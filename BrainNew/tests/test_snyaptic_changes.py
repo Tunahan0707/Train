@@ -8,7 +8,7 @@ def baglanti_ateslendir(etki):
         hedef.dendritler[0],
         etki_mv=etki
     )
-    hedef.membran_potansiyeli = -56.0 if etki >= 1.0 else -55.1
+    hedef.membran_potansiyeli = -56.0 if etki >= 1.0 else -54.2
     baglanti.aktar(0)
     assert hedef.guncelle()
     return kaynak, hedef, baglanti
