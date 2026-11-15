@@ -1,5 +1,4 @@
-
-from Baglanti import Baglanti
+from .Baglanti import Baglanti
 
 
 class AksonUcu:
@@ -14,8 +13,6 @@ class AksonUcu:
             etki_mv,
             gecikme_ms
         )
-
         self.baglantilar.append(baglanti)
         hedef.gelen_baglantilar.append(baglanti)
-
         return baglanti
