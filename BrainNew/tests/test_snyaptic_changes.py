@@ -31,6 +31,7 @@ def test_negatif_geri_bildirim_zayif_baglantiyi_budar():
 
 def test_geri_bildirim_baglantinin_isaretini_degistirebilir():
     _, hedef, baglanti = baglanti_ateslendir(0.2)
+    baglanti.uygunluk_izini_artir()
     hedef.geri_bildirim(-1.0)
     assert baglanti.aktif
     assert baglanti.etki_mv < 0
