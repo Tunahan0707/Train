@@ -107,7 +107,7 @@ def test_geri_bildirim_zayif_baglantiyi_budar():
     noron_b = Noron()
     baglanti = noron_a.aksonlar[0].baglan(
         noron_b.dendritler[0],
-        etki_mv=0.15
+        etki_mv=0.5
     )
     noron_b.membran_potansiyeli = -55.1
     baglanti.aktar(0)
