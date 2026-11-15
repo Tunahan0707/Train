@@ -1,0 +1,2 @@
+class Norotransmitter:
+    pass
