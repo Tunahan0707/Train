@@ -110,6 +110,9 @@ class Beyin:
                 self.etkin_baglantilar.add(baglanti)
 
     def adim(self):
+        # Önce önceki zaman adımından kalan izleri azalt.
+        # Bu adımda oluşan yeni izler bir sonraki adımda azalmaya başlar.
+        self.uygunluk_izlerini_guncelle()
         self._olaylari_ilet()
         ateslenenler = []
 
@@ -129,7 +132,6 @@ class Beyin:
                 for baglanti in akson.baglantilar:
                     self._iletim_planla(baglanti)
 
-        self.uygunluk_izlerini_guncelle()
         self.zaman += 1
         return ateslenenler
 
