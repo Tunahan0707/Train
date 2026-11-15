@@ -22,7 +22,7 @@ def test_negatif_geri_bildirim_baglantiyi_zayiflatir():
 
 
 def test_negatif_geri_bildirim_zayif_baglantiyi_budar():
-    kaynak, hedef, baglanti = baglanti_ateslendir(0.15)
+    kaynak, hedef, baglanti = baglanti_ateslendir(0.5)
     hedef.geri_bildirim(-1.0)
     assert not baglanti.aktif
     assert baglanti not in kaynak.aksonlar[0].baglantilar
