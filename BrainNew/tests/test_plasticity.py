@@ -62,7 +62,7 @@ def test_olumsuz_geri_bildirim_baglantiyi_zayiflatir():
 def test_olumsuz_geri_bildirim_isareti_degistirebilir():
     _, hedef, baglanti = baglanti_olustur(
         etki=0.2,
-        hedef_potansiyeli=-55.1
+        hedef_potansiyeli=-54.2
     )
     baglanti.uygunluk_izini_artir()
     hedef.geri_bildirim(-1.0)
