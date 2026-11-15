@@ -10,7 +10,7 @@ def baglanti_ateslendir(etki=2.0):
         etki_mv=etki,
         gecikme_ms=4
     )
-    hedef.membran_potansiyeli = -56.0 if etki >= 0 else -52.0
+    hedef.membran_potansiyeli = -56.0 if etki >= 0 else -50.0
     baglanti.aktar(0)
     assert hedef.guncelle()
     return akson, hedef, baglanti
