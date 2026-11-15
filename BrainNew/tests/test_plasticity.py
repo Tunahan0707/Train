@@ -64,6 +64,7 @@ def test_olumsuz_geri_bildirim_isareti_degistirebilir():
         etki=0.2,
         hedef_potansiyeli=-55.1
     )
+    baglanti.uygunluk_izini_artir()
     hedef.geri_bildirim(-1.0)
 
     assert baglanti.etki_mv < 0
