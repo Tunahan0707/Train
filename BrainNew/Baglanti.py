@@ -1,4 +1,3 @@
-
 class Baglanti:
     def __init__(
         self,
@@ -18,14 +17,15 @@ class Baglanti:
 
         self.aktif = True
         self.aktarim_sayisi = 0
-
         self.uygunluk_izi = 0.0
 
     def aktar(self, zaman, trace=None):
         if not self.aktif:
             return
 
-        self.hedef.uyari_al(self.etki_mv)
+        # Hedef nöron, hangi sinaptik bağlantının katkı
+        # verdiğini ayırt edebilmeli.
+        self.hedef.uyari_al(self.etki_mv, self)
 
         self.aktarim_sayisi += 1
 
@@ -51,11 +51,7 @@ class Baglanti:
         )
 
         self.etki_mv += degisim
-
-        self.etki_mv = max(
-            -10.0,
-            min(10.0, self.etki_mv)
-        )
+        self.etki_mv = max(-10.0, min(10.0, self.etki_mv))
 
     def isaret_degistir(self):
         self.etki_mv *= -1
@@ -69,25 +65,16 @@ class Baglanti:
         else:
             self.etki_mv -= miktar
 
-        self.etki_mv = max(
-            -10.0,
-            min(10.0, self.etki_mv)
-        )
+        self.etki_mv = max(-10.0, min(10.0, self.etki_mv))
 
     def zayiflat(self, miktar):
         if miktar < 0:
             raise ValueError("Miktar negatif olamaz.")
 
         if self.etki_mv > 0:
-            self.etki_mv = max(
-                0.0,
-                self.etki_mv - miktar
-            )
+            self.etki_mv = max(0.0, self.etki_mv - miktar)
         else:
-            self.etki_mv = min(
-                0.0,
-                self.etki_mv + miktar
-            )
+            self.etki_mv = min(0.0, self.etki_mv + miktar)
 
     def sil(self):
         if not self.aktif:
@@ -102,6 +89,9 @@ class Baglanti:
             self.hedef.gelen_baglantilar.remove(self)
 
     def uygunluk_izini_artir(self, miktar=1.0):
+        if miktar < 0:
+            raise ValueError("Uygunluk izi artışı negatif olamaz.")
+
         self.uygunluk_izi = min(
             5.0,
             self.uygunluk_izi + miktar
