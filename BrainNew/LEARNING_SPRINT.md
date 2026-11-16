@@ -17,7 +17,7 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 - **Aşama 2 doğrulaması:** kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi. Baseline yürütücüsüne ait yeni testler bu son commit'te eklendi; henüz kullanıcı ortamında çalıştırılmadı.
 - **Aşama 3 — baseline yürütücü:** genel örnek/görev ölçüm altyapısı kodlandı. Kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi; yeni baseline yürütücü testlerinin son commit sonrası tekrar çalıştırılması gerekiyor.
 - **Aşama 4 — kısa ömürlü etkinlik izleri:** ilk uygulama eklendi. Her bağlantıda ayrı presinaptik ve postsinaptik iz, bağımsız üstel sönüm ve hedef nöronun yerel ateşlenmesiyle postsinaptik iz güncellemesi var. İzler henüz kalıcı sinaptik ağırlığı değiştirmiyor; bu ayrım korunuyor. Yeni iz testleri son commit sonrası henüz çalıştırılmadı.
-- **Güncel:** Kalıcı sinaptik katsayı, bağlantı-yerel pre/post izleri, Hebbian LTP ve ters sıralı LTD içeren ilk çift-izli STDP prototipi kodda var. Uygunluk izi/modülatör katmanı ve görev düzeyinde öğrenme başarısı henüz doğrulanmadı.
+- **Güncel:** Kalıcı sinaptik katsayı, bağlantı-yerel pre/post izleri, Hebbian LTP ve ters sıralı LTD içeren ilk çift-izli STDP prototipi kodda var. Yapısal bakım, sinaps içine gömülü kurallardan bağımsız Mikroglia ajanlarına taşındı. Uygunluk izi/modülatör katmanı ve görev düzeyinde öğrenme başarısı henüz doğrulanmadı.
 
 ---
 
@@ -47,7 +47,7 @@ Sprint sonunda sistemin teorik olarak şu davranışları gösterebilmesi gereki
 - Sinaps kendi etkinlik geçmişini, uygunluk izini, yerel kimyasal maruziyetini ve yapısal durumunu tutar.
 - Dendrit yerel girdileri, reseptör yanıtını ve kendi yerel öğrenilmiş katkılarını değerlendirir.
 - Nöron ateşlenme, yerel etkinlik ve kendi durum geçişlerini yönetir.
-- Mikroglia-benzeri bakım/budama davranışı bağlantı nesnesinin yerel kural kümesiyle temsil edilir. Bu, gerçek mikroglianın sinapsın içine gömülü olduğu iddiası değildir.
+- Mikroglia-benzeri bakım/budama bağımsız ajanlarla temsil edilir. Ajanlar 2B uzayda sabit konumda yerel tarama yapar; bağlantı indeksi yalnızca yakın sinapsları bulur. Bağlantı nesnesi kendi etkinlik ve yapısal durumunu taşır; bakım kararını mikroglia verir.
 - Bütün ağın her adımda taranması ve yoğun tüm-çift matrisler temel yöntem olmayacaktır.
 - Geçici aktivite izleri, kalıcı öğrenilmiş ağırlıklar ve yapısal bağlantı durumu ayrı tutulur.
 - Öğrenme güncellemeleri sınırlı, deterministik, olay-tabanlı ve test edilebilir olmalıdır.
