@@ -16,6 +16,7 @@ class Beyin:
         "sinaptik_girdi": 0,
         "faz": 1,
         "entegrasyon": 2,
+        "geri_bildirim": 3,
     }
 
     def __init__(self, kimyasal_alan=None, deney_kaydi=None):
@@ -28,6 +29,7 @@ class Beyin:
         self.deney_kaydi = deney_kaydi
         self._olaylar = []
         self._olay_sayaci = itertools.count()
+        self._geri_bildirim_sayaci = itertools.count()
         self._entegrasyon_planlari = set()
         self._mikroglia_bakim_bekleyen = set()
         self._otomatik_mikroglialar = set()
@@ -130,6 +132,10 @@ class Beyin:
             raise ValueError("Gecikme, mevcut simülasyon zamanında temsil edilemeyecek kadar küçük.")
         olay_id = next(self._olay_sayaci)
         oncelik = self._OLAY_ONCELIGI.get(tur, 99)
+        if tur == "geri_bildirim":
+            # Aynı zaman damgasında daha güçlü feedback dalları önce işlenir.
+            miktar = abs(float(veri[2]))
+            oncelik = 3.0 + (1.0 - min(1.0, miktar))
         heapq.heappush(
             self._olaylar,
             (olay_zamani, oncelik, olay_id, tur, hedef_id, veri)
@@ -189,6 +195,44 @@ class Beyin:
         self._iletim_olayini_planla(sinaps, gecikme)
         return True
 
+    def geri_bildirim_baslat(
+        self, noron_id, pozitif=True, miktar=0.1,
+        iz_esigi=0.01, dallanma_sonum=0.5
+    ):
+        """Bir nöronun son ateşlenmesinden yerel geriye feedback başlatır.
+
+        Beyin yalnızca ilk olayı ve devamındaki dal olaylarını zamanlar.
+        Dal seçimi, eşik değişimi ve iz değerlendirmesi nöronlarda yapılır.
+        """
+        if noron_id not in self.noronlar:
+            raise ValueError(f"Bilinmeyen nöron: {noron_id}")
+        noron = self.noronlar[noron_id]
+        if noron.ateslenme_sayisi <= 0:
+            raise ValueError("Feedback yalnızca ateşlenmiş bir nörondan başlatılabilir.")
+        miktar = float(miktar)
+        iz_esigi = float(iz_esigi)
+        dallanma_sonum = float(dallanma_sonum)
+        if not all(math.isfinite(v) for v in (
+            miktar, iz_esigi, dallanma_sonum
+        )):
+            raise ValueError("Feedback parametreleri sonlu olmalı.")
+        if not 0.0 < miktar <= 1.0:
+            raise ValueError("Feedback miktarı (0, 1] aralığında olmalı.")
+        if not 0.0 <= iz_esigi <= 1.0:
+            raise ValueError("Feedback iz eşiği [0, 1] aralığında olmalı.")
+        if not 0.0 < dallanma_sonum < 1.0:
+            raise ValueError("Feedback dallanma sönümü (0, 1) aralığında olmalı.")
+
+        feedback_id = next(self._geri_bildirim_sayaci)
+        veri = (
+            feedback_id, bool(pozitif), miktar, iz_esigi,
+            dallanma_sonum, frozenset({noron_id})
+        )
+        return self.olay_planla(
+            self.ENTEGRASYON_GECIKMESI,
+            "geri_bildirim", noron_id, veri
+        )
+
     def _girdi_olayini_isle(self, noron, veri):
         # Girdi yerel dendrit durumuna kaydedilir. Nöron refrakter durumdaysa
         # entegrasyon kapalı kalır; faz döngüsü tamamlandığında bekleyen
@@ -243,6 +287,25 @@ class Beyin:
             elif noron.bekleyen_girdi_var_mi():
                 # Refrakter dönemde tamponda tutulan girdiler kaybolmaz.
                 self._entegrasyon_planla(noron.kimlik)
+
+        elif tur == "geri_bildirim":
+            (
+                feedback_id, pozitif, miktar, iz_esigi,
+                dallanma_sonum, ziyaret_edilen
+            ) = veri
+            noron = self.noronlar[hedef_id]
+            dallar = noron.geri_bildirim_dali_isle(
+                self.zaman, pozitif, miktar, iz_esigi,
+                dallanma_sonum, ziyaret_edilen
+            )
+            for kaynak_id, dal_miktari, dal_ziyareti, gecikme in dallar:
+                dal_verisi = (
+                    feedback_id, pozitif, dal_miktari, iz_esigi,
+                    dallanma_sonum, dal_ziyareti
+                )
+                self.olay_planla(
+                    gecikme, "geri_bildirim", kaynak_id, dal_verisi
+                )
 
         elif tur == "mikroglia_bakim":
             self._mikroglia_bakim_bekleyen.discard(hedef_id)
