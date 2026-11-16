@@ -397,7 +397,7 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertAlmostEqual(sinaps.pre_iz, 1.0)
         self.assertEqual(sinaps.post_iz, 0.0)
 
-    def test_postsinaptik_iz_yalnizca_gercek_girdi_kaynagi_baglantida_artar(self):
+    def test_post_izi_tum_gelen_sinapslarda_tutulur_ama_yalnizca_preli_sinaps_guclenir(self):
         beyin = Beyin()
         kaynak_aktif = Noron("kaynak_aktif")
         kaynak_sessiz = Noron("kaynak_sessiz")
