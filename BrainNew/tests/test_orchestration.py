@@ -169,8 +169,12 @@ class OrkestrasyonTestleri(unittest.TestCase):
         sinaps.sinaptik_agirligi_ayarla(0.5)
         beyin.duyusal_girdi("kaynak", "kaynak_giris", 100.0)
         beyin.calistir()
-        self.assertEqual(hedef.ateslenme_sayisi, 1)
-        self.assertAlmostEqual(hedef.membran, hedef.depolarizasyon_degeri)
+
+        # 20 birim temel etki, 0.5 ağırlıkla 10 birim iletilir.
+        # Dinlenme membranı -70 olduğundan hedef -60'a ulaşır;
+        # ateşleme eşiği -55'tir, dolayısıyla ateşlenmemelidir.
+        self.assertEqual(hedef.ateslenme_sayisi, 0)
+        self.assertAlmostEqual(hedef.membran, -60.0)
     def test_sinyal_hedefe_baglanti_uzunlugu_bolum_iletim_hizi_gecikmesiyle_ulasir(self):
         beyin, kaynak, hedef, _ = ag_kur()
         hedef = ZamanKayitliNoron("hedef")
