@@ -276,6 +276,8 @@ Yapılacaklar:
 
 ## Aşama 9 — Gecikmiş modülatör ve uygunluk izi
 
+**Uygulama durumu:** İlk olaydan bağımsız integral sürümü eklendi. Bağlantı, pre/post olaylarında uygunluk değişimlerinin zaman damgalı izini tutuyor; sonraki bakımda ödül-ceza alanı × uygunluk izi çarpımı Gauss-Legendre kuadratürüyle zaman boyunca entegre ediliyor. `Beyin.calistir` sonundaki yerel bağlantı bakımı, nöronun yeniden ateşlenmesine gerek kalmadan integrali işliyor. Kimyasal kaynak başlangıçları ve düzenleme yaşı kırılma noktalarında integral bölünüyor. Kısa darbe ve ödülsüz durum testleri yazıldı; henüz çalıştırılmadı. Çoklu kaynak/ölçek maliyeti ayrıca ölçülmeli.
+
 **Amaç:** Yakın geçmişte etkin olmuş bağlantıların daha sonra gelen kimyasal geri bildirimle seçici biçimde değişebilmesi.
 
 Yapılacaklar:
