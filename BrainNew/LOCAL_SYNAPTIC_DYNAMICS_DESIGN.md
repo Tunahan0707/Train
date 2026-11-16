@@ -302,6 +302,12 @@ Her bağlantı en azından şu bilgileri taşımalıdır:
 - Koruma veya onarım sinyalleri budama baskısını azaltabilir.
 - Bağlantı nesnesinin mikroglia-benzeri yerel denetimi, uygun budama koşulları devam ederse bağlantıyı önce zayıflatabilir/işaretleyebilir, ardından fiziksel olarak kaldırabilir.
 - Bağlantı kopma kararı merkezi Beyin tarafından verilmez.
+- **Bakım zamanlaması nöron entegrasyonundan bağımsızdır.** Her bağlantının kendi bir sonraki bakım değerlendirme zamanı bulunur. Bağlantı, kurulduğunda ilk değerlendirmesini planlar; her değerlendirmeden sonra kendi yerel durumuna göre bir sonraki değerlendirme aralığını belirler. Böylece kaynak nöron uzun süre ateşlenmese veya entegrasyon olayı yaşamasa bile bağlantı yaşlanma ve budama sürecine girebilir.
+- Beyin yalnızca bağlantının istediği bakım değerlendirmesini olay kuyruğuna koyar ve zamanı geldiğinde ilgili yerel değerlendirmeyi çalıştırır. Beyin bağlantının kullanımını yorumlamaz, bakım aralığını seçmez ve kopma kararı vermez.
+- Bakım değerlendirmesinde bağlantı, son değerlendirmeden beri geçen süreyi; zaman içinde sönümlenmiş kullanım izini; yapısal bütünlüğünü; koruma/stabilizasyon ve budama işaretlerini; kendi konumundaki yerel kimyasal sinyal maruziyetini birlikte değerlendirir. Geçen zaman tek başına kopma nedeni değildir.
+- Bakım değerlendirmesi zamanında yapılır; kullanım izi ve zamana bağlı değişkenler aradaki süreyi hesaba katarak tembel/lazy biçimde güncellenebilir. Bu, aradaki zamanın veya yaşlanmanın atlanması anlamına gelmez.
+- Bir sonraki değerlendirme aralığını bağlantının yerel bakım mekanizması belirler. Durumu kararlı olan bağlantılar daha seyrek, hızlı değişen veya budama/koruma sinyali alan bağlantılar daha sık değerlendirilebilir. İlk prototipte alt/üst değerlendirme aralığı ve uyarlama kuralı kalibrasyon parametreleridir.
+- Bağlantı fiziksel olarak koptuğunda bekleyen bakım olayları geçersizleşir; kopmuş bağlantı yeniden bakım planlamaz.
 - Önceki taslaktaki 1.0 dayanıklılık, 0.9995 kullanılmama çarpanı ve 0.1 kopma sınırı yalnızca örnekti; kesin parametre değildir ve bu tasarımda zorunlu tutulmaz.
 
 ### 7.3. Yeni bağlantı oluşumu ve eski bağlantının onarımı
@@ -363,7 +369,7 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 - Her transmitter türü için terminal repertuvarı, salım profili, `Q_k(x,t)` yayılım/sönüm parametreleri ve dendrit duyarlılığı `R_{ik}`: deneysel.
 - Hacimsel kimyasal iletimin yerel arama/ızgara çözünürlüğü ve komşulara aktarım katsayıları: deneysel.
 - Kimyasal sinyal sınıflarının yerel etki yarıçapı ve sönüm hızları: deneysel.
-- Bağlantı nesnesinin mikroglia-benzeri yerel denetimi için bakım sıklığı, algılama kapsamı ve budama/koruma tepkileri: deneysel.
+- Bağlantı nesnesinin mikroglia-benzeri yerel denetimi için ilk bakım aralığı, uyarlanabilir alt/üst aralıklar ve budama/koruma tepkileri: deneysel. Bakımın entegrasyondan bağımsız zamanlanması tasarım kararıdır; sayısal aralıklar değildir.
 - Bağlantı yaşlanması, yapısal bütünlük ve eliminasyon koşulları: deneysel.
 - Bağlantı oluşum yarıçapı, yeni bağlantı başlangıç gücü ve olgunlaşma koşulları: deneysel.
 - İletim hızı ve minimum pozitif olay gecikmesi: deneysel.
@@ -404,6 +410,9 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 32. Mikroglia-benzeri denetim bağlantı nesnesinin yerel durum/rule set'i üzerinden çalışır; merkezi veya bağımsız küresel budama yöneticisi yoktur.
 33. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
 34. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
+35. Bağlantının bakım değerlendirmesi, kaynak nöron entegrasyon/ateşlenme olayı yaşamasa da planlanan simülasyon zamanında gerçekleşir.
+36. Bakım zamanlaması ve bir sonraki değerlendirme aralığı bağlantının yerel mekanizması tarafından belirlenir; Beyin yalnızca olay zamanlamasını yürütür.
+37. Bakım değerlendirmesi aradaki bütün sürenin kullanım izi/yaşlanma etkisini hesaba katar; değerlendirme aralığının uzaması yaşlanmayı durdurmaz.
 35. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
 36. Bağlantısız terminal, 2B yerel aramayla uygun dendrit adayı bulabilir.
 37. Yeni bağlantı zayıf başlar ve kullanım/stabilizasyonla olgunlaşır.
