@@ -182,6 +182,51 @@ class Beyin:
                 if onceki_noron not in ziyaret_edilen:
                     kuyruk.append(onceki_noron)
 
+    def ogren(self, hedef_cikti):
+        """
+        Beklenen motor çıktısıyla gerçek çıktıyı karşılaştırır
+        ve yalnızca hata bulunan motor nöronlarından geri bildirim
+        dalgası başlatır.
+
+        Pozitif hata sinyali, hedefi 1 olduğu hâlde ateşlenmemiş
+        motor nöronunda eşik altı sinaptik katkıları da değerlendirir.
+        """
+        hedef_cikti = list(hedef_cikti)
+
+        if len(hedef_cikti) != len(self.motor_noronlari):
+            raise ValueError("Hedef çıktı uzunluğu motor nöron sayısıyla eşleşmiyor.")
+
+        if any(bit not in (0, 1) for bit in hedef_cikti):
+            raise ValueError("Hedef çıktı yalnızca 0 ve 1 içerebilir.")
+
+        for indeks, (hedef, noron) in enumerate(
+            zip(hedef_cikti, self.motor_noronlari)
+        ):
+            gercek = self.motor_organ.ciktilar[indeks]
+            if hedef == gercek:
+                continue
+
+            # Hedef 1 / gerçek 0: güçlendir.
+            # Hedef 0 / gerçek 1: zayıflat.
+            deger = 1.0 if hedef == 1 else -1.0
+            kuyruk = deque([(noron, True)])
+            ziyaret_edilen = set()
+
+            while kuyruk:
+                mevcut, kok = kuyruk.popleft()
+                if mevcut in ziyaret_edilen:
+                    continue
+
+                ziyaret_edilen.add(mevcut)
+                onceki_noronlar = mevcut.geri_bildirim(
+                    deger,
+                    esik_alti_katkilar=(kok and deger > 0)
+                )
+
+                for onceki_noron in onceki_noronlar:
+                    if onceki_noron not in ziyaret_edilen:
+                        kuyruk.append((onceki_noron, False))
+
     def uygunluk_izlerini_guncelle(self):
         for baglanti in tuple(self.etkin_baglantilar):
             if not baglanti.aktif:
