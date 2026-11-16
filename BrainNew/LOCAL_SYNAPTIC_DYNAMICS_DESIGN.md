@@ -1,236 +1,409 @@
-# Yerel Dendrit-Sinaps Dinamikleri — Tasarım
+# BrainNew — Yerel Sinaptik Dinamikler ve Nöral Ağ Tasarımı
 
-Bu belge experiment/dendritic-synaptic-potentials dalındaki sıfırdan başlatılan yeni BrainNew tasarımının güncel tasarım sözleşmesidir. Eski fix/synaptic-contribution-tracking dalı bu tasarımın çalışma dalı değildir.
+Bu belge `experiment/dendritic-synaptic-potentials` branch'indeki BrainNew tasarım sözleşmesidir. Eski `fix/synaptic-contribution-tracking` branch'i yalnızca önceki membran/ateşlenme mekanizmasının referansı olarak incelenmiştir; bu branch yeni tasarımın çalışma dalı değildir.
 
-Belgede kararlar, öneriler ve açık araştırma noktaları birbirinden ayrılır. Sayısal değerlerin deneysel olarak belirlenmesi gereken yerlerde geçici örnekler kesin karar gibi sunulmaz. Bu belge tasarımı tanımlar; çalışan entegrasyon veya test başarısı iddiası değildir.
+Belgede üç ayrım korunur:
+- **Kesin tasarım kararı:** Kullanıcı tarafından açıkça kabul edilmiş veya bu belge güncellemesinde mimari açıdan yeterince sağlam bulunarak sabitlenmiş kural.
+- **Tasarım tercihi:** Uygulamada izlenecek güçlü öneri; sayısal kalibrasyon gerektirebilir.
+- **Açık karar:** Önceki konuşmalarda ayrıntısı doğrulanamayan veya deney olmadan kesinleştirilmemesi gereken konu.
+
+Bu belge tasarımı tanımlar; kodun uygulandığı veya testlerin geçtiği anlamına gelmez. Biyolojik esin ile biyolojik birebirlik aynı şey değildir. Matematiksel kolaylaştırmalar ayrıca belirtilir.
 
 ## 1. Temel mimari ve nöronun çalışma döngüsü
 
-- Beyin yalnızca simülasyon zamanını ve bileşenler arası koordinasyonu yöneten orkestratördür.
-- Öğrenme, geri bildirimin yerel değerlendirilmesi ve sinaptik değişiklik kararları nöronlar/yerel mekanizmalar tarafından verilir. Beyin hangi sinapsın değişeceğine veya feedback'in ne anlama geldiğine karar vermez.
-- Nöronun aksiyon potansiyeli oluşturması, o nörona ait bütün sinapsların koşulsuz biçimde aktive olması anlamına gelmez.
-- Aksiyon potansiyeli oluştuğunda, yalnızca kendi yerel durumları ve aktivasyon koşulları uygun olan sinapslar aktive olabilir. Aktivasyon potansiyelinin/eşiğinin aşılmış olması tek başına sinapsı otomatik aktive etmez; nöronun aksiyon potansiyeli oluşturması gerekir.
-- Nöronun çalışma döngüsünde aksiyon potansiyeli, dinlenme ve yeniden polarizasyon aşamaları bulunur. Döngü tamamlandığında nöron yeni sinyale hazır hâle gelir.
-- Aksiyon potansiyeli tamamlandığında sinyal dalga biçiminde gönderilir. Bu dalganın uzamsal/zamansal yayılım ayrıntıları ayrıca modellenebilir.
-- Aksiyon potansiyelinden sonra refrakter dönem modellenir. Eski branch'de depolarizasyon, repolarizasyon ve hiperpolarizasyon durumları boyunca yeni ateşlenme kararı engellenir. Mutlak ve göreli refrakter dönemlerin ayrı ayrı modellenmesi yeni tasarımda ayrıca kararlaştırılacaktır. Sinaptik girdilerin alınması ile yeniden ateşlenmek ayrı olaylardır.
-
+- Beyin yalnızca simülasyon zamanını, olay kuyruğunu ve bileşenler arası koordinasyonu yöneten orkestratördür.
+- Öğrenme, geri bildirimin yorumlanması ve yerel bağlantı/sinaps değişikliği kararları nöronlar, dendritler, sinapslar, mikroglia-benzeri yerel yapılar ve bunların yerel etkileşimleri tarafından verilir. Beyin hangi sinapsın değişeceğine karar vermez.
+- Yerel ve olay-tabanlı etkileşimler tercih edilir. Bütün ağın her zaman adımında taranması veya tüm olası sinaps çiftleri için yoğun matris tutulması temel yöntem olmayacaktır.
+- Nöronun aksiyon potansiyeli oluşturması, o nörona ait bütün çıkış sinapslarının koşulsuz aktive olması anlamına gelmez.
+- Bir nöron aksiyon potansiyeli oluşturduğunda yalnızca yerel aktivasyon potansiyeli kendi eşiğini karşılayan çıkış sinapsları aktive olur. Yerel sinaps potansiyelinin eşiği aşması tek başına aksiyon potansiyeli oluşturmaz.
+- Sinaptik girdiyi almak, membran potansiyelini değiştirmek, nöronun ateşlenmesi ve nöronun çıkış sinapslarının aktive olması ayrı olaylardır.
+- Nöron ateşlenme döngüsü tamamlanmadan yeniden ateşlenemez. Refrakter dönem sırasında gelen girdilerin nasıl saklanacağı veya sönümleneceği ayrıca tanımlanır.
+- Aksiyon potansiyeli başlatıldığında çıkış sinapslarının uygun olanları aynı ateşlenme olayında aktive edilir. Bu sinapslar arasında rastgele seri aktivasyon uygulanmaz. Uzamsal mesafe aktivasyon sırasından ziyade sinyalin hedefe ulaşma gecikmesini belirler.
 
 ### 1.1. Eski branch'den korunan membran ve aksiyon potansiyeli mekanizması
 
-`fix/synaptic-contribution-tracking` branch'indeki `Noron.py`, `Dendrid.py` ve ilgili testler incelendi. Aşağıdaki mekanizma önceki tasarımın mevcut davranışıdır ve yeni tasarımda başlangıç referansı olarak korunacaktır. Bu bölümün eklenmesi, yeni yerel sinaps dinamikleriyle entegrasyonun tamamlandığı anlamına gelmez.
-
-Eski mekanizmada nöronun ateşlenme kararı, dendritlerden toplanan toplam etkinin nöron membran potansiyeline uygulanması ve bu potansiyelin eşik değerine ulaşması üzerinden verilir:
+`fix/synaptic-contribution-tracking` branch'indeki `Noron.py`, `Dendrid.py` ve ilgili testler incelendi. Eski mekanizmada nöronun ateşlenme kararı dendritlerden toplanan toplam etkinin membran potansiyeline uygulanması ve eşik değerine ulaşması üzerinden verilir. Bu mekanizma yeni tasarımın başlangıç referansıdır:
 
 - Dinlenme membran potansiyeli: -70 mV.
 - Ateşlenme eşiği: -55 mV.
 - Depolarizasyon durumunda membran potansiyeli +30 mV yapılır.
-- Sonraki adımda repolarizasyon durumunda -40 mV yapılır.
-- Ardından hiperpolarizasyon durumunda -80 mV değerine geçilir ve 2 zaman adımı beklenir.
+- Sonraki durumda repolarizasyon potansiyeli -40 mV yapılır.
+- Ardından hiperpolarizasyon durumunda -80 mV değerine geçilir ve 2 simülasyon adımı beklenir.
 - Hiperpolarizasyon tamamlanınca nöron dinlenme durumuna ve -70 mV değerine döner.
 - Dinlenme durumunda dendritlerden alınan toplam etki membran potansiyeline eklenir. Ardından potansiyel dinlenme değerine doğru sızıntı oranı kadar çekilir.
-- Eski kodun varsayılan sızıntı oranı 0.05'tir. Bu oran ve yukarıdaki mV değerleri eski uygulamanın başlangıç parametreleridir; yeni modelde deneysel doğrulama olmadan biyolojik sabit sayılmaz.
-- Pozitif ve negatif sinaptik etkiler aynı toplamda yer alır; uyarıcı etkiler membran potansiyelini yükseltirken baskılayıcı etkiler düşürür.
-- Dış duyusal girdi eski kodda doğrudan membran potansiyeline etki eder ve yalnızca nöron dinlenme durumundayken uygulanır.
-- Eski uygulamada nöron dinlenme dışındaki tüm durumlarda yeni ateşlenme kararı vermez. Bu, tek bir refrakter/durum döngüsüdür; mutlak ve göreli refrakter dönemlerin ayrı fizyolojik mekanizmalar olarak uygulanmış olduğu anlamına gelmez.
+- Eski kodun varsayılan sızıntı oranı 0.05'tir.
+- Pozitif ve negatif sinaptik etkiler aynı toplamda yer alır.
+- Eski kodda dış duyusal girdi doğrudan membran potansiyeline etki eder ve yalnızca nöron dinlenme durumundayken uygulanır.
+- Eski uygulamada nöron dinlenme dışındaki durumlarda yeni ateşlenme kararı vermez. Bu tek bir durum/refrakter döngüsüdür; mutlak ve göreli refrakter dönemlerin ayrı fizyolojik mekanizmalar olarak uygulanmış olduğu anlamına gelmez.
+- Eski uygulamada ateşlenme anında katkıda bulunan bağlantılar uygunluk izi kazanır. Eski modelde ateşlenen nöronun bütün akson bağlantıları için iletim planlanırdı; bu davranış yeni tasarımda seçici çıkış sinapsı aktivasyonuyla değiştirilecektir.
 
-Eski uygulamada bağlantıdan gelen etkiler dendritte bekletilir, nöronun dinlenme adımında dendritlerden alınarak membran potansiyeline eklenir. Ateşlenme anında o ana kadar birikmiş ve katkıda bulunan bağlantılar uygunluk izi kazanır. Eski modelde her ateşlenme, nöronun bütün akson bağlantıları üzerinden iletim planlanmasına yol açar.
++30, -40, -80 mV, iki adım ve 0.05 değerleri eski uygulamanın parametreleridir; yeni modelde biyolojik sabit sayılmaz. İlk prototipte başlangıç değerleri olarak korunabilir, sonra simülasyon zaman ölçeği ve davranış testleriyle kalibre edilir.
 
-**Yeni tasarımla entegrasyon için önemli ayrım:** Eski modelde bağlantı etkisi doğrudan dendrit ve oradan membran potansiyeline gider; yeni tasarımda ise dendrit-sinaps çiftlerinin ayrı yerel potansiyelleri ve sinapsların seçici aktivasyonu bulunur. Bu nedenle eski membran toplama mekanizmasının korunması, yerel sinaps potansiyellerinin membran potansiyeline hangi aşamada ve hangi kuralla katkı vereceğinin ayrıca tanımlanmasını gerektirir. Yerel sinaps potansiyelinin eşiği aşması tek başına nöronu ateşletmez; nöronun ateşlenme kararı membran potansiyeli/eşik mekanizmasında kalır.
+### 1.2. Olay zamanlaması ve ateşlenme zinciri
 
-## 2. Dendrit-sinaps etkileşimi ve yerel potansiyel
+- Beyin olayları simülasyon zamanına göre planlar; olayların fiziksel/etkin gecikmeleri sıfırdan büyük olmalıdır. Bu, aynı anda sınırsız ve sıfır gecikmeli ateşlenme zinciri oluşmasını önler.
+- Bir nöron ateşlendiğinde uygun çıkış sinapsları aynı olay anında aktive olur. Her bağlantının hedefe ulaşma zamanı bağlantı uzunluğu ve iletim hızıyla belirlenir.
+- Bir hedef nörona gelen etki, kaynak nöronun ateşlenme döngüsü hâlâ sürerken hedefe ulaşır ve hedefin membran potansiyelini eşiğe taşırsa, hedef nöron kendi refrakter durumda değilse o anda ateşlenebilir. Kaynak nöronun döngüsünün bitmesi beklenmez.
+- Böylece olay kuyruğu, aynı simülasyon zaman aralığında ardışık fakat gecikmeli ateşlenme zincirlerine izin verir.
+- Tam aynı zaman damgasına düşen **feedback** olayları normalde bekleme/gecikme süreleri nedeniyle seyrek olmalıdır. Yine de çakışırlarsa mutlak etki büyüklüğü daha yüksek olan önce uygulanır; eşitlikte kararlı olay kimliği/sırası kullanılır. Bu bir simülasyon sıralama kuralıdır, biyolojik bir yasa değildir.
+- Bir nöron refrakter durumdaysa eşik aşımı yeni aksiyon potansiyeli başlatmaz. Girdinin bekletilmesi, kaybolması veya yerel olarak sönümlenmesi henüz kesinleştirilmemiştir.
 
-### 2.1. Toplamsal dendrit katkıları
+## 2. Dendritik bütünleşme ve sinapsların yerel aktivasyon potansiyeli
 
-Her dendrit, hedef nörona gelen sinapsların her birine ayrı bir yerel potansiyel katkısı yükleyebilir. Dendrit-sinaps ilişkisi çarpımsal bir öğrenme katsayısının güncellenmesi olarak tanımlanmaz; her dendrit-sinaps çifti için ayrı, toplamsal bir katkı/değer bulunur.
+### 2.1. İki ayrı elektriksel düzey
 
-- Bir dendrit yalnızca gerçekten potansiyel yüklediği sinaps için bu etkileşimin öğrenme güncellemesine katılır.
-- Sinaps, ilgili değerlendirme/aktivasyon fırsatında aktive olursa o dendritin ilgili sinaps üzerindeki katkısı küçük bir pozitif yönde güncellenir.
-- Sinaps aktive olmazsa katkı küçük bir negatif yönde güncellenir.
-- Dendrit o sinapsa potansiyel yüklememişse bu kurala göre güncelleme yapılmaz.
-- Güncellemenin büyüklüğü, ilgili sinapsın en son ne zaman ateşlendiğine bağlı olabilir. Yakın zamanda ateşlenmiş sinapslarda güncelleme daha belirgin; uzun süredir ateşlenmemiş sinapslarda etki olabildiğince küçük olacak şekilde tasarlanır.
-- Bu zaman bağımlılığının matematiksel fonksiyonu ve pozitif/negatif adımların büyüklükleri henüz belirlenmemiştir.
+Yeni tasarımda iki potansiyel birbirine karıştırılmayacaktır:
 
-Birden fazla dendrit aynı sinapsa toplamsal katkı yüklediğinde, toplam etkinin etkin dendrit sayısı dikkate alınarak normalize edilmesi mümkündür. Böylece yalnızca etkin dendrit sayısının artması nedeniyle sinaps potansiyelinin kontrolsüz büyümesi önlenebilir. Normalizasyonun paydası, hangi dendritlerin sayılacağı ve bunun zaman adımına mı yoksa sinapsa yüklenen katkı sayısına mı göre yapılacağı deneysel olarak netleştirilecektir.
+1. **Nöron membran potansiyeli (mV):** Nöronun aksiyon potansiyeli başlatıp başlatmayacağını belirler. Eski branch'deki dendrit → membran → eşik mekanizması temel alınır.
+2. **Sinapsın yerel aktivasyon potansiyeli (boyutsuz, başlangıçta ortak değer):** Nöron ateşlendiği anda hangi çıkış sinapslarının aktive olabileceğini belirler. Tek başına nöronu ateşletmez.
 
-### 2.2. Sinapsın yerel durumu ve aktivasyon koşulu
+Sinapsların yerel potansiyelleri başlangıçta aynı nötr değerden başlar. Aktivasyon eşikleri de başlangıçta ortak olabilir. Eşiklerin zamanla öğrenilip öğrenilmeyeceği şu an kesin karar değildir; mevcut tasarımda dendrit-sinaps katkısı ile sinaps aktivasyon potansiyeli ayrı parametreler olarak tutulur.
 
-Her sinaps en azından şu yerel bilgileri taşır:
-- yerel aktivasyon potansiyeli,
-- aktivasyon/uygunluk eşiği veya koşulu,
-- geçici etkinlik izi,
-- son aktive olma/ateşlenme zamanı,
-- yapısal bağlantı durumu ve bağlantı dayanıklılığı/kullanılmama geçmişi.
+### 2.2. Dendritin yerel membran sinyali ve sinapslara dağıtılması
 
-Dendrit katkıları, sinaps-sinaps etkileşimleri ve feedback sinapsın yerel potansiyelini etkileyebilir. Ancak yerel potansiyelin eşiği aşması tek başına aktivasyon başlatmaz. Sinapsın aktive olabilmesi için nöronun aksiyon potansiyeli oluşturduğu aşamada aktivasyon koşullarının uygun olması gerekir. Hangi sinapsların bu koşulları sağladığı yerel olarak belirlenir.
+Kullanıcının önerisi şu şekilde somutlaştırılır: Bir dendritin topladığı pozitif veya negatif elektriksel etki, o dendritin yerel membran sinyalini oluşturur. Bu sinyal yalnızca tek bir sinapsa hapsedilmez; aynı dendritin yerel bölümündeki/ilişkili sinapslara dağıtılabilir.
 
-### 2.3. Hiç ateşlenmemiş sinapslar
+- Bu dağıtım her dendrit için ayrı hesaplanır.
+- İlk tasarımda bir dendritin sinyali bütün nöronun bütün sinapslarına küresel olarak yayılmaz; öncelikle o dendritle yerel/işlevsel ilişkisi bulunan sinapslara etki eder. Bu tercih yerel mimariyi korur ve gereksiz tümden-tümey ilişkileri önler.
+- Dendritin membran sinyali pozitif veya negatif olabilir; işaret korunur.
+- Aynı sinapsa birden fazla dendritten gelen etkiler toplamsal biçimde birikir.
+- Dendritin etkisi, sinapsın yerel aktivasyon potansiyelini değiştirir. Bu yerel potansiyel, nöronun somatik membran potansiyelinin yerine geçmez ve doğrudan mV cinsinden membrana eklenmez.
+- Dendritin membran sinyalinin somatik membrana aktarılması eski mekanizmanın devamıdır. Yerel sinaps potansiyeline dağıtılması ise yeni tasarımın ek katmanıdır. Bu iki yol birbirinden ayrı tutulur.
 
-Hiç ateşlenmemiş bir sinapsın son ateşlenme zamanı bulunmaz. Bu durum için başlangıçta nötr davranış, ilk aktivasyon girişimine kadar negatif güncelleme yapmama veya küçük başlangıç yanlılığı seçenekleri arasında henüz karar verilmemiştir. Bu durum, yakın zamanda ateşlenmemiş fakat geçmişte ateşlenmiş sinapslarla aynı kabul edilmeyecektir.
+**Başlangıç matematiksel modeli (tasarım tercihi):**
 
-## 3. Sinaps-sinaps etkileşimi
+Dendritin membran potansiyelinden üretilen işaretli, boyutsuz sinyal:
 
-Sinaps-sinaps etkileşimleri aynı nörona ait sinapslar arasında yerel ve yönlüdür. Başlangıçta öğrenilmiş bir ilişki bulunmaz; etkileşimler kullanım/öğrenme sonucunda oluşur. Her olası sinaps çifti için baştan yoğun bir bağlantı matrisi oluşturmak yerine yalnızca oluşmuş/öğrenilmiş ilişkilerin saklanması tercih edilir.
+`u_d = tanh((V_d - V_rest) / S_d)`
 
-- Sinaps k etkinleştiğinde, k→j yönündeki öğrenilmiş ilişki üzerinden aynı nörondaki j sinapsının yerel potansiyeline geçici etki aktarabilir.
-- Kendine etki (k=j) yoktur.
-- k→j ile j→k ayrı ilişkilerdir; biri diğerini zorunlu olarak belirlemez.
-- Birlikte etkinleşme, ilgili yönlü ilişkiyi küçük bir miktar artırabilir.
-- Birlikte etkinleşmeme durumunda ilişkinin azaltılması mı, yoksa değişmeden bırakılması mı gerektiği henüz kesinleştirilmemiştir.
-- İlişkilerin sonlu aralıkta kalması gerekir; sınırlar ve güncelleme miktarları deneysel olarak belirlenecektir.
-- Geçici potansiyel aktarımı ile kalıcı öğrenilmiş ilişkinin güncellenmesi birbirinden ayrı tutulur.
-- Güncellemelerin yalnızca ilgili yerel olaylarda yapılması, bütün sinaps çiftlerinin her zaman adımında taranmaması tercih edilir.
+Burada `V_d` dendritin yerel potansiyeli, `V_rest` dinlenme referansı, `S_d` ölçek parametresidir. `u_d` [-1,+1] aralığındadır. Bu dönüşüm mV ile yerel potansiyel ölçeğini doğrudan toplama hatasını önler.
 
-Birlikte etkinleşmenin zaman penceresi, negatif ilişkinin öğrenilip öğrenilemeyeceği ve ilişkinin güncelleme zamanlaması açık araştırma konularıdır.
+Dendrit `d` ile yerel ilişkisi bulunan sinaps `j` için `a_dj`, o çiftin işaretli katkı değeridir. Sinapsın o anda katkı alan ilişkili dendrit kümesi `D(j)` ise:
+
+`Δp_j = Σ[d ∈ D(j)] (a_dj · u_d) / sqrt(max(1, |D(j)|))`
+
+`p_j` sinapsın yerel aktivasyon potansiyelidir. `a_dj` öğrenilebilir dendrit-sinaps katkısıdır; kendi öğrenme güncellemesi toplamsal yapılır. Formülde anlık dendrit sinyaliyle çarpılması, öğrenilen `a_dj` değerinin çarpımsal öğrenme kuralıyla güncellendiği anlamına gelmez.
+
+Karekök normalizasyonu biyolojik sabit değil, çok sayıda dendritin etkisinin kontrolsüz büyümesini önleyen başlangıç hesaplama tercihidir. Alternatif normalizasyonlar testlerle karşılaştırılabilir. Normalizasyon yalnızca o sinapsa gerçekten katkı yükleyen dendritler üzerinden yapılır.
+
+Yerel potansiyel [-1,+1] sınırları içinde tutulur. Dendritik katkılar, sinaps-sinaps aktarımı ve feedback ayrı kaynaklar olarak hesaplanır; öğrenme katkılarının birbirine karıştırılması önlenir.
+
+### 2.3. Dendrit-sinaps katkısının öğrenilmesi
+
+Her dendrit-sinaps çifti için ayrı bir işaretli katkı değeri bulunur. Bu değer çarpımsal bir öğrenme katsayısı gibi güncellenmez; küçük toplamsal adımlarla değişir.
+
+- Dendrit yalnızca gerçekten potansiyel yüklediği sinaps için güncelleme alır.
+- İlgili nöronun aksiyon potansiyeli sırasında sinaps aktive olursa o dendritin o sinaps üzerindeki katkısı küçük pozitif yönde güncellenir.
+- Nöron ateşlenir fakat sinapsın yerel potansiyeli eşiği karşılamaz ve sinaps aktive olmazsa ilgili katkı küçük negatif yönde güncellenir.
+- Dendrit o sinapsa katkı yüklememişse bu öğrenme kuralı uygulanmaz.
+- Birden fazla dendritin katkısı ayrı ayrı güncellenir.
+- Güncelleme büyüklüğü sinapsın yakın geçmişteki aktivitesine bağlı olabilir: yakın zamanda aktif olanlarda daha belirgin, uzun süredir aktif olmayanlarda çok küçük.
+- Önceki tasarım notunda başlangıç katkılarının küçük rastgele pozitif, negatif veya sıfıra yakın değerler alması önerilmişti. Bu başlangıç dağılımı sayısal olarak kalibre edilmelidir.
+
+Hiç ateşlenmemiş sinaps ile geçmişte ateşlenmiş fakat uzun süredir aktif olmayan sinaps aynı kabul edilmez. Hiç ateşlenmemiş sinapsa ilk değerlendirme fırsatından önce negatif öğrenme cezası verilmez. Bu, kullanıcının önceki kararlarıyla uyumlu en güvenli başlangıç kuralıdır.
+
+### 2.4. Sinapsın aktivasyon kararı
+
+Bir çıkış sinapsı yalnızca şu iki koşul birlikte sağlanırsa aktive olur:
+
+1. Bağlı nöron aksiyon potansiyeli oluşturmuştur.
+2. Sinapsın yerel aktivasyon potansiyeli, o sinapsın aktivasyon eşiğini karşılamıştır.
+
+Buna göre:
+- Nöron ateşlenmezse yerel potansiyeli eşik üstünde olan sinaps da aktive olmaz.
+- Nöron ateşlenir fakat sinaps eşik altında kalırsa o sinaps yalnızca aktive olmaz; bunun için ek bir “başarısız ateşlenme” nesnesi veya ayrı ceza mekanizması gerekmez.
+- Nöron ateşlenir ve sinaps eşik üstündeyse sinaps aktive olur ve bağlantı üzerinden sinyal/kimyasal salım sürecini başlatır.
+- Aynı aksiyon potansiyelinde uygun bütün çıkış sinapsları aynı mantıksal anda aktive edilir. Rastgele sıralama kullanılmaz.
+- Sinaps yerel potansiyeli zamanla nötr değere doğru sönümlenir; aksi hâlde bir kez eşiği geçen sinaps kalıcı biçimde eşik üstünde kalabilir. Sönüm zaman sabiti kalibrasyon parametresidir.
+
+## 3. Sinaps-sinaps ve nöron-nöron yerel etkileşimleri
+
+### 3.1. Aynı nörondaki sinapslar arası etkileşim
+
+Sinaps-sinaps etkileşimleri aynı nörona ait sinapslar arasında yerel ve yönlüdür.
+
+- Başlangıçta öğrenilmiş ilişki bulunmaz.
+- Sinaps `k` aktive olduğunda öğrenilmiş `k→j` ilişkisi üzerinden aynı nörondaki `j` sinapsının yerel potansiyeline geçici etki aktarabilir.
+- Kendine etki (`k=j`) yoktur.
+- `k→j` ve `j→k` ayrı ilişkilerdir.
+- İki sinaps birlikte aktive olursa ilgili ilişki/ilişkiler küçük pozitif yönde güçlenebilir.
+- Birlikte etkinleşmeme yalnızca biri aktif, diğeri aktif değilse söz konusudur. İkisi de aktif değilse bu olaydan ilişki güncellemesi yapılmaz.
+- Yönlü değerlendirmede `k` aktif, `j` aktif değilse `k→j` ilişkisi negatif yönde güncellenebilir; ters durum `j→k` için ayrı değerlendirilir.
+- İlişkinin geçici potansiyel aktarımı ile kalıcı öğrenilmiş ilişki ayrı tutulur.
+- İlişkiler yalnızca ilgili aktivasyon olaylarında güncellenir; bütün sinaps çiftleri her zaman adımında taranmaz.
+
+Birlikte etkinleşmenin zaman penceresi, negatif ilişkinin alt/üst sınırları ve ilişki güncelleme miktarları kalibrasyon gerektirir.
+
+### 3.2. Birlikte ateşlenen yerel nöronların etkileşimi
+
+Aynı nöron içindeki sinaps-sinaps ilişkisi ile farklı nöronların birlikte ateşlenmesi ayrı mekanizmalardır.
+
+- Kullanıcı, uzamsal olarak yerel ve zaman bakımından birlikte/çok yakın aralıkta ateşlenen nöronların birbirlerinin etkilenmesini değiştirmesini tasarım gereksinimi olarak belirtti.
+- Bu etkileşim, bütün nöron çiftleri arasında yoğun ve küresel bir matris olarak kurulmayacaktır; 2B uzamsal komşuluk ve geçici etkinlik izleri üzerinden yerel adaylar bulunacaktır.
+- Bu etkileşimin önceki konuşmalardaki ayrıntılı kuralı mevcut erişilebilir tasarım notlarında bulunamadı. Dolayısıyla belirli bir öğrenme formülünün daha önce kararlaştırıldığı iddia edilmemektedir.
+- Şimdilik kesin olan yalnızca bu yerel nöron-nöron etkileşiminin tasarımda ayrı bir mekanizma olarak bulunmasıdır. Hangi bağlantıların/yerel potansiyellerin değişeceği, etkinliğin yönü, zaman penceresi ve tek taraflı etkinlikte ne olacağı açık karardır.
 
 ## 4. Geçici etkinlik izi
 
 Her sinaps etkinleştiğinde geçici etkinlik izi artar ve zamanla azalır. İz:
 1. Feedback'in geriye doğru hangi dallardan ilerleyebileceğini değerlendirmede,
 2. Yerel etkinlik geçmişini belirlemede,
-3. Sinaps-sinaps birlikte etkinleşme ilişkilerini değerlendirmede
-kullanılır.
+3. Sinaps-sinaps birlikte etkinleşme ilişkilerini değerlendirmede,
+4. Birlikte ateşlenen yerel nöronların zaman yakınlığını belirlemede
+kullanılabilir.
 
-İz tek başına kalıcı öğrenme değildir. Deneme/episode sonunda temizlenebilir; öğrenilmiş ilişkiler ve yapısal bağlantılar bundan ayrı tutulur.
+İz tek başına kalıcı öğrenme değildir. Deneme/episode sonunda temizlenebilir; öğrenilmiş ilişkiler ve yapısal bağlantılar bundan ayrı tutulur. Feedback için ayrıca kalıcı bir nedensel yol/iz (track) veri yapısı zorunlu değildir; geriye dönük erişim geçici izler ve güncel adım verileri üzerinden sağlanır.
 
-Feedback için ayrıca kalıcı bir nedensel yol/iz (track) veri yapısı tutulması zorunlu değildir. Geriye dönük erişim geçici etkinlik izleri ve güncel adım verileri üzerinden sağlanır.
+İz artış miktarı, sönüm zaman sabiti ve episode sonunda hangi izlerin sıfırlanacağı kalibrasyon/deney kararıdır.
 
 ## 5. Geri bildirim ve yayılım
 
 ### 5.1. Geriye doğru dallanma
 
 Feedback, yerel etkinlik izleri ve güncel adım verileri üzerinden geriye doğru takip edilebilen dallara yayılabilir. Her dal kendi izine göre bağımsız değerlendirilir.
+
 - Bir dal, kendi etkinlik izi ilgili geri-adım eşiğinin altına düştüğünde durur.
 - Bir dalın durması diğer dalların ilerlemesini durdurmaz.
 - Sabit maksimum derinlik temel durdurma kuralı değildir; dal bazındaki iz eşiği esastır.
 - Geriye doğru her adımda etkinin büyüklüğü azalır.
-- Dalların iz eşiğinin ve adım başına azalma katsayısının matematiksel biçimi henüz kalibre edilmemiştir.
+- Dalların iz eşiği ve adım başına azalma katsayısı kalibrasyon gerektirir.
 
-### 5.2. Etkilerin ayrı ayrı uygulanması
+### 5.2. Aynı hedefe ulaşan feedback olaylarının sıralanması
 
-Aynı feedback yayılımında farklı dallardan aynı yerel elemana ulaşan etkiler birleştirilip tek bir toplam etki olarak uygulanmaz. Her katkı ayrı ayrı ve sırayla uygulanır. Bu nedenle uygulama sırası nihai potansiyeli etkileyebilir; sıra belirleme/işleme politikası ayrıca tanımlanmalıdır.
+Feedback etkileri aynı hedefe farklı dallardan ulaşırsa birleştirilip tek toplam etki olarak uygulanmaz; her katkı ayrı ve sıralı uygulanır.
 
-### 5.3. Potansiyel üzerindeki etki ve sınırlar
+- Normal şartlarda olay zamanları arasında gecikme bulunur.
+- Aynı hedef ve aynı zaman damgasında birden fazla feedback olayı çakışırsa mutlak etki büyüklüğü daha yüksek olan önce uygulanır.
+- Eşit büyüklükteki olaylarda kararlı olay kimliği/sırası kullanılır.
+- Her etki uygulanırken hedef potansiyelin o andaki güncel değeri kullanılır.
+- Bu sıralama deterministik olmalıdır; rastgele sıralama kullanılmaz.
 
-Feedback yalnızca ateşlenme/aktivasyon potansiyellerini küçük miktarlarda etkiler. Feedback'in dendrit-sinaps öğrenilmiş katkılarını, sinaps eşiklerini veya diğer kalıcı öğrenilmiş parametreleri doğrudan güncellediği kabul edilmez.
+### 5.3. Feedback'in etki alanı ve sınırları
 
-- Potansiyelin dış sınırları [-1,+1] olarak belirlenmiştir.
-- Bu iki değer potansiyelin yakınsaması gereken hedef değerler değil, aşılmaması gereken dış sınırlardır.
-- Potansiyel mevcut değerine ve sınırlara yakınlığına bağlı olarak feedback etkisinin büyüklüğü ölçeklenebilir.
-- Etkiler toplamsal biçimde ayrı ayrı uygulandığından, ölçekleme her bir etki uygulanırken o andaki güncel potansiyel üzerinden değerlendirilmelidir.
-- Kullanılacak ölçekleme fonksiyonu, büyük bir etki altında dahi sınırların aşılmasını matematiksel olarak garanti etmelidir. Önceki doğrusal ölçekleme önerisi bu garantiyi tek başına sağlamadığından kesin çözüm olarak kabul edilmemiştir.
-- Potansiyelin hangi iç değerlere/denge noktalarına yaklaşacağı henüz belirlenmemiştir; deneysel olarak konuşulacaktır.
-- Yakın zamanda ateşlenmemiş nöronlar üzerindeki etkinin olabildiğince minimal tutulması hedeflenir. Bu etkinin hangi yerel mekanizmalara ve hangi zaman ölçeğine uygulanacağı ayrıca kalibre edilecektir.
+Feedback yalnızca ateşlenme/aktivasyon potansiyellerini küçük miktarlarda etkiler. Dendrit-sinaps öğrenilmiş katkılarını, sinaps eşiklerini veya diğer kalıcı öğrenilmiş parametreleri doğrudan değiştirmez.
 
-Pozitif/negatif feedback'in etkinlik izi bulunan ve bulunmayan yerel konumlara uygulayacağı kolaylaştırıcı/engelleyici etki yönleri önceki tabloda önerilmişti; bu yönlerin tümü nihai matematiksel kural olarak sabitlenmiş sayılmaz. Özellikle hiç ateşlenmemiş sinapsların davranışı ayrı ele alınmalıdır.
+- Yerel potansiyelin dış sınırları [-1,+1] olarak belirlenmiştir.
+- Bu değerler yakınsama hedefi değil, aşılmaması gereken sınırlardır.
+- Etki her seferinde hedefin güncel potansiyeline göre ölçeklenir.
+- Sınırın matematiksel olarak aşılmasını önlemek için her tekil etki şu güvenli güncelleme biçimini kullanabilir. `p` mevcut potansiyel, `δ` işaretli feedback etkisi olsun:
 
-## 6. Bağlantı sınıfı, nörotransmitterler ve mikroglia-benzeri kontrol
+`r = |δ| / (1 + |δ|)`
 
-- Mikroglia-benzeri kontrol ayrı ve merkezi bir karar katmanı olarak değil, bağlantı sınıfı/nesnesi üzerinden yönetilecektir.
-- Nörotransmitterler bağlantı üzerinden geçer; etkileri bağlantının kendisi üzerinde ortaya çıkar.
-- Bağlantının korunması, zayıflaması, yeniden şekillenmesi ve fiziksel olarak koparılması bu bağlantı-yerel mekanizma içinde ele alınır.
-- Bağlantının zayıflaması ile bağlantının fiziksel olarak ortadan kaldırılması ayrı olaylardır.
-- Mikroglia-benzeri kontrolün iç durumu, hangi sinyallere nasıl tepki verdiği ve budama/koruma kuralları henüz ayrıntılandırılmamıştır.
+`δ ≥ 0: p' = p + (1 - p) · r`
 
-Kimyasal sinyalleşme yerel olmalıdır. Birden fazla nörotransmitter türü aynı anda bulunabilir; dendritlerdeki reseptör-benzeri duyarlılıklar farklı transmitter türlerine farklı yanıtlar verebilir. Kimyasal sinyaller yerel elektriksel davranışı ve plastisiteyi modüle eder; tek başlarına “şu sinapsı güçlendir” şeklinde merkezi bir öğrenme komutu değildir. Sinyalin hangi bileşenler arasında ve bağlantı nesnesinin hangi iç mekanizması üzerinden taşınacağı tasarımın ilgili yerel kurallarıyla belirlenir.
+`δ < 0: p' = p - (1 + p) · r`
 
-## 7. Bağlantı yaşlanması, kopma ve yeniden bağlantı
+Bu formül `p ∈ [-1,+1]` ise her sonlu `δ` için sınırların dışına çıkmaz. Her katkıdan sonra yeniden uygulanır; dolayısıyla ardışık etkiler de güvenlidir. Bu bir matematiksel sınırlandırma tercihidir, biyolojik bir denklem değildir.
+- Potansiyelin hangi iç değerlere/denge noktalarına yaklaşacağı deneysel olarak belirlenir.
+- Yakın zamanda ateşlenmemiş nöronlara/sinapslara etki olabildiğince minimal tutulur; hangi yerel iz ve zaman ölçeğinin kullanılacağı kalibrasyon gerektirir.
 
-### 7.1. Kullanılmayan bağlantıların yaşlanması
+## 6. Nörotransmitterler, kimyasal sinyaller ve mikroglia-benzeri yapılar
 
-Kullanılmayan bağlantılar zamanla zayıflayabilir/yaşlanabilir. Kullanım bağlantının kullanılmama geçmişini sıfırlayabilir veya dayanıklılığını destekleyebilir. Yaşlanma:
-- bir anda silme şeklinde değil, kademeli olmalı,
-- aktif bağlantıların ömrünü uzatmalı,
-- tek bir denemede kullanılmadı diye bağlantıyı silmemeli,
-- simülasyon adımıyla ölçeklenmelidir.
+### 6.1. Bir sinapsın birden fazla nörotransmitter salabilmesi
 
-Önceki taslakta dayanıklılık 1.0, kullanılmama başına 0.9995 çarpanı ve 0.1 kopma sınırı örnek kalibrasyon değerleri olarak önerilmişti. Bunlar biyolojik sabit veya kesin karar değildir; testlerle doğrulanmadan zorunlu parametre olarak kullanılmamalıdır.
+Bir nöronun birden fazla nörotransmitter kullanabilmesi biyolojik olarak gerçektir. Daha da önemlisi, farklı transmitterler aynı nöronun farklı terminallerinden veya aynı terminaldeki farklı vezikül havuzlarından salınabilir; bazı örneklerde birden fazla transmitter aynı vezikülde birlikte paketlenip salınabilir. Dolayısıyla tek bir sinaps/terminalin birden fazla transmitter türünü desteklemesi biyolojik açıdan mümkündür; ancak bütün sinapsların her transmitter türünü birlikte saldığı varsayılmayacaktır.
 
-### 7.2. Yeni bağlantı oluşumu
+Önceki konuşmadaki kullanıcının tarif ettiği “nörotransmitter potansiyeli/yoğunluğu” mekanizmasının tam formülü mevcut erişilebilir notlarda bulunamadı. Bu nedenle eski formül hatırlanıyormuş gibi sunulmamaktadır. Yeni tasarımda bu ihtiyacı karşılamak için şu açık temsil önerilir:
 
-Bağlantısız bir akson terminalinin yeni bağlantı kurması mümkün olmalıdır. Yeni bağlantı arayışında:
-- Uzamsal konum kullanılarak uygun/boşta bir dendrit aranır.
-- Bağlantısız terminalin aktivasyon girişimi, belirli bir nörotransmitterin etkisi altındaysa bağlantı oluşumunu tetikleyebilir.
-- Doğrudan aktivasyon girişimi de yeni bağlantı oluşumuna yol açabilecek bir koşuldur.
-- Bağlantı kurulacak dendritin uygun/boşta olması gerekir; rastgele tüm ağdan hedef seçilmez.
+- Her sinaps/terminal, desteklediği transmitter türleri için ayrı salım havuzları/yoğunluk durumları taşır.
+- Her transmitter türünün yerel yoğunluğu ayrı bir skaler değerdir; yoğunluk negatif olmaz.
+- Bir sinaps aynı ateşlenme olayında birden fazla transmitter türünü salabilir. Her türün salım miktarı ayrı belirlenir; hepsinin mutlaka aynı anda salınması gerekmez.
+- Salım, nöronun aksiyon potansiyeli ve sinapsın aktive olmasıyla mümkün hâle gelir. Dendritten gelen sinyal hangi mevcut transmitter havuzunun ne kadar salınacağını/öncelik kazanacağını modüle eder.
+- Dendritik sinyal, terminalde bulunmayan bir transmitter türünü aniden yaratmaz. Salınabilecek türler terminalin mevcut repertuvarıyla sınırlıdır.
+- Salım miktarı ve salım olasılığı transmitter türü başına ayrı tutulur. Zamanla yerel yoğunluk azalır; hedef dendritlerin uzaklığı ve reseptör duyarlılığı alınan etkiyi belirler.
 
-Hangi nörotransmitterin hangi koşulda etkili olacağı, doğrudan aktivasyon girişiminin tam anlamı, arama yarıçapı, adayın yaşam döngüsü ve yeni bağlantının başlangıç özellikleri henüz belirlenmemiştir. Yeni bağlantının başlangıçta zayıf/kararsız olması bir tasarım önerisidir; kesin başlangıç parametreleri açık konudur.
+Bu, kullanıcının “hangi transmitterin salgılanacağı dendritten gelen sinyale göre değişsin” kararını koruyan, fakat transmitterin fiziksel olarak bir depodan/vezikül havuzundan salınması gerçeğini de gözeten soyutlamadır. Dendritin kendisinin her durumda klasik nörotransmitter salgıladığı varsayılmaz; dendrit sinyali ilişkili çıkış terminalinin salım profilini düzenler.
 
-### 7.3. Bağlantısını kaybeden nöronun toparlanması
+### 6.2. Dendritlerin transmitterleri algılaması
 
-Bağlantısını kaybeden nöronun yeniden bağlantı kurabilmesini ve plastisitesini desteklemek için:
-- Nörona genel/yerel mekanizmalardan pozitif etki verilmesi,
-- Ateşlenme potansiyelinin varsayılan bir değere döndürülmesi
-önerilmiştir.
+Her dendritin transmitter türlerine karşı reseptör-benzeri duyarlılık profili bulunur.
 
-Bu toparlanma davranışının kapsamı henüz kesinleşmemiştir: bir bağlantının kaybı mı, nöronun tüm bağlantılarını kaybetmesi mi tetikleyicidir; pozitif etki yalnızca yeniden bağlantı ararken mi sürer, yoksa yeni bağlantıdan sonra da bir süre devam mı eder? Bu sorular açık bırakılmıştır. Bu mekanizma, bağlantısını kaybeden her nörona sürekli ve sınırsız pozitif bias verilmesi şeklinde varsayılmamalıdır.
+- Aynı transmitter farklı dendritlerde farklı etki oluşturabilir.
+- Dendritin hangi transmitterle etkinleştiği, onun sinapslara yüklediği katkının yönünü ve büyüklüğünü değiştirebilir.
+- Bir transmitter dendrit-sinaps katkısını güçlendirebilir; başka bir transmitter zayıflatabilir veya yeniden düzenleyebilir.
+- Bazı kimyasal sinyaller bağlantısız bir akson terminalinin uygun dendrit aramasını/bağlantı oluşumunu kolaylaştırabilir.
+- Bazıları mevcut zayıf bağlantıyı koruyabilir veya onarım/stabilizasyon sürecini destekleyebilir.
+- Bazıları uzun süredir etkin olmayan veya zayıf bağlantıyı eliminasyona işaretleyebilir.
+- Bazı sinyaller dendrit-sinaps katkılarını yeniden düzenleyebilir. “Baştan yazma” davranışı doğrudan ve sınırsız sıfırlama olarak değil, yerel ve sınırlandırılmış yeniden düzenleme/yeniden başlatma kuralı olarak uygulanmalıdır.
 
-## 8. Başlangıç parametreleri ve kalibrasyon
+Bir transmitterin etkisi yalnızca transmitter adından çıkarılmaz. Dendritin reseptör profili, transmitter yoğunluğu ve sinyalin zamanlaması birlikte belirleyicidir. Aynı transmitterin her hedefte zorunlu olarak uyarıcı veya baskılayıcı olduğu varsayılmaz.
 
-Aşağıdakiler kesin biyolojik sabitler değildir; prototipte deneyle ayarlanacak başlangıç önerileridir:
-- Dendrit-sinaps katkılarının başlangıç dağılımı ve büyüklüğü: henüz belirlenmedi.
-- Dendrit katkılarının pozitif/negatif güncelleme miktarı: henüz belirlenmedi.
-- Son ateşlenme zamanına bağlı güncelleme fonksiyonu: henüz belirlenmedi.
-- Etkin dendrit sayısına göre normalizasyon: prensip olarak değerlendirilecek; kesin formu belirlenmedi.
-- Sinapslar arası öğrenilmiş ilişkiler: başlangıçta ilişki bulunmaması; yalnızca oluşmuş ilişkilerin saklanması.
-- Sinaps yerel potansiyelinin dış sınırları: [-1,+1].
-- Feedback'in potansiyel üzerindeki tekil etki büyüklükleri ve sınırda güvenli ölçekleme fonksiyonu: henüz belirlenmedi.
-- Feedback'in geriye doğru adımlarda azalma katsayısı: henüz belirlenmedi.
-- Sinaps aktivasyon koşulları/eşikleri: önceki taslakta önerilen 0.2–0.4 aralığı doğrulanmış karar değildir; yeni aktivasyon döngüsüyle birlikte yeniden kalibre edilmelidir.
-- Geçici etkinlik izi sönümü: deneysel olarak belirlenecek.
-- Bağlantı dayanıklılığı ve kullanılmama yaşlanması: deneysel olarak belirlenecek.
-- Uzamsal temsilin 2B/3B seçimi ve bağlantı arama yarıçapı: henüz kesinleşmedi.
+### 6.3. Kimyasal sinyal sınıfları
 
-## 9. Zorunlu testler
+İlk modelde çok sayıda gerçek molekülü ayrı ayrı simüle etmek yerine işlevsel sınıflar kullanılacaktır. Bunlar gerçek biyolojide birebir aynı molekül değildir; soyutlama sınıflarıdır:
 
-1. Bir dendritin potansiyel katkısı yalnızca yükleme yaptığı hedef sinapsı etkiler.
-2. Aynı anda birden fazla dendritin katkısı doğru biçimde hesaplanır ve normalizasyon seçeneği ayrı test edilir.
-3. Bir dendritin ilgili sinapsa katkı yüklemediği durumda o dendrit-sinaps çifti için öğrenme güncellemesi yapılmaz.
-4. Sinaps aktive olursa ilgili dendrit katkısı pozitif; aktive olmazsa negatif yönde küçük güncellenir.
-5. Güncelleme büyüklüğü son ateşlenme zamanına bağlıdır; uzun süredir ateşlenmemiş sinaps üzerindeki etki minimal kalır.
-6. Hiç ateşlenmemiş sinapsın davranışı, geçmişte ateşlenip uzun süredir ateşlenmeyen sinapstan ayrı test edilir.
-7. Yerel potansiyeli aktivasyon seviyesini aşmış sinaps, nöron aksiyon potansiyeli oluşmadan otomatik aktive olmaz.
-8. Nöron aksiyon potansiyeli oluşturduğunda yalnızca aktivasyon koşullarını sağlayan sinapslar aktive olabilir; uygun olmayan sinapslar zorla aktive edilmez.
-9. Membran potansiyeli eşik altında kaldığında nöron ateşlenmez; eşik değerine ulaştığında ateşlenir.
-10. Pozitif ve negatif dendritik/sinaptik etkiler membran potansiyelini doğru yönde değiştirir.
-11. Membran potansiyelinin dinlenme değerine sızıntısı doğru uygulanır ve parametreleri kalibre edilebilir.
-12. Depolarizasyon (+30 mV), repolarizasyon (-40 mV), hiperpolarizasyon (-80 mV / 2 adım) ve dinlenmeye dönüş döngüsü doğrulanır.
-13. Refrakter durumlarda yeni ateşlenme kararı verilmez; bekleyen sinaptik girdilerin nasıl ele alınacağı açıkça test edilir.
-14. Yeni tasarımda yerel sinaps potansiyellerinin membran potansiyeline katkı kuralı belirlendikten sonra, seçici sinaps aktivasyonu ile nöronun ateşlenme kararı birbirinden bağımsız test edilir.
-15. Aksiyon potansiyeli tamamlandığında sinyal dalga biçiminde gönderilir.
-12. Sinaps-sinaps etkileşimleri yönlüdür; k→j ile j→k bağımsız davranır.
-13. Sinaps-sinaps geçici potansiyel aktarımı ile kalıcı ilişki öğrenmesi birbirinden ayrıdır.
-14. Feedback bütün erişilebilir dalları bağımsız izler; bir dalın durması diğer dalları durdurmaz.
-15. Aynı konuma ulaşan farklı feedback katkıları birleştirilmeden, ayrı ayrı ve sırayla uygulanır.
-16. Feedback etkisi yalnızca potansiyelleri değiştirir; kalıcı dendrit katkılarını veya sinaps eşiklerini doğrudan değiştirmez.
-17. Potansiyel [-1,+1] dışına çıkmaz; büyük tekil etkiler ve art arda uygulanan çoklu etkiler sınanır.
-18. Potansiyel sınırlarına yaklaşırken etki ölçeklemesi güvenli çalışır; yakınsama hedefleri ayrıca deneysel olarak belirlenir.
-19. Feedback yayılımında her adımda etki azalır ve dal kendi iz eşiğiyle durur.
-20. Bağlantı üzerinden geçen nörotransmitterin bağlantı-yerel mekanizma üzerindeki etkisi doğrulanır.
-21. Kullanılmayan bağlantıların yaşlanması ve yeniden kullanımda durumunun değişmesi test edilir.
-22. Bağlantısız akson terminali, uzamsal aramayla uygun/boşta dendrit bulabilir.
-23. Yeni bağlantı oluşumu belirli transmitter etkisi ve doğrudan aktivasyon girişimi koşulları için ayrı ayrı test edilir.
-24. Bağlantısını kaybeden nöronun toparlanma mekanizması, tetikleyici ve süre kararları verildikten sonra test edilir.
-25. Aynı seed ile aynı başlangıç koşulları tekrarlanabilir.
+1. **Hızlı sinaptik iletim sinyalleri:** Hedef membran/dendrit potansiyelini hızlı biçimde etkileyen uyarıcı veya baskılayıcı etkiler.
+2. **Modülatör sinyaller:** Dendrit reseptör duyarlılığını, transmitter salım miktarını/olasılığını ve plastisite hassasiyetini değiştiren sinyaller.
+3. **Büyüme ve stabilizasyon sinyalleri:** Bağlantının korunmasını, zayıf bağlantının güçlenmesini veya yeni bağlantının olgunlaşmasını destekleyen sinyaller.
+4. **Budama/hasar işaretleri:** Bağlantının zayıf, gereksiz veya ortadan kaldırılmaya aday olduğunu yerel mikroglia-benzeri yapılara bildiren sinyaller.
 
-## 10. Açık araştırma ve karar noktaları
+Son iki sınıfın tamamı klasik nörotransmitter değildir. Nörotrofik faktörler, purinerjik sinyaller, sitokinler ve kompleman benzeri işaretler ayrı kimyasal sinyal aileleri olarak modellenebilir. Bu ayrım terminoloji hatasını önler.
 
-- Dendrit-sinaps toplamsal katkılarının veri temsili ve başlangıç dağılımı nasıl olacak?
-- Etkin dendrit sayısına göre normalizasyonun kesin formu ne olacak?
-- Son ateşlenme zamanına bağlı pozitif/negatif güncelleme fonksiyonu ne olacak?
-- Hiç ateşlenmemiş sinaps ilk aktivasyon girişimine kadar nasıl davranacak?
-- Eski branch'deki membran potansiyeli toplama/sızıntı/eşik mekanizması yeni yerel sinaps potansiyelleriyle nasıl bütünleştirilecek: yerel sinaps potansiyelleri dendrit üzerinden membrana hangi koşulda, ne kadar ve hangi zamanlamayla katkı verecek?
-- Sinapsın yerel aktivasyon koşulu/eşiği ile nöronun membran potansiyeli üzerinden aksiyon potansiyeli oluşturma koşulu arasındaki kesin ilişki nasıl kurulacak?
-- Eski modeldeki sabit +30/-40/-80 mV durum geçişleri ve 2 adımlık hiperpolarizasyon yeni simülasyon zaman ölçeğinde korunacak mı, yoksa kalibre edilecek mi?
-- Refrakter dönem tek birleşik kilit olarak mı kalacak, yoksa mutlak ve göreli dönemler ayrı mı modellenmeli?
-- Refrakter dönemde gelen sinaptik etkiler bekletilmeli, sönümlenmeli, yoksa başka bir yerel kurala mı tabi olmalı?
-- Aksiyon potansiyeli dalgasının yayılımı ve terminal/bağlantı üzerindeki zamanlaması nasıl modellenmeli?
-- Sinaps-sinaps ilişkisi hangi zaman penceresinde birlikte etkinleşme sayılmalı?
-- Birlikte etkinleşmeme ilişkiyi azaltmalı mı, yoksa ilişki değişmeden mi kalmalı?
-- Sinapslar arası negatif ilişkiler öğrenilebilmeli mi?
-- Feedback dallarında aynı konumun tekrar ziyaret edilmesi ve uygulama sırasının belirlenmesi nasıl ele alınmalı?
-- Feedback'in sınırları aşmasını kesin olarak önleyen fonksiyon ne olacak; potansiyelin deneysel yakınsama/denge değerleri ne olacak?
-- Yakın zamanda ateşlenmemiş nöronlara minimal etki kuralı hangi mekanizmalara, hangi zaman ölçeğinde uygulanacak?
-- Bağlantı nesnesinin mikroglia-benzeri kontrolü hangi iç durumları ve yerel kuralları içerecek?
-- Bağlantı oluşumunu tetikleyebilecek nörotransmitter türü/türleri ve koşulları ne olacak?
-- Uzamsal arama 2B mi 3B mi olacak; uygun dendrit arama yarıçapı ve konum modeli nasıl seçilecek?
-- Bağlantısını kaybeden nöronun toparlanma mekanizması hangi bağlantı kaybı türünde başlayacak ve yeni bağlantı kurulduktan sonra ne kadar sürecek?
+### 6.4. Mikroglia-benzeri yapılar
+
+Önceki tasarım notunda mikroglia-benzeri yapıların bağımsız yapılar olarak sistemde bulunması zorunlu kabul edilmişti. Bu karar korunur.
+
+- Mikroglia-benzeri yapılar bağımsız, uzamsal konumu ve yerel durumu olan ajanlardır.
+- Beyin tarafından merkezi olarak hangi bağlantıyı budayacakları söylenmez.
+- Yerel çevrelerindeki aktivite izlerini, kimyasal işaretleri ve bağlantı durumlarını algılarlar.
+- Bağlantı nesnesi kendi yapısal bütünlüğünü, kullanım geçmişini ve koruma/budama işaretlerini taşır; mikroglia'nın kendisi bağlantı nesnesinin içine gömülmez.
+- Mikroglia-benzeri ajanlar bağlantıların korunması, zayıflatılması, yeniden şekillendirilmesi ve uygun koşullarda fiziksel olarak ortadan kaldırılmasında yerel rol oynar.
+- Mikroglia-benzeri yapıların yerel kimyasal sinyallerden etkilenmesi ve bazı büyüme/stabilizasyon sinyallerini üretmesi mümkün olabilir; hangi türün hangi durumda bunu yaptığı kalibrasyon/araştırma konusudur.
+- Bir bağlantının zayıflaması ile fiziksel olarak ortadan kaldırılması ayrı süreçlerdir.
+
+Bu karar, bağlantı sınıfının mikroglia gibi davranmasını öngören önceki ifade ile düzeltilmiştir: bağlantı nesnesi kendi durumunu taşır; mikroglia-benzeri yapı ise ondan ayrı, yerel karar veren aktördür.
+
+## 7. Bağlantıların yaşlanması, korunması, kopması ve yeniden oluşması
+
+### 7.1. Bağlantı durumu
+
+Her bağlantı en azından şu bilgileri taşımalıdır:
+- işlevsel iletim gücü,
+- yapısal bütünlük/dayanıklılık,
+- son kullanım zamanı ve kullanılmama geçmişi,
+- geçici etkinlik izi veya kullanım geçmişi,
+- koruma/stabilizasyon ve budama işaretlerinin yerel düzeyleri,
+- bağlı olduğu akson terminali ve dendrit.
+
+İşlevsel gücün azalması bağlantının fiziksel olarak yok olduğu anlamına gelmez. Yapısal bütünlük yeterince düşmeden bağlantı silinmez.
+
+### 7.2. Yaşlanma ve eliminasyon
+
+- Kullanılmayan bağlantılar zamanla yaşlanabilir; tek bir kullanılmama olayında silinmez.
+- Kullanım, bağlantının korunmasını destekler ve kullanılmama geçmişini azaltabilir.
+- Yalnızca kullanılmama sayacı bağlantıyı silmek için yeterli değildir.
+- Eliminasyon için uzun süreli düşük kullanım/zayıflık ile yerel budama işaretlerinin birlikte bulunması gerekir.
+- Koruma veya onarım sinyalleri budama baskısını azaltabilir.
+- Mikroglia-benzeri yerel ajan, uygun budama koşulları devam ederse bağlantıyı önce zayıflatabilir/işaretleyebilir, ardından fiziksel olarak kaldırabilir.
+- Bağlantı kopma kararı merkezi Beyin tarafından verilmez.
+- Önceki taslaktaki 1.0 dayanıklılık, 0.9995 kullanılmama çarpanı ve 0.1 kopma sınırı yalnızca örnekti; kesin parametre değildir ve bu tasarımda zorunlu tutulmaz.
+
+### 7.3. Yeni bağlantı oluşumu ve eski bağlantının onarımı
+
+İki olay birbirinden ayrılır:
+
+**Mevcut fakat zayıflamış bağlantının onarımı/stabilizasyonu**
+- Bağlantı fiziksel olarak hâlâ mevcutsa uygun büyüme/stabilizasyon sinyalleri onun yapısal bütünlüğünü ve dayanıklılığını artırabilir.
+- Onarım, bağlantıyı tek adımda eski gücüne döndürmek zorunda değildir; kademeli olabilir.
+- Kullanım ve uygun kimyasal sinyaller olgunlaşmayı destekleyebilir.
+
+**Kopmuş bağlantının yeniden kurulması**
+- Fiziksel olarak kopmuş bağlantı artık onarılabilir bir mevcut bağlantı sayılmaz.
+- Bağlantısız akson terminali 2B uzamsal aramayla uygun/boş dendrit adayı bulur.
+- Yerel bağlantı-oluşum sinyali ve terminalin aktivasyon/arama koşulu yeni bağlantı oluşumunu destekleyebilir.
+- Yeni bağlantı başlangıçta zayıf ve kararsız olur; kullanımla ve stabilizasyon sinyalleriyle olgunlaşır.
+- Rastgele tüm ağdan hedef seçilmez; yerel adaylar arasından seçim yapılır.
+
+### 7.4. Bağlantılarını kaybeden nöronun toparlanması
+
+- Tek bir bağlantının kaybı, bütün nöronun otomatik olarak varsayılan duruma sıfırlanmasını tetiklemez.
+- Nöronun kullanılabilir bütün çıkış bağlantılarını kaybetmesi, toparlanma modunu başlatır.
+- Toparlanma modunda yerel bağlantı-oluşum sinyallerine duyarlılık geçici olarak artar ve ateşlenme/aktivasyon hazırlığı varsayılan nötr seviyeye döndürülür.
+- Bu pozitif toparlanma etkisi sınırsız veya kalıcı değildir. Yeni bağlantı oluşup kullanılabilir hâle geldiğinde veya belirli bir toparlanma süresi dolduğunda normal duruma döner.
+- Yeni bağlantı kurulduktan sonra kısa bir olgunlaşma/stabilizasyon dönemi olabilir; ancak toparlanma bias'ı sonsuza kadar sürmez.
+
+Bu, tek bağlantı kaybında gereksiz küresel reset yapılmasını engeller ve tamamen bağlantısız nörona yeniden ağ kurma fırsatı verir.
+
+## 8. Uzamsal temsil ve hesaplama
+
+- Uzamsal temsil **2B** olacaktır; kullanıcı bunun daha önce kararlaştırıldığını belirtti.
+- Nöron, dendrit, akson terminali, bağlantı ve mikroglia-benzeri ajanlar 2B koordinatlarla temsil edilir.
+- Basit koordinat çiftleri `(x, y)` kullanılır. Gereksiz vektör soyutlamaları eklenmez.
+- Yerel komşuluk ve arama yarıçapı karşılaştırmalarında karekök almadan `d²=(x1-x2)²+(y1-y2)²` kullanılır.
+- Gerçek iletim gecikmesi için fiziksel mesafe gerekiyorsa karekök yalnızca bu aşamada hesaplanabilir.
+- Bağlantı uzunluğu, sinyalin hedefe ulaşma gecikmesini etkiler. Başlangıçta düz çizgi mesafesi yaklaşık iletim yolu olarak kullanılabilir; aksonun kıvrımlı geometrisi ilk modelde zorunlu değildir.
+- Yerel arama yarıçapı ve iletim hızı sayısal olarak kalibre edilecektir.
+- Başlangıçta grid/spatial hash gibi uzamsal indeksleme eklenmez. Ölçülen aday sayısı ve çalışma süresi gerektirirse sonradan eklenir.
+- Sinaps-sinaps ve nöron-nöron ilişkileri seyrek tutulur; yalnızca öğrenilmiş/aktif ilişkiler saklanır.
+
+## 9. Başlangıç parametreleri ve matematiksel kalibrasyon
+
+Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit olarak sunulmaz:
+
+- Eski branch'den başlangıç membran değerleri: -70 mV dinlenme, -55 mV eşik, +30 mV depolarizasyon, -40 mV repolarizasyon, -80 mV hiperpolarizasyon, 2 adım hiperpolarizasyon, 0.05 sızıntı.
+- Yerel sinaps potansiyeli başlangıcı: bütün sinapslarda aynı nötr değer (önerilen 0).
+- Yerel sinaps aktivasyon eşiği: başlangıçta bütün sinapslarda aynı; sayısal değer deneyle belirlenecek. Eski 0.2–0.4 önerisi doğrulanmış karar değildir.
+- Yerel sinaps potansiyelinin sönüm zaman sabiti: deneysel.
+- Dendrit yerel sinyal ölçeği `S_d`: deneysel.
+- Dendrit-sinaps katkılarının başlangıç dağılımı: küçük, işaretli ve sınırlandırılmış; pozitif/negatif/sıfıra yakın örnekler.
+- Dendrit-sinaps katkı güncelleme miktarları: deneysel.
+- Dendrit normalizasyonunun karekök biçimi: ilk prototip tercihi; alternatiflerle test edilebilir.
+- Sinaps-sinaps ilişki zaman penceresi, güncelleme adımı ve sınırları: deneysel.
+- Yerel nöron-nöron birlikte ateşlenme penceresi ve etkisi: henüz tanımlanmadı.
+- Etkinlik izi artış/sönüm değerleri: deneysel.
+- Feedback dallanma eşiği ve adım başına azalma: deneysel.
+- Feedback potansiyel sınırlandırması: yukarıdaki güvenli formül başlangıç tercihi.
+- Her transmitter türü için salım havuzu, salım miktarı, sönüm ve reseptör profili: deneysel.
+- Kimyasal sinyal sınıflarının yerel etki yarıçapı ve sönüm hızları: deneysel.
+- Mikroglia-benzeri ajanların algılama yarıçapı, aktivasyon eşiği ve budama/koruma tepkileri: deneysel.
+- Bağlantı yaşlanması, yapısal bütünlük ve eliminasyon koşulları: deneysel.
+- Bağlantı oluşum yarıçapı, yeni bağlantı başlangıç gücü ve olgunlaşma koşulları: deneysel.
+- İletim hızı ve minimum pozitif olay gecikmesi: deneysel.
+
+## 10. Zorunlu testler
+
+1. Membran potansiyeli eşik altında kaldığında nöron ateşlenmez; eşik değerine ulaştığında ateşlenir.
+2. Pozitif ve negatif dendritik/sinaptik etkiler membran potansiyelini doğru yönde değiştirir.
+3. Eski membran sızıntısı ve depolarizasyon/repolarizasyon/hiperpolarizasyon döngüsü doğru uygulanır.
+4. Refrakter durumdayken yeni aksiyon potansiyeli başlatılmaz.
+5. Sinaps yerel potansiyeli eşik üstünde olsa bile nöron ateşlenmeden sinaps aktive olmaz.
+6. Nöron ateşlendiğinde yalnızca yerel eşik koşulunu sağlayan çıkış sinapsları aktive olur.
+7. Uygun çıkış sinapsları aynı ateşlenme olayında aktive edilir; rastgele seri sıra sonucu değiştirmez.
+8. Dendritin yerel sinyali yalnızca o dendritle ilişkili yerel sinapsları etkiler.
+9. Pozitif/negatif dendrit sinyali yerel sinaps potansiyelinde işaretini korur.
+10. Bir sinapsa katkı yükleyen birden fazla dendritin etkisi toplamsal hesaplanır ve normalizasyon sınanır.
+11. Dendrit katkısı yüklemeyen dendrit-sinaps çifti öğrenme güncellemesi almaz.
+12. Aktive olan sinaps için katkı pozitif; ateşlenme fırsatında aktive olmayan fakat katkı almış sinaps için katkı negatif yönde küçük güncellenir.
+13. Hiç ateşlenmemiş sinaps, geçmişte ateşlenip uzun süredir aktif olmayan sinapstan farklı davranır.
+14. Yerel sinaps potansiyeli zamanla nötr değere sönümlenir.
+15. Sinaps-sinaps etkileşimi yönlüdür; `k→j` ile `j→k` bağımsız davranır.
+16. İki sinaps da etkin değilse birlikte etkinleşmeme güncellemesi yapılmaz.
+17. Yalnızca biri etkinse etkin→etkin olmayan yönlü ilişki için negatif güncelleme kuralı çalışır.
+18. Birlikte etkinleşmede ilişki güçlenmesi geçici potansiyel aktarımından ayrı test edilir.
+19. Yerel nöron-nöron birlikte ateşlenme mekanizması tanımlandığında uzamsal ve zamansal komşuluk testleri eklenir.
+20. Feedback dalları birbirinden bağımsız ilerler; bir dalın durması diğerini durdurmaz.
+21. Aynı hedefe aynı anda gelen feedback olayları mutlak etki büyüklüğüne göre sıralanır.
+22. Feedback'in her tekil ve ardışık etkisinde potansiyel [-1,+1] aralığında kalır.
+23. Feedback'in her geriye adımda zayıflaması doğrulanır.
+24. Bir sinaps/terminal aynı ateşlenme olayında desteklediği birden fazla transmitter türünü ayrı miktarlarda salabilir.
+25. Dendritin reseptör profili, aynı transmitterin farklı dendritlerde farklı etkiler oluşturmasını sağlar.
+26. Transmitter yoğunluğu zamanla ve mesafeyle azalır; yerel etki yarıçapı dışında etkisizleşir.
+27. Mikroglia-benzeri ajanlar bağlantı nesnesinden ayrı yerel varlıklar olarak çalışır.
+28. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
+29. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
+30. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
+31. Bağlantısız terminal, 2B yerel aramayla uygun dendrit adayı bulabilir.
+32. Yeni bağlantı zayıf başlar ve kullanım/stabilizasyonla olgunlaşır.
+33. Zayıf ama mevcut bağlantı onarılabilir; kopmuş bağlantı yeni bağlantı oluşumu gerektirir.
+34. Nöron yalnızca bütün kullanılabilir çıkış bağlantılarını kaybettiğinde toparlanma moduna girer.
+35. Olay gecikmeleri sıfırdan büyüktür; kaynak nöronun ateşlenme döngüsü sürerken hedef nöronun eşik aşımıyla ateşlenmesi mümkündür.
+36. Aynı seed ve aynı başlangıç koşulları tekrarlanabilir sonuç verir.
+
+## 11. Açık araştırma ve karar noktaları
+
+- Dendritin yerel membran sinyalinin hangi sinapslarla ilişkili olacağı mevcut topoloji üzerinden mi, uzamsal yakınlık üzerinden mi belirlenecek?
+- Dendrit-sinaps katkısı `a_dj` için kesin başlangıç aralığı ve güncelleme miktarı ne olacak?
+- Dendritik sinyal ölçeği `S_d` nasıl kalibre edilecek?
+- Yerel sinaps aktivasyon eşiği zamanla öğrenilecek mi, yoksa sabit mi kalacak?
+- Refrakter dönemde gelen sinaptik etkiler bekletilecek mi, sönümlenecek mi, yoksa bir kısmı mı korunacak?
+- Yerel nöron-nöron birlikte ateşlenme etkileşimi tam olarak hangi parametreleri değiştirecek? Önceki konuşmanın ayrıntılı formülü mevcut notlarda bulunmadığından uydurulmamıştır.
+- Sinaps-sinaps birlikte etkinleşme zaman penceresi ve negatif güncelleme miktarı ne olacak?
+- Feedback'in zaman gecikmesi ve dal sönüm katsayısı ne olacak?
+- Her transmitter türünün havuz/yoğunluk dinamiği, dendritin salım profilini nasıl modüle ettiği ve reseptör tepkisi nasıl kalibre edilecek?
+- İlk prototipte kaç işlevsel kimyasal sinyal sınıfı kullanılacak?
+- Mikroglia-benzeri ajanların sayısı, hareketi/arama davranışı ve yerel kimyasal algılaması nasıl olacak?
+- Bağlantı eliminasyonunda budama işaretinin ne kadar süre devam etmesi gerekecek?
+- Bağlantı oluşumu için terminal aktivasyon girişimi ve kimyasal sinyalin birlikte mi, alternatif koşullar olarak mı aranacağı kesinleştirilecek.
+- Yeni bağlantı olgunlaşma süresi ve bağlantısız nöronun toparlanma süresi ne olacak?
+- İletim hızı, minimum gecikme ve aksiyon potansiyeli süresi hangi simülasyon zaman birimleriyle ifade edilecek?
+
+## 12. Biyolojik dayanaklar ve modelleme sınırları
+
+Aşağıdaki bulgular tasarımın biyolojik esinini destekler; simülasyondaki her matematiksel kuralın biyolojik olarak birebir bulunduğunu göstermez.
+
+- Dendritik sinaptik girdiler uzamsal ve zamansal olarak bütünleşir; bu bütünleşmenin sonucu membran potansiyelini ve aksiyon potansiyeli çıktısını etkiler. Dendrit morfolojisi, aktif membran özellikleri ve sinaps konumu bu entegrasyonu değiştirebilir. Kaynak: Magee, *Dendritic integration of excitatory synaptic input* (2000), https://www.nature.com/articles/35044552
+- Birçok nöron birden fazla transmitter kullanabilir. Birden fazla transmitter farklı vezikül havuzlarında bulunup ayrı zamanlarda salınabilir; bazı sistemlerde aynı vezikülde birlikte paketlenmeleri de gösterilmiştir. Bu nedenle çoklu transmitter desteği biyolojik olarak temellidir; bütün sinapsların aynı transmitter kombinasyonunu saldığı varsayımı doğru değildir. Kaynak: Wallace & Sabatini, *Synaptic and circuit functions of multitransmitter neurons in the mammalian brain* (2023), https://pmc.ncbi.nlm.nih.gov/articles/PMC10592565/
+- Sinaptik vezikül salımı aksiyon potansiyeliyle terminale ulaşan elektriksel aktivite ve kalsiyum aracılı süreçlerle tetiklenir; salım olasılığı ve miktarı yerel olarak düzenlenebilir. Kaynak: Branco & Staras, *The probability of neurotransmitter release* (2009), https://www.nature.com/articles/nrn2634
+- Mikroglia nöral aktiviteyi algılayabilir ve sinapsların oluşumu, korunması, işlevsel düzenlenmesi ve eliminasyonuna katılabilir. Ancak sinaps eliminasyonunun hücresel ayrıntıları ve bağlama göre değişimi hâlâ araştırılmaktadır. Kaynak: *Microglia: Activity-dependent regulators of neural circuits* (2024), https://pubmed.ncbi.nlm.nih.gov/38294960/ ; Pereira-Iglesias et al., *Microglia as hunters or gatherers of brain synapses* (2025), https://www.nature.com/articles/s41593-024-01818-w
+- Mikroglia-benzeri ajanların yerel sinyal ve bağlantı işaretlerine göre çalışması biyolojik esin taşır; simülasyondaki belirli onarım, budama ve bağlantı oluşturma kuralları ayrıca tasarlanmış soyutlamalardır. Özellikle kopmuş bir bağlantının doğrudan “tamiri” ile yeni sinaps oluşumu aynı biyolojik olay gibi ele alınmamalıdır.
+
