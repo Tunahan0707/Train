@@ -1,6 +1,6 @@
 import unittest
 
-from BrainNew.Baglantı import Baglanti
+from BrainNew.Baglanti import Baglanti
 from BrainNew.Beyin import Beyin
 from BrainNew.Noron import Noron
 
