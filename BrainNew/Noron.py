@@ -150,6 +150,16 @@ class Noron:
 
         return True, self.ateslenme_sonucunu_isle(zaman, kimyasal_alan)
 
+    def faz_gecisi_gecikmesi(self):
+        """Mevcut aksiyon potansiyeli fazının süresini döndürür."""
+        if self.durum == self.DEPOLARIZASYON:
+            return 1.0
+        if self.durum == self.REPOLARIZASYON:
+            return 1.0
+        if self.durum == self.HIPERPOLARIZASYON:
+            return 2.0
+        raise RuntimeError("Dinlenme durumundaki nöronun faz süresi yoktur.")
+
     def faz_degistir(self):
         """Fazı ilerletir; sonraki faz olayının gecikmesini döndürür."""
         if self.durum == self.DEPOLARIZASYON:
