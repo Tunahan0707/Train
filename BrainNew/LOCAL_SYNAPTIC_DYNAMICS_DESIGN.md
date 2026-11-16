@@ -90,7 +90,7 @@ Karekök normalizasyonu biyolojik sabit değil, çok sayıda dendritin etkisinin
 
 Yerel potansiyel [-1,+1] sınırları içinde tutulur. Dendritik katkılar aynı zaman olayı için önce işaretli olarak toplamsal biçimde hesaplanır; ardından toplam etki sınırlandırılmış potansiyele uygulanır. Sinaps-sinaps aktarımı ve feedback ayrı kaynaklar olarak hesaplanır; öğrenilmiş ilişki değerleri ile geçici potansiyel değişimleri birbirine karıştırılmaz.
 
-Herhangi bir kaynaktan gelen işaretli potansiyel artışı `δ), mevcut yerel potansiyel `p∈[-1,+1]` için güvenli biçimde şöyle uygulanır:
+Herhangi bir kaynaktan gelen işaretli potansiyel artışı `δ`, mevcut yerel potansiyel `p∈[-1,+1]` için güvenli biçimde şöyle uygulanır:
 
 `r = |δ| / (1 + |δ|)`
 
@@ -225,7 +225,7 @@ Bir dendritin k transmitterini algılama yanıtı için başlangıçta:
 
 `h_i = Σ_k R_{ik} · f_k(Q_k(x_i,t))`
 
-kullanılabilir. Başlangıçta sınırlı reseptör yanıtı için `f_k(Q)=Q/(K_k+Q)` seçilebilir; `K_k>0) yarı-doyum parametresidir. `R_{ik}` pozitif, negatif veya sıfır olabilir: aynı transmitter bir dendritte kolaylaştırıcı, diğerinde baskılayıcı veya etkisiz olabilir. Bu, reseptör yanıtının basit bir simülasyon yaklaşımıdır; bütün reseptörlerin biyolojik olarak bu tek eğriyi izlediği iddia edilmez. Bu kimyasal yanıt, dendritin elektriksel toplamından ve dendrit-sinaps öğrenilmiş katkısından ayrı tutulur; hangi yerel işlem üzerinden bunları modüle edeceği aşağıda tanımlanır.
+kullanılabilir. Başlangıçta sınırlı reseptör yanıtı için `f_k(Q)=Q/(K_k+Q)` seçilebilir; `K_k>0` yarı-doyum parametresidir. `R_{ik}` pozitif, negatif veya sıfır olabilir: aynı transmitter bir dendritte kolaylaştırıcı, diğerinde baskılayıcı veya etkisiz olabilir. Bu, reseptör yanıtının basit bir simülasyon yaklaşımıdır; bütün reseptörlerin biyolojik olarak bu tek eğriyi izlediği iddia edilmez. Bu kimyasal yanıt, dendritin elektriksel toplamından ve dendrit-sinaps öğrenilmiş katkısından ayrı tutulur; hangi yerel işlem üzerinden bunları modüle edeceği aşağıda tanımlanır.
 
 - Her sinaps/akson terminali, desteklediği transmitter türleri için ayrı salım profilleri taşır. Önceki konuşmalarda bir sinapsın aynı ateşlenme olayında birden fazla transmitter salgılayabilmesi açıkça kabul edilmişti; bu karar korunur.
 - Bir ateşlenme olayı birden fazla transmitter türünün birlikte salınmasına yol açabilir. Türlerin salım miktarları ayrı hesaplanır; her türün aynı miktarda veya her olayda zorunlu olarak salınması gerekmez.
