@@ -445,3 +445,57 @@ Aşağıdaki bulgular tasarımın biyolojik esinini destekler; simülasyondaki h
 - Mikroglia nöral aktiviteyi algılayabilir ve sinapsların oluşumu, korunması, işlevsel düzenlenmesi ve eliminasyonuna katılabilir. Ancak sinaps eliminasyonunun hücresel ayrıntıları ve bağlama göre değişimi hâlâ araştırılmaktadır. Kaynak: *Microglia: Activity-dependent regulators of neural circuits* (2024), https://pubmed.ncbi.nlm.nih.gov/38294960/ ; Pereira-Iglesias et al., *Microglia as hunters or gatherers of brain synapses* (2025), https://www.nature.com/articles/s41593-024-01818-w
 - Biyolojik mikroglia, sinapsların oluşumu, korunması ve budanmasında yer alır; BrainNew'de bu davranış bağlantı nesnesine ait yerel bakım/budama kurallarıyla soyutlanır. Bu yazılım temsili gerçek mikroglia hücresinin yapısal konumunu birebir modellemez. Özellikle kopmuş bir bağlantının doğrudan “tamiri” ile yeni sinaps oluşumu aynı biyolojik olay gibi ele alınmamalıdır.
 
+## 13. Performans ve davranışı koruyan optimizasyon ilkeleri
+
+Bu bölümdeki optimizasyon kararları kullanıcı tarafından onaylanmıştır. Amaç yalnızca daha hızlı çalışan bir simülasyon elde etmek değildir: **öğrenme kuralları, sinyal akışı, olay zamanlaması ve yerel etkileşimlerin anlamı korunurken gereksiz hesaplama ve bellek maliyeti azaltılacaktır.** Optimizasyon, modelin davranışını değiştirmek için gerekçe olarak kullanılamaz.
+
+### 13.1. Değişmez öncelik
+
+Optimizasyon yapılırken öncelik sırası şöyledir:
+
+1. Sistemin mantıksal ve sayısal doğruluğu.
+2. Öğrenme ve etkileşim davranışının korunması.
+3. Aynı başlangıç koşulları ve aynı rastgelelik tohumu altında tekrarlanabilirlik.
+4. Performans ve bellek verimliliği.
+5. Gereksiz mimari karmaşıklıktan kaçınma.
+
+Bir optimizasyon bu koşulları ihlal ediyorsa kabul edilmez. Özellikle hesaplama azaltmak amacıyla öğrenme güncellemeleri atlanmaz, olaylar gelişigüzel birleştirilmez, kimyasal etki yarıçapı veya zaman pencereleri keyfî biçimde daraltılmaz ve yerel etkileşimler küresel/merkezi bir kurala dönüştürülmez.
+
+### 13.2. Onaylanan hesaplama stratejileri
+
+- **Olay-tabanlı hesaplama:** Bir bileşen yalnızca kendisini etkileyen bir olay gerçekleştiğinde veya zamanlanmış bir değerlendirme zamanı geldiğinde işlenir. Bütün nöronlar, sinapslar, dendritler ve bağlantılar her simülasyon adımında koşulsuz taranmaz.
+- **Seyrek ilişkiler:** Dendrit-sinaps ve sinaps-sinaps ilişkileri yalnızca gerçekten tanımlanmış/öğrenilmiş ilişkiler için saklanır. Bütün olası çiftler için yoğun matris oluşturulmaz. Bir ilişkinin bulunmaması, tasarımda başlangıç ilişkisinin bulunmaması anlamına gelir; bu durum kendiliğinden yeni bir etki veya öğrenme kuralı üretmez.
+- **Yerel kimyasal yayılım:** Kimyasal sinyal yalnızca salımın etkileyebileceği yerel uzamsal bölge ve ilgili zaman aralığında hesaplanır. Bütün 2B uzayın her transmitter türü için her zaman adımında taranması temel yöntem değildir. Yerel yayılım yaklaşımı, seçilen kimyasal yayılım/sönüm modelinin etkisini korumalıdır; etki alanını yalnızca performans uğruna değiştirmek kabul edilmez.
+- **Gecikmeli/lazy potansiyel güncellemesi:** Zamanla nötr değere sönümlenen potansiyeller, her zaman adımında fiziksel olarak güncellenmek yerine son güncelleme zamanı saklanarak ihtiyaç anında hesaplanabilir. Hesaplanan değer, aradaki bütün zamanın sönümünü uygulamış olmalı ve her olayın göreceği değer adım-adım güncellemeyle matematiksel olarak eşdeğer olmalıdır. Bu yöntem zamanın veya sönümün atlanması anlamına gelmez.
+- **Hedefe göre olay gruplama:** Olaylar hedef bileşene göre gruplanabilir. Ancak aynı hedefe ulaşan feedback katkıları mevcut tasarımda tanımlanan ayrı ve sıralı uygulama kuralını korur; katkılar davranışı değiştirecek biçimde tek bir toplama indirgenmez. Aynı zaman damgasındaki çakışmalarda belirlenmiş büyüklük ve kararlı eşitlik sırası korunur.
+- **Uzamsal indeksleme gerektiğinde:** 2B koordinatlar ve kare uzaklık kontrolleri temel kalır. Aday arama maliyeti ölçümlerde sorun oluşturursa grid, spatial hash veya benzeri bir indeks eklenebilir. İndeks yalnızca adayları daha hızlı bulur; gerçek uzaklık/komşuluk koşulunun yerine geçmez ve adayları sessizce dışarıda bırakmaz.
+- **Sabit hesapların yeniden kullanılması:** Değişmeyen normalizasyon değerleri, katsayılar ve benzeri hesaplar uygun olduğunda önceden hesaplanabilir veya önbelleğe alınabilir. Önbellek, parametre değiştiğinde geçersiz kılınmalı; eski değer kullanımı davranışı değiştirmemelidir.
+
+### 13.3. Matematiksel ve davranışsal eşdeğerlik şartı
+
+- Bir optimizasyonun kabulü yalnızca daha az işlem yaptığına bakılarak verilmez. Referans, daha basit/doğrudan hesaplama biçimiyle karşılaştırmalı doğrulamadır.
+- Lazy sönüm, olay zamanlaması, kimyasal yayılım, yerel potansiyel sınırlandırması ve öğrenme güncellemeleri için karşılaştırmalı testler yazılır.
+- Olayların sıralı uygulanmasının sonucu etkilediği mekanizmalarda olay sırası korunur. Paralelleştirme veya toplu hesaplama, bu sırayı değiştirecekse doğrudan uygulanmaz.
+- Aynı seed ve başlangıç koşullarıyla deterministik sonuç üretme şartı korunur. Paralel hesaplama kullanılırsa sonuçların gelişigüzel tamamlanma sırasına bağlı olmasına izin verilmez.
+- Kayan nokta toplama sırası değişebileceğinden, matematiksel olarak eşdeğer görünen yeniden sıralamalar dahi davranış testleriyle doğrulanır. Öğrenme dinamiklerinde anlamlı fark yaratıyorsa kullanılmaz.
+- Yaklaşık hesaplama, kesme eşiği, örnekleme veya çözünürlük azaltma gibi sayısal yaklaşım yöntemleri mevcut kuralları değiştirebilir. Bunlar sessizce optimizasyon olarak eklenemez; ayrı tasarım önerisi, hata ölçümü ve kullanıcı onayı gerektirir.
+
+### 13.4. Bellek ve ölçeklenebilirlik
+
+- Gereksiz tüm-çift ilişkileri, her adım için tekrar oluşturulan ara listeler ve artık kullanılmayan olay/veriler tutulmaz.
+- Seyrek ilişki yapıları yalnızca mevcut ilişkileri saklar; yoğun matrisin bellekte gizli biçimde yeniden oluşturulmasına izin verilmez.
+- Olay kuyruğunda zamanı geçmiş veya geçersizleşmiş olaylar kontrollü biçimde temizlenir. Temizleme, geçerli olayları veya öğrenme izlerini kaybettirmemelidir.
+- Geçici etkinlik izleri ile kalıcı öğrenilmiş bağlantı/parametreler ayrı yaşam döngülerine sahip olmaya devam eder. Bellek temizliği kalıcı öğrenmeyi silemez.
+- Veri yapısı seçimi yalnızca teorik işlem karmaşıklığına göre değil, gerçek bellek tüketimi ve uygulama dilinin nesne/erişim maliyetleri ölçülerek yapılır.
+
+### 13.5. Performans doğrulama ve kabul ölçütleri
+
+- Optimizasyon öncesinde ve sonrasında aynı senaryolarla çalışma süresi, olay sayısı, işlenen bileşen sayısı ve bellek tüketimi ölçülür.
+- Küçük ağlarda doğruluk ve davranış testleri; daha büyük ağlarda ölçeklenme testleri ayrı yürütülür.
+- Seyrek ve yoğun etkileşim, çoklu transmitter salımı, çok dallı feedback, uzun süre sönümlenen potansiyeller ve bağlantı oluşumu/budaması ayrı performans senaryoları olarak ölçülür.
+- Her optimizasyon için hem performans testi hem de ilgili davranış/eşdeğerlik testi bulunur.
+- Darboğaz ölçülmeden karmaşık optimizasyon eklenmez. Ancak mimari en baştan olay-tabanlı ve seyrek veri kullanımını destekleyecek biçimde kurulur.
+- Belirli bir donanımda veya ağ büyüklüğünde sıfır performans sorunu garanti edilemez. Hedef, ölçülebilir ölçek sınırlarını belirlemek, darboğazları erken bulmak ve sistemin doğruluğunu koruyarak bu sınırları iyileştirmektir.
+
+Bu bölümdeki stratejiler hesaplama yöntemini düzenler; nöronların, dendritlerin, sinapsların, kimyasal sinyallerin veya bağlantıların biyolojik esinli yerel davranış kurallarını değiştirmez. Kodlama ve test aşamasında her optimizasyon bu sözleşmeye göre değerlendirilir.
+
