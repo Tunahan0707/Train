@@ -276,6 +276,13 @@ class Beyin:
             if ateslendi:
                 for sinaps, gecikme in aktif_sinapslar:
                     self._iletim_olayini_planla(sinaps, gecikme)
+                # Beyin yalnızca uzamsal adayları bulur; ilişki öğrenme kararı
+                # ateşlenen nöronun yerel mekanizmasında kalır.
+                komsular = self.noron_indeksi.yakinindakileri_bul(
+                    noron.konum, noron.noron_iliski_arama_yaricapi,
+                    haric=noron
+                )
+                noron.yakin_noron_ateslenmelerini_isle(komsular, self.zaman)
                 self.olay_planla(
                     noron.faz_gecisi_gecikmesi(), "faz", hedef_id
                 )
