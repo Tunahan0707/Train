@@ -74,17 +74,24 @@ class TrainingFoundationTests(unittest.TestCase):
         beyin.calistir()
         self.assertEqual(hedef.ateslenme_sayisi, 0)
 
-    def test_refractory_input_is_not_replayed_after_recovery(self):
+    def test_refractory_input_is_processed_once_after_recovery(self):
         beyin = Beyin()
         noron = Noron("N")
         dendrit = Dendrid("D")
         noron.dendrit_ekle(dendrit)
         beyin.noron_ekle(noron)
         noron.durum = noron.DEPOLARIZASYON
-        beyin.duyusal_girdi("N", "D", 100.0, gecikme=1.0)
+        noron.membran = noron.depolarizasyon_degeri
+
+        # Girdi refrakter dönemde gelir; faz döngüsü tamamlanınca
+        # tamponlanan girdi bir kez değerlendirilmelidir.
+        beyin.olay_planla(1.0, "faz", "N")
+        beyin.duyusal_girdi("N", "D", 100.0, gecikme=0.5)
         beyin.calistir()
+
+        self.assertEqual(noron.ateslenme_sayisi, 1)
+        self.assertEqual(noron.durum, noron.DEPOLARIZASYON)
         self.assertFalse(noron.bekleyen_girdi_var_mi())
-        self.assertEqual(noron.ateslenme_sayisi, 0)
 
     def test_training_runner_reuses_same_brain_across_episodes(self):
         beyin = Beyin()
