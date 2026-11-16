@@ -384,6 +384,8 @@ Kurallar:
 
 ## Aşama 14 — Bağımsız mikroglia ve bağlantı yaşam döngüsünü tamamla
 
+**Uygulama durumu:** Bağımsız mikroglia bakım ajanı mevcut. Bağlantının fiziksel bütünlüğünden ayrı `yapisal_olgunluk` durumu eklendi: kullanım ve stabilizasyon olgunlaştırır, kimyasal budama olgunluğu azaltır; olgunluk iletim etkinliğini ölçekler. Yeni bağlantılar düşük olgunlukla başlar. Bu, yaşam döngüsünün ilk parçasıdır; bağlantısız nöron toparlanması, otomatik büyüme zamanlaması ve onarım kalibrasyonu hâlâ açık.
+
 **Amaç:** Bağlantıların korunma, yaşlanma, zayıflama, onarım, budanma ve yeniden oluşma döngüsünü kurmak.
 
 Mikroglia:
