@@ -169,15 +169,11 @@ class Noron:
                     dendrit.son_islenen_sinapslar.discard(sinaps)
 
     def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
-        """Yalnızca bu entegrasyona kaynak olmuş bağlantılara postsinaptik iz verir."""
-        for sinaps in tuple(self._entegrasyon_girdi_sinapslari):
-            if (
-                sinaps.hedef is self
-                and not sinaps.kopuk
-                and sinaps in self.gelen_sinapslari
-            ):
-                sinaps.hebbian_ogren(zaman)
-                sinaps.postsinaptik_iz_arttir(zaman)
+        """Post ateşlenme izini tüm gelen sinapslara yerel olarak dağıtır."""
+        # Daha sonra gelecek bir pre olayı, mevcut post izine göre LTD yapabilmelidir.
+        for sinaps in tuple(self.gelen_sinapslari):
+            if sinaps.hedef is self and not sinaps.kopuk:
+                sinaps.stdp_postsinaptik_olayi_isle(zaman)
         self._entegrasyon_girdi_sinapslari.clear()
 
         aktif = []
