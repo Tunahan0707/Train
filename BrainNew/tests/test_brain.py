@@ -117,7 +117,8 @@ class BrainNewPrototypeTests(unittest.TestCase):
             "s", kaynak, None, transmitter_profili={"A": 2.0, "B": 3.0}
         )
         beyin.noron_ekle(kaynak)
-        beyin.sinyal_gonder(sinaps, 0.0)
+        sinaps.etki_uygula(1.0, 0.0)
+        self.assertTrue(beyin.sinyal_gonder(sinaps, 0.0))
 
         self.assertEqual(alan.kaynak_sayisi(), 2)
         self.assertGreater(alan.yogunluk("A", (0.0, 0.0), 1.0), 0.0)
