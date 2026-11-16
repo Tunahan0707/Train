@@ -21,7 +21,7 @@ Güncel dalda `Baglanti.py`, `Beyin.py`, `Dendrid.py`, `Noron.py`, `KimyasalAlan
 | `Baglanti.post_iz` | Hedef nöron ateşlendiğinde artırılan postsinaptik iz | Baglanti | Kısa | Hayır |
 | `Dendrid.sinaps_katkilari[s]` | Bir dendritin, aynı nöronun çıkış terminali hazır olma potansiyeline katkısı | Dendrid | Öğrenmeyle değişebilir | Evet; fakat yalnızca nöron-içi yönlendirme parametresi |
 | `Dendrid.sinaps_degerlendirmeleri` | Katkı değerlendirme sayacı; sonraki dendrit katkı güncellemesinin yerel bağlamını tutar | Dendrid | Dendrit durumu boyunca | Doğrudan ağırlık değil |
-| `Baglanti.yapisal_butunluk` | Bağlantı-yerel bakım/budama modelinin yapısal durumu | Baglanti | Uzun | Yapısal durum; iletim ağırlığı değil |
+| `Baglanti.yapisal_butunluk` | Bağımsız mikroglia ajanlarının değerlendirdiği yapısal durum | Baglanti | Uzun | Yapısal durum; iletim ağırlığı değil |
 | `KimyasalAlan` kaynakları | Salım konumu, zamanı, miktarı ve yayılım/temizlenme bilgisi | KimyasalAlan | Kaynağın zaman profiline bağlı | Hayır |
 
 **Önemli ayrım:** `potansiyel`, `etki`, `iz`, `pre_iz` ve `post_iz` birbirinin yerine kullanılamaz. Kodda aynı isim ailesine ait olmaları aynı fiziksel/hesaplamalı anlamı taşıdıkları anlamına gelmez.
@@ -84,7 +84,7 @@ Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri 
 - Kaynak bağlantı kimliği hedef dendrit entegrasyonuna kadar taşınıyor.
 - Bağlantı bazında pre/post izleri, yerel Hebbian LTP ve ters sıralı STDP-LTD uygulanıyor.
 - İşaretli, sınırlı ve sönümlü uygunluk izi; yerel ödül/ceza kimyasal alanıyla gecikmiş ağırlık güncellemesi ilk sürüm olarak eklendi.
-- Öğrenme durumları ilgili Baglanti nesnesinde tutuluyor; nöron homeostazı ilgili Noron nesnesinde tutuluyor; Beyin yalnızca olay akışını koordine ediyor.
+- Öğrenme durumları ilgili Baglanti nesnesinde tutuluyor; nöron homeostazı ilgili Noron nesnesinde tutuluyor; yapısal bakım kararı bağımsız Mikroglia ajanlarında; Beyin yalnızca olay akışını koordine ediyor.
 
 **Henüz doğrulanmamış noktalar**
 - Gecikmiş modülatörün gerçek simülasyon olay akışında hangi sıklıkta örnekleneceği ve kısa ödül darbelerinin kaçırılma riski.
@@ -140,3 +140,14 @@ kontrollü olarak ele alınacaktır.
 - Güncelleme, geçen zaman boyunca izlenen etkinlik hatasının analitik integraline dayanır; çağrı sayısına doğrudan bağlı değildir.
 - Bu ilk homeostaz biçimi ateşlenme eşiğini düzenler. İnhibitör plastisite, sinaptik ölçekleme ve metaplastisite henüz uygulanmış değildir.
 - Parametreler prototip değerleridir; görev deneyleri ve ağ kararlılığı testleriyle kalibre edilmelidir.
+
+
+## 12. Bağımsız mikroglia ajanı
+
+- Mikroglia, sinapsın içine gömülü bir alan değil, bağımsız bir ajandır.
+- İlk hesaplamalı modelde hücre gövdesi sabittir; algılama yarıçapı hareketli uzantıların yerel çevre taramasını soyutlar.
+- Ajan, uzamsal indeks üzerinden yalnızca yakın sinapsları bulur.
+- Kullanım izi, yerel büyüme/stabilizasyon/budama kimyası ve yapısal bütünlük birlikte değerlendirilir.
+- Kullanılmama tek başına fiziksel kopma oluşturmaz; budama işareti ve düşük kullanım birlikte gerekir.
+- Mikroglia karar verir; Beyin yalnızca bakım olayını zamanlar ve kopmuş bağlantıyı ağ kayıtlarından temizler.
+- Bu model gerçek hücre morfolojisini, göçünü veya moleküler repertuvarını simüle etmez.
