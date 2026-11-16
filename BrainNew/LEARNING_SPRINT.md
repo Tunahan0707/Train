@@ -444,6 +444,8 @@ Yapılacaklar:
 
 **Üçüncü deney — bağlama duyarlı geri çağırma:** `BaglamaDuyarliHafizaDeneyi` eklendi. Aynı A ipucu, X veya Y bağlamıyla birlikte sunuluyor. A katkısı iki önceden kurulmuş bağlam kapısına da düşük şiddetle ulaşıyor; X yalnızca Gx'e, Y yalnızca Gy'ye ulaşıyor. Tek katkı membran eşiğini aşmıyor; iki katkının yerel toplamı ilgili kapıyı ateşliyor. Gx→B,C ve Gy→D,E bağlantıları ayrı eğitim episode'larında güçlendiriliyor. A, X veya Y tek başına verildiğinde kapıların ateşlenmemesi; A+X ve A+Y'nin farklı örüntüleri geri çağırması ölçülüyor. Dört test eklendi; henüz çalıştırılmadı. Bu deney bağlam kapılarının/topolojisinin öğrenilmesini değil, önceden kurulmuş yakınsayan girişler üzerinde yerel eşik toplamasını ve bağlama göre farklı öğrenilmiş çıkış ilişkilerinin seçilmesini sınar.
 
+**Dördüncü deney — giriş genliği gürültüsü:** Eğitimden sonra A ipucu ile X/Y bağlam girdilerinin genliği birlikte ölçeklenerek geri çağırma dayanıklılığı ölçülür. Her ölçek ve bağlam için ağ baştan kurulup aynı eğitim sırasından geçirilir; test koşulları birbirinin öğrenmesini etkilemez. ±%5 genlik değişiminde doğru örüntünün korunması ve eşik altı %10 azaltımda kapıların sessiz kalması sınanır. Bu deney yalnızca kontrollü genlik duyarlılığını ölçer; eksik kanal toleransı, genel gürültü dayanıklılığı veya kapıların kendiliğinden öğrenilmesi anlamına gelmez.
+
 ## Aşama 17 — Matematik öğrenme arayüzü ve görev basamakları
 
 **Amaç:** BrainNew'in nihai hedeflerinden biri olan matematik öğrenme kapasitesini, önceki öğrenme mekanizmalarını kullanarak sınamak.
