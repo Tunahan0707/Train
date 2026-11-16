@@ -72,6 +72,10 @@ class Noron:
         self.ateslenme_sayisi = 0
         self._sinaps_dendritik_sinyalleri = {}
         self._entegrasyon_girdi_sinapslari = set()
+        # Son ateşlenmenin yerel nedensel izi: geriye dönük feedback
+        # yalnızca bu ateşlenmeye gerçekten girdi taşıyan bağlantıları izler.
+        self._son_nedensel_girdi_sinapslari = set()
+        self._son_aktif_cikis_sinapslari = set()
 
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
@@ -242,6 +246,66 @@ class Noron:
             degisimler[sinaps.kimlik] = sinaps.esik - onceki
         return degisimler
 
+    def geri_bildirim_dali_isle(
+        self, zaman, pozitif, miktar, iz_esigi, dallanma_sonum,
+        ziyaret_edilen
+    ):
+        """Bir feedback dalını yerel olarak işler ve nedensel öncüllere dallandırır.
+
+        Nöron kendi son ateşlenmesindeki çıkış etkinliğini değerlendirir.
+        Geriye yalnızca o ateşlenmeye girdi taşımış, hâlâ bağlı sinapslardan
+        geçilir. Her dal kendi presinaptik izine göre ayrı sönümlenir.
+        """
+        zaman = float(zaman)
+        miktar = float(miktar)
+        iz_esigi = float(iz_esigi)
+        dallanma_sonum = float(dallanma_sonum)
+        if not all(math.isfinite(v) for v in (
+            zaman, miktar, iz_esigi, dallanma_sonum
+        )):
+            raise ValueError("Feedback dalı parametreleri sonlu olmalı.")
+        if zaman < 0 or not 0.0 < miktar <= 1.0:
+            raise ValueError("Feedback zamanı veya miktarı geçersiz.")
+        if not 0.0 <= iz_esigi <= 1.0:
+            raise ValueError("Feedback iz eşiği [0, 1] aralığında olmalı.")
+        if not 0.0 < dallanma_sonum < 1.0:
+            raise ValueError("Feedback dallanma sönümü (0, 1) aralığında olmalı.")
+
+        self.geri_bildirim_uygula(
+            self._son_aktif_cikis_sinapslari,
+            pozitif=pozitif,
+            miktar=miktar
+        )
+
+        ziyaret = set(ziyaret_edilen)
+        dallar = []
+        for sinaps in sorted(
+            self._son_nedensel_girdi_sinapslari,
+            key=lambda oge: str(oge.kimlik)
+        ):
+            if sinaps.kopuk or sinaps.hedef is not self or sinaps.kaynak is None:
+                continue
+            kaynak_id = sinaps.kaynak.kimlik
+            if kaynak_id in ziyaret:
+                continue
+
+            sinaps.izleri_guncelle(zaman)
+            yerel_iz = max(0.0, min(1.0, sinaps.pre_iz))
+            dal_miktari = miktar * yerel_iz * dallanma_sonum
+            if dal_miktari < iz_esigi:
+                continue
+
+            dal_ziyareti = set(ziyaret)
+            dal_ziyareti.add(kaynak_id)
+            gecikme = max(
+                sinaps.MINIMUM_GECIKME,
+                sinaps.uzunluk / sinaps.iletim_hizi
+            )
+            dallar.append((
+                kaynak_id, dal_miktari, frozenset(dal_ziyareti), gecikme
+            ))
+        return dallar
+
     def episode_sifirla(self, zaman):
         """Geçici elektriksel/iz durumlarını sıfırlar; öğrenilmiş yapıyı korur."""
         zaman = float(zaman)
@@ -254,6 +318,8 @@ class Noron:
         self.durum = self.DINLENME
         self._sinaps_dendritik_sinyalleri.clear()
         self._entegrasyon_girdi_sinapslari.clear()
+        self._son_nedensel_girdi_sinapslari.clear()
+        self._son_aktif_cikis_sinapslari.clear()
         self.homeostatik_aktivite_izi = 0.0
         self.son_homeostatik_guncelleme = zaman
         for dendrit in self.dendritler.values():
@@ -361,8 +427,14 @@ class Noron:
                     dendrit.son_islenen_sinapslar.discard(sinaps)
 
     def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
-        """Post ateşlenme izini tüm gelen sinapslara yerel olarak dağıtır."""
-        # Daha sonra gelecek bir pre olayı, mevcut post izine göre LTD yapabilmelidir.
+        """Ateşlenme sonrası yerel plastisiteyi ve terminal etkinliğini işler."""
+        # STDP'nin postsinaptik olayı tüm gelen sinapslarda iz bırakabilir.
+        # Feedback nedenselliği ise yalnızca bu ateşlenmeye gerçekten girdi
+        # taşıyan sinapsların ayrı bir anlık görüntüsünü kullanır.
+        self._son_nedensel_girdi_sinapslari = {
+            sinaps for sinaps in self._entegrasyon_girdi_sinapslari
+            if sinaps.hedef is self and not sinaps.kopuk
+        }
         for sinaps in tuple(self.gelen_sinapslari):
             if sinaps.hedef is self and not sinaps.kopuk:
                 sinaps.stdp_postsinaptik_olayi_isle(zaman)
@@ -380,6 +452,7 @@ class Noron:
             aktif.append((sinaps, gecikme))
 
         aktif_sinapslar = [sinaps for sinaps, _ in aktif]
+        self._son_aktif_cikis_sinapslari = set(aktif_sinapslar)
         for dendrit in self.dendritler.values():
             dendrit.firsat_sonucu_ogren(aktif_sinapslar, zaman)
         return aktif
