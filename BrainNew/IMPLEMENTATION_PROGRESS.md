@@ -119,3 +119,14 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Kanal bazlı taramada ipucu, bağlam ve birleşik gürültü ayrı ayrı ölçüldü. 100 tekrar/koşul sonuçlarında yanlış pozitif görülmedi; gürültü arttıkça tam eşleşme düştü.
 - Tek seed'e özgü rastlantıyı değerlendirmek için `coklu_seed_gurultu_ozeti` eklendi. Varsayılan üç bağımsız seed'in sonuçlarını birleştirir; toplam başarı oranının yanında seed başına oranların en düşüğünü ve en yükseğini verir.
 - Bu özet son doğrulama içindir. Sonuçlar alındıktan sonra bağlama duyarlı hafıza prototipi dondurulup matematik öğrenme görevlerine geçilecek; mevcut deney genel hafıza veya kendiliğinden bağlam kapısı oluşumunu kanıtlamaz.
+
+## Aşama 17 — Sayısal temsil altyapısı
+
+- [x] SayisalTemsil.py eklendi: 1–9 aralığı için log-Gauss ayarlı, örtüşen popülasyon kodlaması.
+- [x] İdeal popülasyon yanıtları, her birim için zamansal duyusal darbe sayılarına çevriliyor.
+- [x] MotorOrgan.ateslenme_sayilari_oku ile episode içindeki gerçek spike sayıları okunabiliyor; mevcut ikili oku arayüzü korunuyor.
+- [x] Popülasyon örüntüsü, sabit kod kitabına göre harici motor çözücüden sayısal etikete dönüştürülebiliyor.
+- [x] Temsil, örtüşme, ayırt edilebilirlik, geçersiz girdi ve gerçek Beyin spike döngüsü üzerinden gidiş-dönüş testleri eklendi.
+- **Sınır:** Bu sabit duyusal kodlayıcı, sayısal büyüklükleri ağ için önceden popülasyon örüntüsüne dönüştürür. Henüz ağın kendi kendine sayı kavramı veya aritmetik öğrendiği anlamına gelmez. Sıfır ayrıca temsil edilmemiştir.
+- **Doğrulama:** Testler depoya eklendi; bu güncellemede yerel pytest çalıştırılmadı. Kullanıcı ortamında çalıştırılmalıdır.
+
