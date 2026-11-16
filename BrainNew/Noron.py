@@ -12,10 +12,19 @@ class Noron:
         sizinti=0.05, depolarizasyon=30.0, repolarizasyon=-40.0,
         hiperpolarizasyon=-80.0
     ):
+        sayisal_degerler = (
+            dinlenme, esik, sizinti, depolarizasyon,
+            repolarizasyon, hiperpolarizasyon
+        )
+        if not all(math.isfinite(float(v)) for v in sayisal_degerler):
+            raise ValueError("Nöron parametreleri sonlu sayılar olmalı.")
         if not 0.0 <= sizinti < 1.0:
             raise ValueError("Sızıntı oranı [0, 1) aralığında olmalı.")
+        if len(konum) != 2 or not all(math.isfinite(float(v)) for v in konum):
+            raise ValueError("Nöron konumu sonlu iki boyutlu koordinat olmalı.")
+
         self.kimlik = kimlik
-        self.konum = tuple(konum)
+        self.konum = tuple(float(v) for v in konum)
         self.dinlenme_degeri = float(dinlenme)
         self.esik = float(esik)
         self.sizinti = float(sizinti)
@@ -24,19 +33,32 @@ class Noron:
         self.hiperpolarizasyon_degeri = float(hiperpolarizasyon)
         self.membran = self.dinlenme_degeri
         self.son_membran_guncelleme = 0.0
+        self.son_entegrasyon_zamani = None
+        self.son_girdi_zamani = None
         self.durum = self.DINLENME
         self.dendritler = {}
         self.cikis_sinapslari = []
         self.ateslenme_sayisi = 0
 
     def dendrit_ekle(self, dendrit):
+        mevcut = self.dendritler.get(dendrit.kimlik)
+        if mevcut is not None and mevcut is not dendrit:
+            raise ValueError(f"Aynı kimlikle ikinci bir dendrit eklenemez: {dendrit.kimlik}")
         self.dendritler[dendrit.kimlik] = dendrit
 
     def cikis_sinapsi_ekle(self, sinaps):
-        self.cikis_sinapslari.append(sinaps)
+        if sinaps not in self.cikis_sinapslari:
+            self.cikis_sinapslari.append(sinaps)
 
-    def girdi_al(self, dendrit_id, etki):
+    def girdi_al(self, dendrit_id, etki, zaman=None):
+        if dendrit_id not in self.dendritler:
+            raise ValueError(f"Nöronda bulunmayan dendrit: {dendrit_id}")
         self.dendritler[dendrit_id].girdi_al(etki)
+        if zaman is not None:
+            self.son_girdi_zamani = float(zaman)
+
+    def bekleyen_girdi_var_mi(self):
+        return any(dendrit.girdi_var_mi() for dendrit in self.dendritler.values())
 
     def girdileri_birlestir(self, zaman, kimyasal_alan=None):
         toplam_membran_etkisi = 0.0
@@ -59,8 +81,8 @@ class Noron:
                 )
                 dendrit.son_islenen_sinapslar.add(sinaps)
 
-        # Tasarım belgesindeki normalizasyon sinaps başına, o olaya
-        # gerçekten katkı veren dendrit sayısına göre yapılır.
+        # Normalizasyon sinaps başına, o olaya gerçekten katkı veren
+        # dendrit sayısına göre yapılır.
         for sinaps, katkilar in sinaps_katkilari.items():
             toplam = sum(deger for _, deger in katkilar)
             normalizasyon = math.sqrt(max(1, len(katkilar)))
@@ -103,13 +125,35 @@ class Noron:
             dendrit.firsat_sonucu_ogren(aktif, zaman)
         return aktif
 
+    def entegrasyonu_isle(self, zaman, kimyasal_alan=None):
+        """Girdileri bütünleştirir ve ateşlenme kararını yerel olarak verir."""
+        if self.durum != self.DINLENME:
+            return False, []
+
+        toplam = self.girdileri_birlestir(zaman, kimyasal_alan)
+        self.son_entegrasyon_zamani = float(zaman)
+        if not self.membrani_guncelle(toplam, zaman):
+            return False, []
+        if not self.aksiyon_potansiyeli_baslat():
+            return False, []
+
+        return True, self.ateslenme_sonucunu_isle(zaman)
+
     def faz_degistir(self):
+        """Fazı ilerletir; sonraki faz olayının gecikmesini döndürür."""
         if self.durum == self.DEPOLARIZASYON:
             self.durum = self.REPOLARIZASYON
             self.membran = self.repolarizasyon_degeri
-        elif self.durum == self.REPOLARIZASYON:
+            return 1.0
+        if self.durum == self.REPOLARIZASYON:
             self.durum = self.HIPERPOLARIZASYON
             self.membran = self.hiperpolarizasyon_degeri
-        elif self.durum == self.HIPERPOLARIZASYON:
+            return 2.0
+        if self.durum == self.HIPERPOLARIZASYON:
             self.durum = self.DINLENME
             self.membran = self.dinlenme_degeri
+            return None
+        raise RuntimeError("Dinlenme durumundaki nörona faz geçişi uygulanamaz.")
+
+    def faz_olayini_isle(self):
+        return self.faz_degistir()
