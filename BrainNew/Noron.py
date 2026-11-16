@@ -81,9 +81,10 @@ class Noron:
         for baglanti, katki in tuple(
             self.birikmis_sinaptik_katkilar.items()
         ):
-            # İlk prototipte yalnızca depolarizasyona pozitif
-            # katkı yapan sinapslar uygunluk izi kazanır.
-            if baglanti.aktif and katki > self.KATKI_ESIGI:
+            # Ateşlenme anında hem uyarıcı hem baskılayıcı
+            # girdiler nedensel geçmişin parçasıdır. Geri bildirim
+            # işareti, ağırlığın hangi yönde değişeceğini belirler.
+            if baglanti.aktif and abs(katki) > self.KATKI_ESIGI:
                 baglanti.uygunluk_izini_artir()
 
         self.birikmis_sinaptik_katkilar.clear()
