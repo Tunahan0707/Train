@@ -69,6 +69,8 @@ class Noron:
                 zaman, kimyasal_alan
             )
             toplam_membran_etkisi += elektriksel_toplam
+            if not math.isfinite(toplam_membran_etkisi):
+                raise ValueError("Nöron membranına gelen toplam etki sonlu olmalı.")
 
             if yerel_sinyal == 0.0:
                 continue
@@ -93,6 +95,10 @@ class Noron:
     def membrani_guncelle(self, toplam_etki, zaman):
         if self.durum != self.DINLENME:
             return False
+        toplam_etki = float(toplam_etki)
+        zaman = float(zaman)
+        if not math.isfinite(toplam_etki) or not math.isfinite(zaman):
+            raise ValueError("Membran etkisi ve simülasyon zamanı sonlu olmalı.")
         if zaman < self.son_membran_guncelleme:
             raise ValueError("Simülasyon zamanı geriye gidemez.")
 
