@@ -245,8 +245,27 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         beyin.noron_ekle(n)
         beyin.duyusal_girdi("n", "d1", 100.0)
         beyin.calistir()
-        self.assertAlmostEqual(d1.sinaps_katkilari[s], 0.41)
+        self.assertAlmostEqual(d1.sinaps_katkilari[s], 0.403)
         self.assertAlmostEqual(d2.sinaps_katkilari[s], 0.7)
+
+    def test_dendrit_sinaps_ogrenmesi_sinirlar_icinde_kalir_ve_yakinlikta_yavaslar(self):
+        d = Dendrid("d")
+        s = Baglanti("s", None, None)
+        d.sinaps_bagla(s, 0.99)
+        d.son_islenen_sinapslar.add(s)
+        d.firsat_sonucu_ogren([s], zaman=0.0, adim=0.1)
+        self.assertGreater(d.sinaps_katkilari[s], 0.99)
+        self.assertLess(d.sinaps_katkilari[s], 1.0)
+
+        d.sinaps_katkilari[s] = 1.0
+        d.son_islenen_sinapslar.add(s)
+        d.firsat_sonucu_ogren([s], zaman=1.0, adim=0.1)
+        self.assertEqual(d.sinaps_katkilari[s], 1.0)
+
+        with self.assertRaises(ValueError):
+            d.sinaps_bagla(Baglanti("disari", None, None), 1.1)
+        with self.assertRaises(ValueError):
+            d.firsat_sonucu_ogren([], zaman=2.0, adim=float("nan"))
 
     def test_ateslenmeyen_onceki_entegrasyonun_ogrenme_izi_sonraki_ateslenmeye_tasinmaz(self):
         n = Noron("n")
