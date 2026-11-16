@@ -24,6 +24,9 @@ class Dendrid:
         self.katki_ust = float(katki_ust)
         self.sinaps_katkilari = {}
         self.girdiler = []
+        # Bu entegrasyonda dendrite ulaşan gerçek kaynak bağlantılar.
+        self.bekleyen_kaynak_sinapslari = []
+        self.son_girdi_kaynak_sinapslari = ()
         self.reseptor_duyarliliklari = {}
         self.son_islenen_sinapslar = set()
         self.sinaps_degerlendirmeleri = {}
@@ -51,16 +54,22 @@ class Dendrid:
             raise ValueError("Kimyasal reseptör yanıtı sonlu olmalı.")
         return toplam
 
-    def girdi_al(self, etki):
+    def girdi_al(self, etki, kaynak_sinaps=None):
         etki = float(etki)
         if not math.isfinite(etki):
             raise ValueError("Dendrit girdisi sonlu olmalı.")
         self.girdiler.append(etki)
+        if kaynak_sinaps is not None:
+            self.bekleyen_kaynak_sinapslari.append(kaynak_sinaps)
 
     def girdi_var_mi(self):
         return bool(self.girdiler)
 
     def sinyali_hazirla(self, zaman, kimyasal_alan=None):
+        self.son_girdi_kaynak_sinapslari = tuple(
+            self.bekleyen_kaynak_sinapslari
+        )
+        self.bekleyen_kaynak_sinapslari.clear()
         if not self.girdiler:
             return 0.0, 0.0
 
