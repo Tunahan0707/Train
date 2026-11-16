@@ -35,6 +35,8 @@ class Dendrid:
         for tur, duyarlilik in self.reseptor_duyarliliklari.items():
             yogunluk = kimyasal_alan.yogunluk(tur, self.konum, zaman)
             toplam += duyarlilik * (yogunluk / (1.0 + yogunluk))
+        if not math.isfinite(toplam):
+            raise ValueError("Kimyasal reseptör yanıtı sonlu olmalı.")
         return toplam
 
     def girdi_al(self, etki):
@@ -51,6 +53,8 @@ class Dendrid:
             return 0.0, 0.0
 
         elektriksel_toplam = sum(self.girdiler)
+        if not math.isfinite(elektriksel_toplam):
+            raise ValueError("Dendritik girdi toplamı sonlu olmalı.")
         self.girdiler.clear()
 
         kimyasal_modulasyon = 0.0
