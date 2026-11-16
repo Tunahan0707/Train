@@ -318,22 +318,6 @@ class Baglanti:
         olaylar.sort(key=lambda oge: oge[0])
         baslangic_izi = self.son_modulator_uygunluk_izi
 
-        # Kimyasal kaynak başlangıçları ve düzenleme yaşının kırılma noktaları
-        # integrali süreksizlik/köşe noktalarında parçalara ayırır.
-        sinirlar = {baslangic, zaman}
-        for olay_zamani, _ in olaylar:
-            sinirlar.add(olay_zamani)
-        for kaynak in getattr(kimyasal_alan, "kaynaklar", ()):
-            if kaynak.tur not in ("odul", "ceza"):
-                continue
-            for kirilma in (
-                kaynak.zaman,
-                kaynak.zaman + kaynak.baslangic_yasi
-            ):
-                if baslangic < kirilma < zaman:
-                    sinirlar.add(kirilma)
-        sinirlar = sorted(sinirlar)
-
         dugumler = (
             -0.9602898564975363, -0.7966664774136267,
             -0.5255324099163290, -0.1834346424956498,
@@ -364,19 +348,58 @@ class Baglanti:
             return iz
 
         integral = 0.0
-        for sol, sag in zip(sinirlar, sinirlar[1:]):
-            if sag <= sol:
-                continue
-            orta = 0.5 * (sol + sag)
-            yari = 0.5 * (sag - sol)
-            for dugum, agirlik in zip(dugumler, agirliklar):
-                t = orta + yari * dugum
-                iz = iz_degeri(t)
-                kimyasal = (
-                    kimyasal_alan.yogunluk("odul", self.terminal_konumu, t)
-                    - kimyasal_alan.yogunluk("ceza", self.terminal_konumu, t)
-                )
-                integral += yari * agirlik * iz * kimyasal
+        kaynaklar = getattr(kimyasal_alan, "kaynaklar", None)
+        tek_kaynak_yogunlugu = getattr(
+            kimyasal_alan, "kaynak_yogunlugu", None
+        )
+        if kaynaklar is not None and callable(tek_kaynak_yogunlugu):
+            # Her kaynak ayrı entegre edilir. Böylece her quadrature noktasında
+            # bütün kaynakları yeniden toplamak yerine maliyet O(kaynak × iz).
+            for kaynak in kaynaklar:
+                if kaynak.tur not in ("odul", "ceza"):
+                    continue
+                sol_baslangic = max(baslangic, kaynak.zaman)
+                if zaman <= sol_baslangic:
+                    continue
+                sinirlar = {sol_baslangic, zaman}
+                for olay_zamani, _ in olaylar:
+                    if sol_baslangic < olay_zamani < zaman:
+                        sinirlar.add(olay_zamani)
+                kirilma = kaynak.zaman + kaynak.baslangic_yasi
+                if sol_baslangic < kirilma < zaman:
+                    sinirlar.add(kirilma)
+                sirali_sinirlar = sorted(sinirlar)
+                yon = 1.0 if kaynak.tur == "odul" else -1.0
+                for sol, sag in zip(sirali_sinirlar, sirali_sinirlar[1:]):
+                    if sag <= sol:
+                        continue
+                    orta = 0.5 * (sol + sag)
+                    yari = 0.5 * (sag - sol)
+                    for dugum, agirlik in zip(dugumler, agirliklar):
+                        t = orta + yari * dugum
+                        iz = iz_degeri(t)
+                        kimyasal = tek_kaynak_yogunlugu(
+                            kaynak, self.terminal_konumu, t
+                        )
+                        integral += yari * agirlik * iz * kimyasal * yon
+        else:
+            # Genel KimyasalAlan arayüzü için güvenli geri dönüş.
+            sinirlar = {baslangic, zaman}
+            for olay_zamani, _ in olaylar:
+                sinirlar.add(olay_zamani)
+            for sol, sag in zip(sorted(sinirlar), sorted(sinirlar)[1:]):
+                if sag <= sol:
+                    continue
+                orta = 0.5 * (sol + sag)
+                yari = 0.5 * (sag - sol)
+                for dugum, agirlik in zip(dugumler, agirliklar):
+                    t = orta + yari * dugum
+                    iz = iz_degeri(t)
+                    kimyasal = (
+                        kimyasal_alan.yogunluk("odul", self.terminal_konumu, t)
+                        - kimyasal_alan.yogunluk("ceza", self.terminal_konumu, t)
+                    )
+                    integral += yari * agirlik * iz * kimyasal
 
         self.son_modulator_zamani = zaman
         self.son_modulator_degeri = deger
