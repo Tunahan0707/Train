@@ -90,7 +90,7 @@ class TrainingFoundationTests(unittest.TestCase):
         beyin.calistir()
 
         self.assertEqual(noron.ateslenme_sayisi, 1)
-        self.assertEqual(noron.durum, noron.DEPOLARIZASYON)
+        self.assertEqual(noron.durum, noron.DINLENME)
         self.assertFalse(noron.bekleyen_girdi_var_mi())
 
     def test_training_runner_reuses_same_brain_across_episodes(self):
