@@ -42,7 +42,9 @@ class KimyasalAlan:
                 continue
 
             yas = zaman - kaynak.zaman
-            yayilmis_zaman = max(yas, 1e-9)
+            if yas <= 0.0:
+                continue
+            yayilmis_zaman = yas
             dx = x - kaynak.konum[0]
             dy = y - kaynak.konum[1]
             uzaklik_kare = dx * dx + dy * dy
