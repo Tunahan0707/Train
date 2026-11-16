@@ -183,6 +183,49 @@ class TrainingFoundationTests(unittest.TestCase):
         )
         self.assertLess(sonraki, ilk)
 
+    def test_nearby_neuron_coactivity_learns_temporal_direction(self):
+        onceki = Noron(
+            "onceki", konum=(0.0, 0.0),
+            noron_iliski_zaman_penceresi=5.0
+        )
+        sonraki = Noron(
+            "sonraki", konum=(1.0, 0.0),
+            noron_iliski_zaman_penceresi=5.0
+        )
+        onceki.yerel_aktivite_izini_guncelle(1.0, yeni_ateslenme=True)
+
+        sonraki.yakin_noron_ateslenmelerini_isle([onceki], 2.0)
+
+        self.assertGreater(onceki.noron_iliski_oku(sonraki, 2.0), 0.0)
+        self.assertEqual(sonraki.noron_iliski_oku(onceki, 2.0), 0.0)
+
+    def test_distant_or_out_of_window_neurons_do_not_form_relation(self):
+        onceki = Noron("onceki", konum=(0.0, 0.0))
+        uzak = Noron("uzak", konum=(100.0, 0.0))
+        gec = Noron("gec", konum=(1.0, 0.0))
+        onceki.yerel_aktivite_izini_guncelle(0.0, yeni_ateslenme=True)
+
+        uzak.yakin_noron_ateslenmelerini_isle([onceki], 1.0)
+        gec.yakin_noron_ateslenmelerini_isle([onceki], 50.0)
+
+        self.assertEqual(onceki.noron_iliski_oku(uzak, 1.0), 0.0)
+        self.assertEqual(onceki.noron_iliski_oku(gec, 50.0), 0.0)
+
+    def test_episode_reset_clears_activity_trace_but_preserves_neuron_relation(self):
+        beyin = Beyin()
+        noron = Noron("n")
+        hedef = Noron("hedef", konum=(1.0, 0.0))
+        noron.noron_iliski_guncelle(hedef, 0.0, birlikte=True)
+        noron.yerel_aktivite_izini_guncelle(1.0, yeni_ateslenme=True)
+        beyin.noron_ekle(noron)
+        beyin.noron_ekle(hedef)
+
+        beyin.episode_baslat()
+
+        self.assertIsNone(noron.son_ateslenme_zamani)
+        self.assertEqual(noron.yerel_aktivite_izi, 0.0)
+        self.assertGreater(noron.noron_iliski_oku(hedef, 1.0), 0.0)
+
     def test_training_runner_reuses_same_brain_across_episodes(self):
         beyin = Beyin()
         noron = Noron("N")
