@@ -10,6 +10,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] Nöronun yerel feedback metodu, pozitif feedback'te etkin sinaps eşiğini düşürüp etkin olmayanı yükseltir; negatif feedback bunu tersine çevirir.
 - [x] İlk dallanan geriye feedback prototipi eklendi: son ateşlenmenin nedensel girdileri üzerinden ters yönde, yerel presinaptik iz ve dal sönümüyle ilerler; Beyin yalnızca olayları zamanlar.
 - [x] Aynı nöronun çıkış sinapsları arasında seyrek, yönlü sinaps-sinaps ilişkileri eklendi; birlikte etkinleşme, tek taraflı etkinleşme, geçici potansiyel etkisi ve tembel sönüm testleri yazıldı.
+- [x] Yakın nöronlar arasında zaman pencereli yerel birlikte etkinlik izi ve yönlü ilişki eklendi; aynı zaman damgasında iki yön öğrenilir, sıralı etkinlikte önceki→sonraki yön öğrenilir. İlişki bağlantı büyüme uygunluğunu sınırlı ölçüde etkiler.
 - [x] Kopmuş bağlantıdan daha önce kuyruğa alınmış sinaptik olayın hedefe ulaşması engellendi.
 - [x] Refrakter dönemde gelen girdi dendritte tamponlanır; faz döngüsü tamamlandığında bir kez entegre edilir.
 - [x] 2B kimyasal difüzyon çekirdeğinin salım anı tekilliği pozitif başlangıç yaşıyla düzenlendi.
@@ -20,7 +21,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 - Seed'li seyrek ağ kurucunun kapsamlı yapılandırma, erişilebilirlik ve istatistik raporları.
 
-- Nöron-nöron yerel birlikte etkinlik etkileşimi.
+
 - Signed synaptic efficacy: kalıcı sinaptik katsayının işaret değiştirebilmesi.
 - Feedback'in çoklu dal, döngü, gecikme, iz eşiği ve pozitif/negatif yönlerde kapsamlı davranış doğrulaması.
 - Kimyasal kaynakların güvenli yaşam döngüsü/temizliği ve olay tabanlı modülatör integrasyonu.
