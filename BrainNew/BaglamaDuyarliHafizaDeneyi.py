@@ -139,7 +139,7 @@ class BaglamaDuyarliHafizaDeneyi:
         )
 
     @classmethod
-    def _bozulmus_ornek(cls, kimlik, baglam, rng, gurultu_orani=0.0, eksik_kanal=None):
+    def _bozulmus_ornek(cls, kimlik, baglam, rng, gurultu_orani=0.0, eksik_kanal=None, gurultu_kanali="hepsi"):
         """Yalnızca geri çağırma girdilerine gürültü veya kanal kaybı uygular."""
         import math
 
@@ -147,6 +147,8 @@ class BaglamaDuyarliHafizaDeneyi:
             raise ValueError("Gürültü oranı sonlu ve negatif olmayan bir sayı olmalı.")
         if eksik_kanal not in (None, "ipucu", "baglam"):
             raise ValueError("Eksik kanal 'ipucu', 'baglam' veya None olmalı.")
+        if gurultu_kanali not in ("ipucu", "baglam", "hepsi"):
+            raise ValueError("Gürültü kanalı geçersiz.")
 
         temel = cls._ornek(kimlik, baglam=baglam)
         girdiler = []
@@ -156,7 +158,7 @@ class BaglamaDuyarliHafizaDeneyi:
             )
             if kanal == eksik_kanal:
                 continue
-            if gurultu_orani:
+            if gurultu_orani and gurultu_kanali in (kanal, "hepsi"):
                 etki *= max(0.0, 1.0 + rng.gauss(0.0, gurultu_orani))
             girdiler.append((noron_id, dendrit_id, etki, gecikme))
 
@@ -218,6 +220,53 @@ class BaglamaDuyarliHafizaDeneyi:
                     "ornekler": tuple(ornek_sonuclari),
                 }
             rapor[oran] = baglam_raporu
+        return rapor
+
+    def kanal_bazli_gurultu_taramasi(self, gurultu_oranlari=(0.05, 0.10, 0.20),
+                                     kanallar=("ipucu", "baglam", "hepsi"),
+                                     tekrar=100, seed=20261117):
+        """Gürültüyü yalnızca ipucuna, yalnızca bağlama veya ikisine uygular."""
+        import math
+        import random
+        if not isinstance(tekrar, int) or tekrar < 1:
+            raise ValueError("Tekrar sayısı pozitif tam sayı olmalı.")
+        oranlar = tuple(float(x) for x in gurultu_oranlari)
+        if any(not math.isfinite(x) or x < 0.0 for x in oranlar):
+            raise ValueError("Gürültü oranları sonlu ve negatif olmayan olmalı.")
+        kanallar = tuple(kanallar)
+        if any(x not in ("ipucu", "baglam", "hepsi") for x in kanallar):
+            raise ValueError("Gürültü kanalı geçersiz.")
+        rng = random.Random(seed)
+        rapor = {}
+        for kanal in kanallar:
+            kanal_raporu = {}
+            for oran in oranlar:
+                baglam_raporu = {}
+                for baglam in ("X", "Y"):
+                    dogru = yanlis_pozitif = toplam_olay = 0
+                    for sira in range(tekrar):
+                        _, surucu, _ = self._ag_kur()
+                        for egitim_baglam in ("X", "Y"):
+                            surucu.episode_calistir(self._ornek(
+                                f"kanal-egitim-{egitim_baglam}-{kanal}-{oran}-{sira}",
+                                baglam=egitim_baglam, tam_oruntu=egitim_baglam
+                            ), feedback=False)
+                        ornek = self._bozulmus_ornek(
+                            f"kanal-test-{kanal}-{baglam}-{oran}-{sira}",
+                            baglam, rng, gurultu_orani=oran, gurultu_kanali=kanal
+                        )
+                        sonuc = surucu.episode_calistir(ornek, feedback=False)
+                        dogru += bool(sonuc["dogru"])
+                        yanlis_pozitif += len(set(sonuc["gerceklesen"]) - set(sonuc["beklenen"]))
+                        toplam_olay += sonuc["islenen_olay"]
+                    baglam_raporu[baglam] = {
+                        "dogru": dogru, "toplam": tekrar,
+                        "tam_eslesme_orani": dogru / tekrar,
+                        "yanlis_pozitif": yanlis_pozitif,
+                        "ortalama_islenen_olay": toplam_olay / tekrar,
+                    }
+                kanal_raporu[oran] = baglam_raporu
+            rapor[kanal] = kanal_raporu
         return rapor
 
     def eksik_kanal_taramasi(self, kanallar=("ipucu", "baglam")):
