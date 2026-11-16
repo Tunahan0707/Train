@@ -81,5 +81,46 @@ class KimyasalAlan:
 
         return toplam
 
+    def kaynaklari_temizle(self, zaman, tolerans=1e-9):
+        """Toplam alan hatasını toleransla sınırlayarak sönmüş kaynakları siler.
+
+        Her kaynak için merkezdeki yoğunluk, bütün uzay üzerindeki üst sınırdır.
+        Kaynak başına tolerans bütçesi toplam kaynak sayısına bölünür; böylece
+        silinen kaynakların herhangi bir noktadaki toplam katkısı toleransı aşmaz.
+        """
+        zaman = float(zaman)
+        tolerans = float(tolerans)
+        if (
+            not math.isfinite(zaman) or zaman < 0
+            or not math.isfinite(tolerans) or tolerans < 0
+        ):
+            raise ValueError("Kimyasal temizlik zamanı ve toleransı geçerli olmalı.")
+
+        kaynak_sayisi = len(self.kaynaklar)
+        if kaynak_sayisi == 0:
+            return 0
+        kaynak_butcesi = tolerans / kaynak_sayisi
+        kalanlar = []
+        silinen = 0
+
+        for kaynak in self.kaynaklar:
+            if zaman <= kaynak.zaman:
+                kalanlar.append(kaynak)
+                continue
+            yas = zaman - kaynak.zaman
+            etkin_yas = max(yas, kaynak.baslangic_yasi)
+            merkez_ust_siniri = (
+                kaynak.miktar
+                * math.exp(-kaynak.temizlenme * yas)
+                / (4.0 * math.pi * kaynak.yayilim * etkin_yas)
+            )
+            if merkez_ust_siniri <= kaynak_butcesi:
+                silinen += 1
+            else:
+                kalanlar.append(kaynak)
+
+        self.kaynaklar = kalanlar
+        return silinen
+
     def kaynak_sayisi(self):
         return len(self.kaynaklar)
