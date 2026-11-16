@@ -170,3 +170,14 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Eğitim boyunca her örnekte terminal aktivasyon sayısı farkı ölçülüyor; bu sayı imzalı iletim katsayısıyla çarpılarak kanal→karar hedefi bazında yaklaşık sinaptik olay akışı hesaplanıyor. Ayrıca sol/sağ duyusal nöronların ateşlenmeleri terminal aktivasyonlarından ayrı tutuluyor.
 - Bu akış toplamı hedef nöron membran potansiyeli değildir; hedefe zamanlanan imzalı sinaptik olayların tanısal yaklaşık toplamıdır. Öğrenme mekanizmasına müdahale etmez.
 - Yeni testler imzalı katsayı formülünü, dendrit katkısını ve aktivasyon farkı hesabını kontrol eder.
+
+
+## Aşama M2 — Binary büyüklük karşılaştırması ve ara nöron katmanı
+
+- `M2_BinaryBuyuklukKarsilastirma.py` eklendi: 1–9 aralığındaki sayılar dört bitlik binary kodla temsil edilir; sol ve sağ operandlar ayrı dört duyusal nörona dağıtılır.
+- Toplam 8 duyusal, 20 ara ve 2 karar nöronu kullanılır. 20 ara nöronun her biri sekiz duyusal kanaldan seed ile rastgele seçilmiş dört tanesine bağlanır.
+- Duyusal nöronlardan karar nöronlarına doğrudan bağlantı yoktur. Ara nöronlar iki karar popülasyonuna da rastgele işaretli projeksiyon yapar.
+- Duyusal→ara bağlantılar yerel Hebbian/STDP plastisitesine; ara→karar bağlantıları gecikmiş yerel ödül/ceza modülatörüne açıktır. Görev ortamı ağırlıkları doğrudan değiştirmez.
+- Test örnekleri, eğitim sonrası ağın bağımsız kopyalarında tek tek değerlendirilir. Böylece test örnekleri birbirlerinin parametrelerini değiştirmez; eğitimden kalan kimyasal kaynaklar test kopyasından temizlenir.
+- Testler binary kodlamayı, giriş olaylarını, ağ boyutunu, bağlantı yönlerini, seed tekrarlanabilirliğini, eğitim/test ayrımını ve test kopyalarının eğitim ağını değiştirmediğini denetler.
+- **Sınır:** Bu yeni deney henüz kullanıcı ortamında çalıştırılmadı. Ara katman ve binary kodlama eklendi; karşılaştırma başarısı veya genelleme iddiası yoktur. İlk çalıştırmada eğitim/test davranışı, sınıf yanlılığı ve öğrenilen bağlantı değişimleri birlikte incelenmelidir.
