@@ -714,3 +714,8 @@ Bağımsız genlik taramasını takiben, iki ayrı hata türü ölçülecek:
 2. **Kanal kaybı:** İpucu veya bağlam girdisi tamamen kaldırılır. Tek başına kalan kanalın örüntü çağırmaması ve yanlış pozitif üretmemesi beklenir.
 
 Bu deneyler gürültü dayanıklılığı ve eksik kanal toleransını ayrı ayrı ölçer. Başarı eşiği önceden varsayılmayacak; sonuçlar görüldükten sonra yorumlanacaktır.
+
+
+### Gürültü kaynağını ayırma — kanal bazlı tarama
+
+Önceki gürültü deneyi ipucu ve bağlamı aynı anda bozduğu için kırılganlığın kaynağını ayırt etmiyordu. Yeni tarama üç koşulu ayrı ölçer: yalnızca ipucu gürültülü, yalnızca bağlam gürültülü, ikisi birlikte gürültülü. Varsayılan 100 tekrar ve sabit seed kullanılır. Her koşulda ağ temiz eğitilir; gürültü yalnızca geri çağırma girdisine uygulanır. Tam eşleşme, yanlış pozitif ve olay sayısı raporlanır. Bu, gürültü kaynağı ayrıştırmasıdır; bağlam kapılarının kendiliğinden öğrenildiğini kanıtlamaz.
