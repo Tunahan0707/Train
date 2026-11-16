@@ -336,6 +336,8 @@ Kurallar:
 
 ## Aşama 12 — Yerel nöron-nöron birlikte etkinleşme
 
+**Uygulama durumu:** İlk yerel sürüm eklendi. Beyin yalnızca 2B uzamsal indeksten yakın adayları buluyor; ateşlenen nöronun yerel mekanizması, zaman penceresinde yakın zamanda ateşlenmiş komşularla yönlü ilişki kuruyor. Sıralı etkinleşme önceki→sonraki yönünü, aynı zaman damgasındaki eşzamanlı etkinleşme iki yönü de güçlendiriyor. İlişki, bağlantı büyüme uygunluğunu sınırlı ölçüde etkiliyor; doğrudan spike üretmiyor. Birim testleri yazıldı; henüz çalıştırılmadı.
+
 **Amaç:** Uzamsal olarak yakın ve zaman bakımından ilişkili nöronların birbirlerinin yerel etkilenmesini değiştirmesini modellemek.
 
 Önceki konuşmalarda bu mekanizmanın varlığı istenmiştir; fakat hangi değişkeni değiştireceğine dair kesin formül doğrulanamamıştır. Bu nedenle en basit yerel model kullanılacaktır:
