@@ -255,19 +255,19 @@ Bir transmitterin etkisi yalnızca transmitter adından çıkarılmaz. Dendritin
 
 Son iki sınıfın tamamı klasik nörotransmitter değildir. Nörotrofik faktörler, purinerjik sinyaller, sitokinler ve kompleman benzeri işaretler ayrı kimyasal sinyal aileleri olarak modellenebilir. Bunlar `Q_k) benzeri ayrı kimyasal alanlar olarak soyutlanabilir ancak biyolojik sınıflandırmada klasik nörotransmitter diye adlandırılmamalıdır.
 
-### 6.4. Mikroglia-benzeri yapılar
+### 6.4. Bağlantı nesnesi içindeki mikroglia-benzeri yerel denetim
 
-Önceki tasarım notunda mikroglia-benzeri yapıların bağımsız yapılar olarak sistemde bulunması zorunlu kabul edilmişti. Bu karar korunur.
+Önceki tasarımın bağlayıcı kararı korunur: mikroglia-benzeri denetim ayrı ve merkezi bir karar katmanı olmayacak; bağlantı sınıfı/nesnesi üzerinden yürütülecektir. Bu, gerçek mikroglia hücresinin biyolojik olarak bir sinapsın içine gömülü olduğu iddiası değildir; simülasyondaki yerel bakım/budama davranışının bağlantı nesnesine ait kurallarla temsil edilmesidir.
 
-- Mikroglia-benzeri yapılar bağımsız, uzamsal konumu ve yerel durumu olan ajanlardır.
-- Beyin tarafından merkezi olarak hangi bağlantıyı budayacakları söylenmez.
-- Yerel çevrelerindeki aktivite izlerini, kimyasal işaretleri ve bağlantı durumlarını algılarlar.
-- Bağlantı nesnesi kendi yapısal bütünlüğünü, kullanım geçmişini ve koruma/budama işaretlerini taşır; mikroglia'nın kendisi bağlantı nesnesinin içine gömülmez.
-- Mikroglia-benzeri ajanlar bağlantıların korunması, zayıflatılması, yeniden şekillendirilmesi ve uygun koşullarda fiziksel olarak ortadan kaldırılmasında yerel rol oynar.
-- Mikroglia-benzeri yapıların yerel kimyasal sinyallerden etkilenmesi ve bazı büyüme/stabilizasyon sinyallerini üretmesi mümkün olabilir; hangi türün hangi durumda bunu yaptığı kalibrasyon/araştırma konusudur.
-- Bir bağlantının zayıflaması ile fiziksel olarak ortadan kaldırılması ayrı süreçlerdir.
+- Her bağlantı nesnesi kendi kullanım geçmişini, yapısal bütünlüğünü, yerel kimyasal sinyal maruziyetini ve koruma/budama durumunu taşır.
+- Bağlantı nesnesinin mikroglia-benzeri yerel denetimi bu bilgileri kullanarak bağlantıyı koruma, zayıflatma, yeniden şekillendirme veya fiziksel olarak kaldırılmaya aday gösterme kararlarını verir.
+- Beyin hangi bağlantının değişeceğini söylemez; yalnızca zaman ve olay koordinasyonu sağlar.
+- Nörotransmitter/kimyasal sinyal bağlantı üzerinden taşınır veya bağlantı tarafından algılanır; etkisi bağlantının kendi yerel durumuna uygulanır.
+- Dendrit reseptörleri kimyasal sinyali algılayıp dendritik katkılarını değiştirebilirken, bağlantı nesnesi aynı kimyasal alanı kendi yapısal/işlevsel durumunu değiştirmek için farklı biçimde algılayabilir.
+- Bağlantının zayıflaması ile fiziksel olarak ortadan kaldırılması ayrı süreçlerdir.
+- Bağlantı sınıfı içinde temsil edilen mikroglia-benzeri kurallar küresel ağ taraması yapmaz; yalnızca ilgili bağlantının yerel olayları ve zamanlanmış bakım değerlendirmeleriyle çalışır.
 
-Bu karar, bağlantı sınıfının mikroglia gibi davranmasını öngören önceki ifade ile düzeltilmiştir: bağlantı nesnesi kendi durumunu taşır; mikroglia-benzeri yapı ise ondan ayrı, yerel karar veren aktördür.
+Bu yaklaşım önceki mimari ilkeyle uyumludur: mikroglia-benzeri kontrol yereldir ve bağlantı nesnesinin iç durum/rule set'i üzerinden işler; Beyin veya ayrı bir küresel budama yöneticisi karar vermez.
 
 ## 7. Bağlantıların yaşlanması, korunması, kopması ve yeniden oluşması
 
@@ -290,7 +290,7 @@ Her bağlantı en azından şu bilgileri taşımalıdır:
 - Yalnızca kullanılmama sayacı bağlantıyı silmek için yeterli değildir.
 - Eliminasyon için uzun süreli düşük kullanım/zayıflık ile yerel budama işaretlerinin birlikte bulunması gerekir.
 - Koruma veya onarım sinyalleri budama baskısını azaltabilir.
-- Mikroglia-benzeri yerel ajan, uygun budama koşulları devam ederse bağlantıyı önce zayıflatabilir/işaretleyebilir, ardından fiziksel olarak kaldırabilir.
+- Bağlantı nesnesinin mikroglia-benzeri yerel denetimi, uygun budama koşulları devam ederse bağlantıyı önce zayıflatabilir/işaretleyebilir, ardından fiziksel olarak kaldırabilir.
 - Bağlantı kopma kararı merkezi Beyin tarafından verilmez.
 - Önceki taslaktaki 1.0 dayanıklılık, 0.9995 kullanılmama çarpanı ve 0.1 kopma sınırı yalnızca örnekti; kesin parametre değildir ve bu tasarımda zorunlu tutulmaz.
 
@@ -323,7 +323,7 @@ Bu, tek bağlantı kaybında gereksiz küresel reset yapılmasını engeller ve 
 ## 8. Uzamsal temsil ve hesaplama
 
 - Uzamsal temsil **2B** olacaktır; kullanıcı bunun daha önce kararlaştırıldığını belirtti.
-- Nöron, dendrit, akson terminali, bağlantı ve mikroglia-benzeri ajanlar 2B koordinatlarla temsil edilir.
+- Nöron, dendrit, akson terminali ve bağlantılar 2B koordinatlarla temsil edilir. Mikroglia-benzeri denetim ayrı uzamsal ajan olarak değil, bağlantı nesnesinin yerel mekanizması olarak temsil edilir.
 - Basit koordinat çiftleri `(x, y)` kullanılır. Gereksiz vektör soyutlamaları eklenmez.
 - Yerel komşuluk ve arama yarıçapı karşılaştırmalarında karekök almadan `d²=(x1-x2)²+(y1-y2)²` kullanılır.
 - Gerçek iletim gecikmesi için fiziksel mesafe gerekiyorsa karekök yalnızca bu aşamada hesaplanabilir.
@@ -390,7 +390,7 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 29. Aynı transmitter farklı dendritlerde farklı yanıt oluşturabilir.
 30. Presinaptik salım modülasyonu ile postsinaptik/dendritik algılama etkisi birbirinden ayrı test edilir.
 31. Yerel yeniden düzenleme sinyali yalnızca hedef dendritin/bağlantı alanının katkılarını etkiler; küresel öğrenilmiş parametreleri sıfırlamaz.
-32. Mikroglia-benzeri ajanlar bağlantı nesnesinden ayrı yerel varlıklar olarak çalışır.
+32. Mikroglia-benzeri denetim bağlantı nesnesinin yerel durum/rule set'i üzerinden çalışır; merkezi veya bağımsız küresel budama yöneticisi yoktur.
 33. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
 34. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
 35. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
@@ -417,7 +417,7 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 - Dendrit reseptör duyarlılığı `R_{ik}` zamanla öğrenilecek mi, sabit mi kalacak?
 - Dendritin kimyasal sinyale yanıtı mevcut `a_{dj}` katkılarını hangi koşullarda modüle edecek, yeniden düzenleyecek veya kontrollü biçimde baştan kuracak?
 - İlk prototipte kaç işlevsel kimyasal sinyal sınıfı kullanılacak?
-- Mikroglia-benzeri ajanların sayısı, hareketi/arama davranışı ve yerel kimyasal algılaması nasıl olacak?
+- Bağlantı nesnesinin mikroglia-benzeri yerel denetim durumları, bakım sıklığı ve kimyasal sinyal yanıtları nasıl kalibre edilecek?
 - Bağlantı eliminasyonunda budama işaretinin ne kadar süre devam etmesi gerekecek?
 - Bağlantı oluşumu için terminal aktivasyon girişimi ve kimyasal sinyalin birlikte mi, alternatif koşullar olarak mı aranacağı kesinleştirilecek.
 - Yeni bağlantı olgunlaşma süresi ve bağlantısız nöronun toparlanma süresi ne olacak?
