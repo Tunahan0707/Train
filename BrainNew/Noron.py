@@ -525,12 +525,6 @@ class Noron:
         if not math.isfinite(zaman) or zaman < 0:
             raise ValueError("Episode zamanı sonlu ve negatif olmayan değer olmalı.")
         self.membran = self.dinlenme_degeri
-        self.tanilama_entegre_sayisi = 0
-        self.tanilama_toplam_membran_girdisi = 0.0
-        self.tanilama_mutlak_membran_girdisi = 0.0
-        self.tanilama_maksimum_membran_girdisi = 0.0
-        self.tanilama_maksimum_membran = self.dinlenme_degeri
-        self.tanilama_maksimum_esik_marji = self.dinlenme_degeri - self.esik
         self.son_membran_guncelleme = zaman
         self.son_entegrasyon_zamani = None
         self.son_girdi_zamani = None
@@ -542,6 +536,13 @@ class Noron:
         # Homeostatik etkinlik izi uzun dönem durumdur; episode sınırında
         # silinmez. Yalnızca geçen zaman kadar doğal biçimde sönümlenir.
         self.homeostatik_durumu_guncelle(zaman)
+        # Esik homeostazisi tamamlandiktan sonra episode tanilamasini baslat.
+        self.tanilama_entegre_sayisi = 0
+        self.tanilama_toplam_membran_girdisi = 0.0
+        self.tanilama_mutlak_membran_girdisi = 0.0
+        self.tanilama_maksimum_membran_girdisi = 0.0
+        self.tanilama_maksimum_membran = self.dinlenme_degeri
+        self.tanilama_maksimum_esik_marji = self.dinlenme_degeri - self.esik
         self.yerel_aktivite_izi = 0.0
         self.son_yerel_aktivite_guncelleme = zaman
         self.son_ateslenme_zamani = None
