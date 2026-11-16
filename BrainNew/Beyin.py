@@ -2,6 +2,10 @@ import heapq
 import itertools
 import math
 
+from BrainNew.KimyasalAlan import KimyasalAlan
+from BrainNew.Mikroglia import Mikroglia
+from BrainNew.UzamsalIndeks import UzamsalIndeks
+
 
 class Beyin:
     """Simülasyon saatini ve olayların bileşenlere dağıtımını yönetir."""
@@ -17,7 +21,9 @@ class Beyin:
     def __init__(self, kimyasal_alan=None, deney_kaydi=None):
         self.zaman = 0.0
         self.noronlar = {}
-        self.kimyasal_alan = kimyasal_alan
+        self.baglanti_indeksi = UzamsalIndeks()
+        self.mikroglialar = {}
+        self.kimyasal_alan = kimyasal_alan if kimyasal_alan is not None else KimyasalAlan()
         self.deney_kaydi = deney_kaydi
         self._olaylar = []
         self._olay_sayaci = itertools.count()
@@ -28,6 +34,39 @@ class Beyin:
         if mevcut is not None and mevcut is not noron:
             raise ValueError(f"Aynı kimlikle ikinci bir nöron eklenemez: {noron.kimlik}")
         self.noronlar[noron.kimlik] = noron
+        for sinaps in noron.cikis_sinapslari:
+            self.baglanti_ekle(sinaps)
+
+    def baglanti_ekle(self, sinaps):
+        """Sinaps terminalini mikroglia için uzamsal indekse kaydeder."""
+        if sinaps.kopuk:
+            return False
+        return self.baglanti_indeksi.ekle(sinaps)
+
+    def mikroglia_ekle(self, mikroglia):
+        if not isinstance(mikroglia, Mikroglia):
+            raise TypeError("mikroglia_ekle bir Mikroglia nesnesi bekler.")
+        mevcut = self.mikroglialar.get(mikroglia.kimlik)
+        if mevcut is not None and mevcut is not mikroglia:
+            raise ValueError("Aynı kimlikle ikinci bir mikroglia eklenemez.")
+        self.mikroglialar[mikroglia.kimlik] = mikroglia
+        return mikroglia
+
+    def mikroglia_bakim_planla(self, mikroglia_id, gecikme):
+        if mikroglia_id not in self.mikroglialar:
+            raise ValueError(f"Bilinmeyen mikroglia: {mikroglia_id}")
+        return self.olay_planla(gecikme, "mikroglia_bakim", mikroglia_id)
+
+    def _kopuk_baglantiyi_temizle(self, sinaps):
+        if sinaps.kaynak is not None and sinaps in sinaps.kaynak.cikis_sinapslari:
+            sinaps.kaynak.cikis_sinapslari.remove(sinaps)
+            for dendrit in sinaps.kaynak.dendritler.values():
+                dendrit.sinaps_katkilari.pop(sinaps, None)
+                dendrit.sinaps_degerlendirmeleri.pop(sinaps, None)
+                dendrit.son_islenen_sinapslar.discard(sinaps)
+        if sinaps.hedef is not None and sinaps in sinaps.hedef.gelen_sinapslari:
+            sinaps.hedef.gelen_sinapslari.remove(sinaps)
+        self.baglanti_indeksi.cikar(sinaps)
 
     def olay_planla(self, gecikme, tur, hedef_id, veri=None):
         try:
@@ -150,6 +189,14 @@ class Beyin:
             elif noron.bekleyen_girdi_var_mi():
                 # Refrakter dönemde tamponda tutulan girdiler kaybolmaz.
                 self._entegrasyon_planla(noron.kimlik)
+
+        elif tur == "mikroglia_bakim":
+            mikroglia = self.mikroglialar[hedef_id]
+            kopanlar = mikroglia.bakim_yap(
+                self.baglanti_indeksi, self.kimyasal_alan, self.zaman
+            )
+            for sinaps in kopanlar:
+                self._kopuk_baglantiyi_temizle(sinaps)
 
         else:
             raise ValueError(f"Bilinmeyen olay türü: {tur}")

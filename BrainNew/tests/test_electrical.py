@@ -6,6 +6,8 @@ from BrainNew.Beyin import Beyin
 from BrainNew.Dendrid import Dendrid
 from BrainNew.Noron import Noron
 from BrainNew.KimyasalAlan import KimyasalAlan
+from BrainNew.Mikroglia import Mikroglia
+from BrainNew.UzamsalIndeks import UzamsalIndeks
 
 
 class ElektrikselMekanizmaTestleri(unittest.TestCase):
@@ -226,37 +228,40 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertEqual(alan.kaynak_sayisi(), 1)
         self.assertGreater(alan.kaynaklar[0].miktar, 1.0)
 
-    def test_yerel_budama_sinyali_kullanim_izi_yokken_baglantiyi_koparabilir(self):
+    def test_baglantiyi_bagimsiz_mikroglia_budayabilir(self):
         alan = KimyasalAlan()
+        indeks = UzamsalIndeks()
         s = Baglanti(
             "s", None, None, yapisal_yaslanma_tau=1000.0,
-            budama_kazanci=1.0, budama_esigi=0.1,
-            kopma_esigi=0.5
+            budama_kazanci=10.0, budama_esigi=0.1, kopma_esigi=0.5
         )
+        indeks.ekle(s)
         alan.sal("budama", s.terminal_konumu, 10.0, 0.0)
-        self.assertFalse(s.yerel_bakim(alan, 1.0))
+        mikroglia = Mikroglia("m", algilama_yaricapi=2.0)
+        kopanlar = mikroglia.bakim_yap(indeks, alan, 1.0)
+        self.assertEqual(kopanlar, (s,))
         self.assertTrue(s.kopuk)
         self.assertFalse(s.aktive_olabilir_mi(1.0))
 
-    def test_stabilizasyon_sinyali_mevcut_baglantiyi_korur(self):
+    def test_stabilizasyon_sinyali_mikroglia_bakiminda_butunlugu_korur(self):
         alan = KimyasalAlan()
+        indeks = UzamsalIndeks()
         s = Baglanti(
             "s", None, None, yapisal_yaslanma_tau=10.0,
             bakim_kazanci=0.5
         )
+        indeks.ekle(s)
         once = s.yapisal_butunluk
         alan.sal("stabilizasyon", s.terminal_konumu, 2.0, 0.0)
-        s.yerel_bakim(alan, 1.0)
+        Mikroglia("m", algilama_yaricapi=2.0).bakim_yap(indeks, alan, 1.0)
         self.assertGreater(s.yapisal_butunluk, once * math.exp(-0.1))
 
-    def test_ateslenme_olmasa_da_entegrasyon_olayinda_yerel_budama_isler(self):
-        from BrainNew.KimyasalAlan import KimyasalAlan
-
+    def test_noron_entegrasyonu_mikroglia_olmadan_fiziksel_budama_yapmaz(self):
         alan = KimyasalAlan()
         n = Noron("n")
         d = Dendrid("d")
         s = Baglanti(
-            "s", n, None, budama_kazanci=1.0,
+            "s", n, None, budama_kazanci=10.0,
             budama_esigi=0.1, kopma_esigi=0.5
         )
         d.sinaps_bagla(s, 0.4)
@@ -267,9 +272,9 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
 
         ateslendi, _ = n.entegrasyonu_isle(1.0, alan)
         self.assertFalse(ateslendi)
-        self.assertTrue(s.kopuk)
-        self.assertNotIn(s, n.cikis_sinapslari)
-        self.assertNotIn(s, d.sinaps_katkilari)
+        self.assertFalse(s.kopuk)
+        self.assertIn(s, n.cikis_sinapslari)
+        self.assertIn(s, d.sinaps_katkilari)
 
     def test_kopmus_baglanti_yeniden_aktive_edilemez(self):
         s = Baglanti("s", None, None)
