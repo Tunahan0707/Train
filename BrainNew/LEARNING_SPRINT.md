@@ -368,3 +368,12 @@ Bu sprintin her adımı ayrı ayrı uygulanır ve doğrulanır. **Teorik tasarı
 - Bu adım kalıcı sinaptik ağırlık veya STDP eklemez. Olay-atıf altyapısını düzeltir; STDP için gerekli nedensel veri yolunu hazırlar.
 - Yeni test eklendi: bir hedef nöron ateşlendiğinde, etkin olmayan başka bir gelen bağlantının postsinaptik izi yanlışlıkla artmamalı.
 - **Bu son kod değişikliklerinin testleri henüz kullanıcı tarafından çalıştırılıp doğrulanmadı.** Bir sonraki kapı, tam test paketi ve ana prototip smoke testidir.
+
+
+### Olay-atıf düzeltme turu — kullanıcı test geri bildirimi
+
+İlk test çalıştırmasında iki hata raporlandı:
+1. Nedensel iz testindeki kaynak nöronun çıkış sinapsı, kaynak dendritin yerel terminal-katkı haritasına bağlanmamıştı. Kaynak nöron bu nedenle terminal potansiyelini yükseltemiyor ve hedefe sinyal gönderemiyordu. Test düzeneğine `kaynak_giris.sinaps_bagla(aktif_sinaps, 1.0)` eklendi; bu üretim kodunda bir öğrenme kuralı değişikliği değildir.
+2. `Beyin`, yeni `kaynak_sinaps` anahtar sözcüğünü doğrudan `Noron.girdi_al` metoduna iletiyordu. Bu, `girdi_al` metodunu genişletmeden override eden `ZamanKayitliNoron` gibi alt sınıfların geriye dönük uyumluluğunu bozdu. Beyin artık eski imzayla girdiyi iletir ve kaynak bağlantı atfını ayrı `Noron.girdi_kaynagini_isaretle` yerel metodu üzerinden ekler.
+
+Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında doğrulanmadı.
