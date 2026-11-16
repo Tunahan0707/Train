@@ -124,15 +124,20 @@ def test_gercek_geri_bildirim_yalnizca_izli_nedensel_yola_ulasir():
     ara = beyin.ara_noronlar[0]
     motor = beyin.motor_noronlari[0]
 
+    # Baglanti agirliklari [-10, 10] araliginda sinirlanir.
+    # Ara ve motor noronlarini esige yakin baslatarak 8 mV\n    # baglantilarla iki asamali aktarimi gercekci sekilde tetikle.
     ilk = reseptor.aksonlar[0].baglan(
-        ara.dendritler[0], etki_mv=20.0, gecikme_ms=1
+        ara.dendritler[0], etki_mv=8.0, gecikme_ms=1
     )
     ikinci = ara.aksonlar[0].baglan(
-        motor.dendritler[0], etki_mv=20.0, gecikme_ms=1
+        motor.dendritler[0], etki_mv=8.0, gecikme_ms=1
     )
     ilgisiz = ilgisiz_reseptor.aksonlar[0].baglan(
         motor.dendritler[1], etki_mv=3.0, gecikme_ms=1
     )
+
+    ara.membran_potansiyeli = -56.0
+    motor.membran_potansiyeli = -56.0
 
     assert beyin.isle([1, 0], adim_sayisi=3) == [1]
     assert ilk.uygunluk_izi > 0
