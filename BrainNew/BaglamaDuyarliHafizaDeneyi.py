@@ -83,20 +83,22 @@ class BaglamaDuyarliHafizaDeneyi:
         return beyin, EgitimSurucusu(beyin), sinapslar
 
     @classmethod
-    def _girdiler(cls, baglam=None, tam_oruntu=None, ipucu=True, olcek=1.0):
+    def _girdiler(cls, baglam=None, tam_oruntu=None, ipucu=True, olcek=1.0, ipucu_olcegi=None, baglam_olcegi=None):
         girdiler = []
+        ipucu_olcegi = olcek if ipucu_olcegi is None else ipucu_olcegi
+        baglam_olcegi = olcek if baglam_olcegi is None else baglam_olcegi
         if ipucu:
             girdiler.extend((
-                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI * olcek, cls.IPUCU_GECIKMESI),
-                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI * olcek, cls.IPUCU_GECIKMESI),
+                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI * ipucu_olcegi, cls.IPUCU_GECIKMESI),
+                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI * ipucu_olcegi, cls.IPUCU_GECIKMESI),
             ))
         if baglam == "X":
             girdiler.append(
-                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI * olcek, cls.BAGLAM_GECIKMESI)
+                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI * baglam_olcegi, cls.BAGLAM_GECIKMESI)
             )
         elif baglam == "Y":
             girdiler.append(
-                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI * olcek, cls.BAGLAM_GECIKMESI)
+                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI * baglam_olcegi, cls.BAGLAM_GECIKMESI)
             )
 
         if tam_oruntu is not None:
@@ -110,7 +112,7 @@ class BaglamaDuyarliHafizaDeneyi:
         return girdiler
 
     @classmethod
-    def _ornek(cls, kimlik, baglam=None, tam_oruntu=None, ipucu=True, olcek=1.0):
+    def _ornek(cls, kimlik, baglam=None, tam_oruntu=None, ipucu=True, olcek=1.0, ipucu_olcegi=None, baglam_olcegi=None):
         if tam_oruntu is not None:
             secilen_oruntu = tam_oruntu
         elif ipucu and baglam in ("X", "Y"):
@@ -129,7 +131,9 @@ class BaglamaDuyarliHafizaDeneyi:
             kimlik,
             cls._girdiler(
                 baglam=baglam, tam_oruntu=tam_oruntu,
-                ipucu=ipucu, olcek=olcek
+                ipucu=ipucu, olcek=olcek,
+                ipucu_olcegi=ipucu_olcegi,
+                baglam_olcegi=baglam_olcegi,
             ),
             beklenen,
         )
@@ -232,6 +236,61 @@ class BaglamaDuyarliHafizaDeneyi:
                     feedback=False,
                 )
             rapor[olcek] = baglam_sonuclari
+        return rapor
+
+    def bagimsiz_genlik_taramasi(
+        self,
+        olcek_ciftleri=((0.90, 1.0), (1.0, 0.90), (0.90, 0.90), (0.80, 1.0), (1.0, 0.80)),
+    ):
+        """İpucu ve bağlam kanallarının genlik duyarlılığını ayrı ayrı ölçer.
+
+        Her çift (ipucu ölçeği, bağlam ölçeği) için tek ağ kurulur,
+        iki bağlam da aynı ağda eğitilir ve ardından ayrı ayrı geri çağrılır.
+        Bu deney rastgele gürültü değil, kanallara bağımsız genlik
+        bozulması uygular.
+        """
+        import math
+
+        rapor = {}
+        for ipucu_olcegi, baglam_olcegi in olcek_ciftleri:
+            ipucu_olcegi = float(ipucu_olcegi)
+            baglam_olcegi = float(baglam_olcegi)
+            if (
+                not math.isfinite(ipucu_olcegi)
+                or not math.isfinite(baglam_olcegi)
+                or ipucu_olcegi <= 0.0
+                or baglam_olcegi <= 0.0
+            ):
+                raise ValueError("Genlik ölçekleri sonlu ve pozitif olmalı.")
+
+            _, surucu, _ = self._ag_kur()
+            surucu.episode_calistir(
+                self._ornek(
+                    f"bagimsiz-egitim-X-{ipucu_olcegi}-{baglam_olcegi}",
+                    baglam="X", tam_oruntu="X",
+                ),
+                feedback=False,
+            )
+            surucu.episode_calistir(
+                self._ornek(
+                    f"bagimsiz-egitim-Y-{ipucu_olcegi}-{baglam_olcegi}",
+                    baglam="Y", tam_oruntu="Y",
+                ),
+                feedback=False,
+            )
+
+            baglam_sonuclari = {}
+            for baglam in ("X", "Y"):
+                baglam_sonuclari[baglam] = surucu.episode_calistir(
+                    self._ornek(
+                        f"bagimsiz-geri-cagirma-{baglam}-{ipucu_olcegi}-{baglam_olcegi}",
+                        baglam=baglam,
+                        ipucu_olcegi=ipucu_olcegi,
+                        baglam_olcegi=baglam_olcegi,
+                    ),
+                    feedback=False,
+                )
+            rapor[(ipucu_olcegi, baglam_olcegi)] = baglam_sonuclari
         return rapor
 
 
