@@ -53,7 +53,7 @@ Bu, mevcut simülatörde çalışan bir nöron-içi hesaplamalı yönlendirme ö
 İlk bağlantı-yerel Hebbian kuralı uygulanmıştır:
 `Δw = η_H · pre_iz · (w_max - w)/(w_max - w_min)`
 
-Bu kural, nedensel pre/post eşleşmesinde pozitif ağırlık değişimi üretir ve üst sınıra yaklaştıkça küçülür. Henüz ters zaman sırasına bağlı zayıflatma, uygunluk izi/modülatör kapısı veya görev başarısı ölçümü yoktur. Dolayısıyla bu aşama STDP ya da genel öğrenme kapasitesinin kanıtı değildir.
+Bu kural, pre→post sıralamasında pozitif ağırlık değişimi üretir. Ayrıca ters post→pre sıralamasında, presinaptik olay geldiğinde mevcut post izine bağlı LTD uygulanır. Bu çift-izli STDP prototipidir; uygunluk izi/modülatör kapısı ve görev başarısı ölçümü henüz yoktur. Dolayısıyla genel öğrenme kapasitesinin kanıtı değildir.
 
 ### Gerekli düzeltme sözleşmesi
 
@@ -115,5 +115,5 @@ Her aşamada testler, eğitim/test ayrımı ve olay sırası korunur. Bir deği�
 
 - Güncelleme yalnızca ilgili bağlantının pre izi pozitifse yapılır; ilgisiz gelen bağlantılar değişmez.
 - Güncelleme bağlantı nesnesinin kendi metodundadır. Nöron yalnızca kendi ateşlenme olayı sırasında ilgili yerel bağlantı metodunu çağırır; Beyin öğrenme hesabı yapmaz.
-- Bu ilk Hebbian katman yalnızca pozitif birliktelik güçlendirmesidir. Nedensel zaman sırası ve ters sıra zayıflatması henüz STDP aşamasına aittir.
+- Hebbian güçlendirme STDP'nin LTP kolu olarak pre→post sıralamasında çalışır; ters post→pre sıralaması ayrı LTD kolunu tetikler.
 - Bu kuralın görev genellemesi sağladığı henüz gösterilmiş değildir; yalnızca yerel eşleşme öğrenmesinin altyapısıdır.
