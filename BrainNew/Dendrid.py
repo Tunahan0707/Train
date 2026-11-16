@@ -13,6 +13,7 @@ class Dendrid:
         self.sinaps_katkilari = {}
         self.girdiler = []
         self.reseptor_duyarliliklari = {}
+        self.son_islenen_sinapslar = set()
 
     def sinaps_bagla(self, sinaps, katki):
         self.sinaps_katkilari[sinaps] = float(katki)
@@ -31,13 +32,13 @@ class Dendrid:
         self.girdiler.append(float(etki))
 
     def sinyali_isle(self, zaman, kimyasal_alan=None):
+        self.son_islenen_sinapslar.clear()
+        if not self.girdiler:
+            return 0.0
+
         elektriksel_toplam = sum(self.girdiler)
         self.girdiler.clear()
 
-        # Kimyasal sinyal elektriksel girdinin yerine geçmez; yerel dendritik
-        # yanıtı modüle eder. Boş entegrasyon olayında tekrar tekrar uygulanmaz.
-        if not elektriksel_toplam and not self.reseptor_duyarliliklari:
-            return 0.0
         kimyasal_modulasyon = 0.0
         if kimyasal_alan is not None and self.reseptor_duyarliliklari:
             kimyasal_modulasyon = self.kimyasal_yanit(kimyasal_alan, zaman)
@@ -46,16 +47,18 @@ class Dendrid:
             elektriksel_toplam / self.sinyal_olcegi + kimyasal_modulasyon
         )
         adet = len(self.sinaps_katkilari)
-        if adet:
+        if adet and u != 0.0:
             normalizasyon = math.sqrt(max(1, adet))
             for sinaps, katki in self.sinaps_katkilari.items():
                 sinaps.etki_uygula((katki * u) / normalizasyon, zaman)
+                self.son_islenen_sinapslar.add(sinaps)
         return elektriksel_toplam
 
     def firsat_sonucu_ogren(self, aktif_sinapslar, zaman, adim=0.01):
-        """Yalnızca bu dendritin gerçekten katkı yüklediği çiftleri günceller."""
-        for sinaps in self.sinaps_katkilari:
+        """Yalnızca bu olayda gerçekten katkı yüklenen çiftleri günceller."""
+        for sinaps in self.son_islenen_sinapslar:
             if sinaps in aktif_sinapslar:
                 self.sinaps_katkilari[sinaps] += adim
-            elif sinaps.aktivasyon_sayisi > 0:
+            elif sinaps.degerlendirme_sayisi > 0:
                 self.sinaps_katkilari[sinaps] -= adim
+        self.son_islenen_sinapslar.clear()
