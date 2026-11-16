@@ -45,15 +45,15 @@ class HomeostazTestleri(unittest.TestCase):
             "denge", homeostatik_hedef_oran=0.02,
             homeostatik_tau=100.0, homeostatik_oran=0.01
         )
-        # Her 10 zaman biriminde bir ateşlenme: hedef 0.02/zaman
-        # değerinin yaklaşık yarısı değil, kontrollü düşük aktivite.
-        for zaman in range(0, 101, 10):
+        # Her 50 zaman biriminde bir ateşlenme, hedef 0.02/zaman
+        # oranına karşılık gelir. İlk geçişteki başlangıç etkisi sınırlıdır.
+        for zaman in range(0, 501, 50):
             noron.homeostatik_durumu_guncelle(float(zaman))
             noron.homeostatik_durumu_guncelle(
                 float(zaman), yeni_ateslenme=True
             )
 
-        noron.homeostatik_durumu_guncelle(110.0)
+        noron.homeostatik_durumu_guncelle(550.0)
 
         self.assertTrue(
             noron.homeostatik_esik_alt
