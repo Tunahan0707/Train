@@ -53,6 +53,28 @@ class BrainNewPrototypeTests(unittest.TestCase):
         self.assertEqual(uygun.aktivasyon_sayisi, 1)
         self.assertEqual(uygun_degil.aktivasyon_sayisi, 0)
 
+    def test_multiple_dendrites_use_per_synapse_sqrt_normalization(self):
+        beyin = Beyin()
+        noron = Noron("n")
+        d1 = Dendrid("d1")
+        d2 = Dendrid("d2")
+        sinaps = Baglanti("s", noron, None, esik=0.2)
+        d1.sinaps_bagla(sinaps, 0.5)
+        d2.sinaps_bagla(sinaps, 0.5)
+        noron.dendrit_ekle(d1)
+        noron.dendrit_ekle(d2)
+        noron.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(noron)
+
+        beyin.duyusal_girdi("n", "d1", 10.0)
+        beyin.duyusal_girdi("n", "d2", 10.0)
+        beyin.calistir()
+
+        u = __import__("math").tanh(1.0)
+        delta = (0.5 * u + 0.5 * u) / (2.0 ** 0.5)
+        expected = delta / (1.0 + delta)
+        self.assertAlmostEqual(sinaps.potansiyel, expected)
+
     def test_learning_only_updates_dendrite_that_loaded_synapse(self):
         beyin = Beyin()
         noron = Noron("n")
