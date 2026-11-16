@@ -87,3 +87,11 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Her ölçek ve bağlam için ağ yeniden kurulup aynı iki örüntüyle eğitiliyor; böylece bir test episode'undaki yerel plastisite başka bir test koşulunu kirletmiyor.
 - ±%5 genlik değişiminde iki bağlamın doğru örüntüyü koruması, eşik altı %10 azaltımda ise kapıların sessiz kalması denetleniyor.
 - **Sınır:** Bu, giriş genliğine karşı kontrollü dayanıklılık ölçümüdür; eksik duyusal kanal, rastgele gürültü dağılımı veya kendiliğinden öğrenilmiş bağlam kapısı kanıtı değildir.
+
+
+## Aşama 16 — Bağımsız ipucu/bağlam genliği taraması
+
+- Önceki tarama hem A ipucunu hem X/Y bağlam girdisini aynı katsayıyla değiştiriyordu. Bu, hangi kanalın eşik davranışını belirlediğini ayırt etmiyordu.
+- Yeni deney ipucu ve bağlam genliğini bağımsız değiştirir; her koşulda tek ağda iki örüntü yeniden öğretilir ve iki bağlam da geri çağrılır.
+- %10 azaltımın yalnızca bir kanala uygulanması ile iki kanala birlikte uygulanması karşılaştırılır.
+- Bu deney rastgele gürültü veya eksik kanal toleransı değil, kanal bazında genlik duyarlılığı ölçümüdür.
