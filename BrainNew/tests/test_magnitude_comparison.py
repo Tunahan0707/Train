@@ -1,6 +1,7 @@
 import unittest
 
 from BrainNew.M1_BuyuklukKarsilastirma import BuyuklukKarsilastirmaDeneyi
+from BrainNew.M1_Tanilama import _agirlik_gruplari, _davranis_ozeti
 
 
 class BuyuklukKarsilastirmaTests(unittest.TestCase):
@@ -78,6 +79,50 @@ class BuyuklukKarsilastirmaTests(unittest.TestCase):
         self.assertIsNone(deney._karar_ver(3, 3))
         self.assertEqual(deney._karar_ver(4, 2), deney.SOL)
         self.assertEqual(deney._karar_ver(1, 2), deney.SAG)
+
+
+    def test_diagnostic_reports_decision_and_expected_class_separately(self):
+        deney = BuyuklukKarsilastirmaDeneyi(seed=20261120)
+        sonuclar = (
+            {
+                "gerceklesen": deney.SOL,
+                "beklenen": deney.SOL,
+                "dogru": True,
+            },
+            {
+                "gerceklesen": deney.SOL,
+                "beklenen": deney.SAG,
+                "dogru": False,
+            },
+            {
+                "gerceklesen": None,
+                "beklenen": deney.SAG,
+                "dogru": False,
+            },
+        )
+
+        ozet = _davranis_ozeti(sonuclar, deney)
+
+        self.assertEqual(
+            ozet["karar_dagilimi"],
+            {deney.SOL: 2, deney.SAG: 0, None: 1},
+        )
+        self.assertEqual(ozet["sinif_bazli"][deney.SOL]["dogruluk"], 1.0)
+        self.assertEqual(ozet["sinif_bazli"][deney.SAG]["dogruluk"], 0.0)
+
+    def test_weight_diagnostic_separates_sensory_and_wta_connections(self):
+        deney = BuyuklukKarsilastirmaDeneyi(seed=20261120)
+        baslangic = {
+            sinaps.kimlik: sinaps.sinaptik_agirlik
+            for sinaps in deney.sinapslar
+        }
+
+        ozet = _agirlik_gruplari(deney, baslangic)
+
+        self.assertEqual(ozet[deney.SOL]["baslangic"]["n"], 18)
+        self.assertEqual(ozet[deney.SAG]["baslangic"]["n"], 18)
+        self.assertEqual(ozet["WTA"]["baglanti_sayisi"], 2)
+        self.assertEqual(ozet["WTA"]["maksimum_mutlak_delta"], 0.0)
 
 
 if __name__ == "__main__":
