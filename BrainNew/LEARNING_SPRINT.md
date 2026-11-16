@@ -17,7 +17,7 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 - **Aşama 2 doğrulaması:** kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi. Baseline yürütücüsüne ait yeni testler bu son commit'te eklendi; henüz kullanıcı ortamında çalıştırılmadı.
 - **Aşama 3 — baseline yürütücü:** genel örnek/görev ölçüm altyapısı kodlandı. Kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi; yeni baseline yürütücü testlerinin son commit sonrası tekrar çalıştırılması gerekiyor.
 - **Aşama 4 — kısa ömürlü etkinlik izleri:** ilk uygulama eklendi. Her bağlantıda ayrı presinaptik ve postsinaptik iz, bağımsız üstel sönüm ve hedef nöronun yerel ateşlenmesiyle postsinaptik iz güncellemesi var. İzler henüz kalıcı sinaptik ağırlığı değiştirmiyor; bu ayrım korunuyor. Yeni iz testleri son commit sonrası henüz çalıştırılmadı.
-- **Güncel:** Kalıcı gerçek sinaptik etkinlik katsayısı, pre/post izleri ve ilk yerel Hebbian güçlendirme kuralı kodda var. Uygunluk izi/modülatör katmanı ve STDP'nin ters sıra zayıflatması henüz yok.
+- **Güncel:** Kalıcı sinaptik katsayı, bağlantı-yerel pre/post izleri, Hebbian LTP ve ters sıralı LTD içeren ilk çift-izli STDP prototipi kodda var. Uygunluk izi/modülatör katmanı ve görev düzeyinde öğrenme başarısı henüz doğrulanmadı.
 
 ---
 
@@ -404,3 +404,13 @@ Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında
 ### Durum düzeltmesi — Hebbian uygulaması
 
 Önceki sprint durum maddelerindeki “sinaptik ağırlık/plastisite henüz yok” ifadeleri güncelliğini yitirmişti. Gerçek sinaptik katsayı ve ilk yerel Hebbian güçlendirme artık uygulanmış durumda. Bu, yalnızca bağlantı-yerel korelasyon mekanizmasının ilk sürümüdür; görev öğrenmesi veya genelleme kanıtı değildir. Yeni testler kullanıcı ortamında henüz çalıştırılmadı.
+
+
+### Çift-izli STDP — ilk uygulama
+
+- Presinaptik olayda önce mevcut post izi okunur; pozitif post izi varsa ağırlık LTD yönünde azaltılır, sonra pre izi artırılır.
+- Postsinaptik ateşlenmede her gelen bağlantının post izi güncellenir. Pre izi bulunan bağlantıda Hebbian LTP gerçekleşir.
+- Böylece pre→post sırası LTP, post→pre sırası LTD üretir.
+- Post izi taşımak tek başına ağırlığı değiştirmez; sonraki pre olayı için zamansal bağlam saklar.
+- Testler iki sıralamanın zıt yönlü etkisini, iz yokken değişmemeyi, ağırlık sınırlarını ve geçersiz depresyon oranını kapsıyor.
+- Kullanıcı ortamında yeni STDP testleri henüz çalıştırılmadı.
