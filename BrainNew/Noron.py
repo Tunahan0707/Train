@@ -131,11 +131,16 @@ class Noron:
 
         return False
 
-    def geri_bildirim(self, deger):
+    def geri_bildirim(self, deger, esik_alti_katkilar=False):
         """
         Bu nöron kendi gelen bağlantılarını değerlendirir.
         Geri bildirim zincirinin bir önceki aşamasındaki
         nöronları döndürür.
+
+        esik_alti_katkilar yalnızca öğretici sinyalin hedefi
+        olan, fakat ateşlenmemiş çıktı nöronunda kullanılır.
+        Böylece ateşlenme eşiğine ulaşmayan gerçek girdiler de
+        uygunluk izi kazanabilir.
         """
         if deger not in (-1.0, 0.0, 1.0):
             raise ValueError(
@@ -144,6 +149,9 @@ class Noron:
 
         if deger == 0:
             return []
+
+        if esik_alti_katkilar:
+            self._katkida_bulunan_baglantilari_isaretle()
 
         etkin_baglantilar = []
 
