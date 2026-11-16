@@ -95,3 +95,11 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Yeni deney ipucu ve bağlam genliğini bağımsız değiştirir; her koşulda tek ağda iki örüntü yeniden öğretilir ve iki bağlam da geri çağrılır.
 - %10 azaltımın yalnızca bir kanala uygulanması ile iki kanala birlikte uygulanması karşılaştırılır.
 - Bu deney rastgele gürültü veya eksik kanal toleransı değil, kanal bazında genlik duyarlılığı ölçümüdür.
+
+
+## Aşama 16 — bağlama duyarlı geri çağırma: rastgele gürültü ve kanal kaybı
+
+- Bağımsız genlik taramasından sonra iki ayrı bozulma türü eklendi.
+- Rastgele genlik gürültüsü, temiz eğitimden sonra yalnızca geri çağırma ipucu ve bağlam girdilerine bağımsız Gauss pertürbasyonu uygular. Her tekrar temiz eğitilmiş yeni bir ağdan başlar; seed ile tekrarlanabilirlik, tam eşleşme oranı, yanlış pozitifler ve ortalama olay sayısı raporlanır.
+- Eksik kanal deneyi, geri çağırma sırasında ipucunu veya bağlamı tamamen kaldırır. Beklenti, tek başına kalan kanalın kapıyı ateşlememesi ve yanlış örüntü üretmemesidir.
+- Bu deneyler henüz kullanıcı tarafından çalıştırılmadı; sonuç veya dayanıklılık iddiası yoktur.
