@@ -171,6 +171,57 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             n2.cikis_sinapsi_ekle(sinaps)
 
+    def test_ateslenme_terminal_salimini_dendritik_sinyalle_moduler(self):
+        from BrainNew.KimyasalAlan import KimyasalAlan
+
+        alan = KimyasalAlan()
+        beyin = Beyin(alan)
+        n = Noron("n")
+        d = Dendrid("d")
+        s = Baglanti(
+            "s", n, None, esik=0.2,
+            transmitter_profili={"A": 1.0},
+            transmitter_salimi_duyarliliklari={"A": 0.5}
+        )
+        d.sinaps_bagla(s, 1.0)
+        n.dendrit_ekle(d)
+        n.cikis_sinapsi_ekle(s)
+        beyin.noron_ekle(n)
+        beyin.duyusal_girdi("n", "d", 10.0)
+        beyin.calistir()
+        self.assertEqual(alan.kaynak_sayisi(), 1)
+        self.assertGreater(alan.kaynaklar[0].miktar, 1.0)
+
+    def test_yerel_budama_sinyali_kullanim_izi_yokken_baglantiyi_koparabilir(self):
+        alan = KimyasalAlan()
+        s = Baglanti(
+            "s", None, None, yapisal_yaslanma_tau=1000.0,
+            budama_kazanci=1.0, budama_esigi=0.1,
+            kopma_esigi=0.5
+        )
+        alan.sal("budama", s.terminal_konumu, 10.0, 0.0)
+        self.assertFalse(s.yerel_bakim(alan, 1.0))
+        self.assertTrue(s.kopuk)
+        self.assertFalse(s.aktive_olabilir_mi(1.0))
+
+    def test_stabilizasyon_sinyali_mevcut_baglantiyi_korur(self):
+        alan = KimyasalAlan()
+        s = Baglanti(
+            "s", None, None, yapisal_yaslanma_tau=10.0,
+            bakim_kazanci=0.5
+        )
+        once = s.yapisal_butunluk
+        alan.sal("stabilizasyon", s.terminal_konumu, 2.0, 0.0)
+        s.yerel_bakim(alan, 1.0)
+        self.assertGreater(s.yapisal_butunluk, once * math.exp(-0.1))
+
+    def test_kopmus_baglanti_yeniden_aktive_edilemez(self):
+        s = Baglanti("s", None, None)
+        s.kopuk = True
+        self.assertFalse(s.aktive_olabilir_mi(1.0))
+        with self.assertRaises(RuntimeError):
+            s.aktive_et(1.0)
+
     def test_sinaps_potansiyeli_esik_altindaysa_aktive_olamaz(self):
         s = Baglanti("s", None, None, esik=0.2)
         s.etki_uygula(0.1, 0.0)
