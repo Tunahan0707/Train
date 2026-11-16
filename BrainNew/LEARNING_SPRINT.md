@@ -719,3 +719,8 @@ Bu deneyler gürültü dayanıklılığı ve eksik kanal toleransını ayrı ayr
 ### Gürültü kaynağını ayırma — kanal bazlı tarama
 
 Önceki gürültü deneyi ipucu ve bağlamı aynı anda bozduğu için kırılganlığın kaynağını ayırt etmiyordu. Yeni tarama üç koşulu ayrı ölçer: yalnızca ipucu gürültülü, yalnızca bağlam gürültülü, ikisi birlikte gürültülü. Varsayılan 100 tekrar ve sabit seed kullanılır. Her koşulda ağ temiz eğitilir; gürültü yalnızca geri çağırma girdisine uygulanır. Tam eşleşme, yanlış pozitif ve olay sayısı raporlanır. Bu, gürültü kaynağı ayrıştırmasıdır; bağlam kapılarının kendiliğinden öğrenildiğini kanıtlamaz.
+
+
+### Son doğrulama — çoklu seed
+
+Kanal bazlı gürültü taramasındaki tek-seed örneklem etkisini görmek için `coklu_seed_gurultu_ozeti` üç bağımsız seed üzerinde aynı koşulları tekrarlar. Toplam tam eşleşme oranını, yanlış pozitif sayısını ve seed bazındaki en düşük/en yüksek başarı oranlarını raporlar. Bu son kontrol tamamlandığında bağlama duyarlı hafıza prototipi dondurulacak; yeni test kombinasyonları açmak yerine matematik öğrenme görevlerine geçilecek.
