@@ -15,7 +15,8 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 - **Aşama 2 — deney ve ölçüm protokolü:** tasarlandı ve ilk pasif olay kaydedicisi uygulandı. Ayrıntı: `LEARNING_EXPERIMENT_PROTOCOL.md`, `DeneyKaydi.py`.
 - **Aşama 2 — deney ve ölçüm altyapısı:** pasif olay kaydı ve deterministik baseline yürütücüsü eklendi. Baseline yürütücüsü örnek başına bağımsız ağ kurar; eğitim/test örneklerini kimlik düzeyinde ayırır; tam eşleşme, doğru pozitif, yanlış pozitif ve yanlış negatif ölçer.
 - **Aşama 2 doğrulaması:** kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi. Baseline yürütücüsüne ait yeni testler bu son commit'te eklendi; henüz kullanıcı ortamında çalıştırılmadı.
-- **Aşama 3 — baseline görevleri:** B1–B6 görev aileleri protokolde tanımlı. Şu anki yürütücü genel örnek/görev ölçüm altyapısıdır; zamansal sıra, örüntü tamamlama ve genelleme için görev-özel deney sürücüleri henüz uygulanmadı.
+- **Aşama 3 — baseline yürütücü:** genel örnek/görev ölçüm altyapısı kodlandı. Kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi; yeni baseline yürütücü testlerinin son commit sonrası tekrar çalıştırılması gerekiyor.
+- **Aşama 4 — kısa ömürlü etkinlik izleri:** ilk uygulama eklendi. Her bağlantıda ayrı presinaptik ve postsinaptik iz, bağımsız üstel sönüm ve hedef nöronun yerel ateşlenmesiyle postsinaptik iz güncellemesi var. İzler henüz kalıcı sinaptik ağırlığı değiştirmiyor; bu ayrım korunuyor. Yeni iz testleri son commit sonrası henüz çalıştırılmadı.
 - **Önemli:** Kalıcı gerçek sinaptik etkinlik katsayısı, pre/post izleri, uygunluk izi ve plastisite kuralları henüz kodda yoktur.
 
 ---
