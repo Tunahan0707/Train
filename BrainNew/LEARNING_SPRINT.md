@@ -426,3 +426,15 @@ Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında
 - Bu, mevcut anlık STDP'ye ek bir üçüncü-faktör yolu; henüz modülatörsüz STDP'yi kapatmıyor.
 - Yeni testler uygunluk işaretini, sönümünü, sınırını, gecikmiş ödül/cezayı, izsiz ağırlığın sabit kalmasını ve zaman monotonluğunu denetler.
 - Kullanıcı ortamında yeni testler henüz çalıştırılmadı.
+
+
+### Adım 8 — Nöron-yerel homeostatik eşik dengelemesi
+
+- Her nöronun ateşlenmeleri kendi üstel sönümlü aktivite izine eklenir.
+- Gözlenen etkinliğin hedef orandan farkı, geçen zaman boyunca analitik olarak entegre edilir.
+- Uzun dönem aşırı etkinlik eşiği yükseltir; düşük etkinlik eşiği düşürür.
+- Eşik kayması temel ateşlenme eşiğinden ayrı tutulur ve sınırlanır.
+- Güncelleme yalnızca nöronun kendi entegrasyon akışında yapılır; Beyin öğrenme/homeostaz kararı vermez.
+- İlk sürüm yalnızca ateşlenme eşiğini homeostatik olarak ayarlar; sinaptik ölçekleme veya inhibitör plastisite değildir.
+- Yeni testler ateşlenme kaydını, iki yönlü eşik tepkisini, sınırları ve zaman monotonluğunu kapsar.
+- Kullanıcı ortamında bu yeni adımın testleri henüz doğrulanmadı.
