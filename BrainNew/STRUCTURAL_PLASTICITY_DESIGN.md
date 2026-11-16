@@ -24,7 +24,7 @@ Kopmuş bağlantıların geri döndürülmesi ile yeni bağlantı oluşturulmas�
 6. **Olgunlaşma:** Kullanım izi ve yerel stabilizasyon/büyüme sinyali bağlantıyı korur. Kullanılmayan ve budama sinyali alan yeni bağlantı kopabilir.
 7. **Gözlem:** Oluşum, olgunlaşma, başarısız aday ve kopma olayları pasif deney kaydına yazılır.
 
-## İlk uygulama — uzamsal aday indeksi
+## Uygulama — uzamsal aday indeksi ve yerel yeni bağlantı oluşumu
 
 `UzamsalIndeks.py` içinde sabit hücreli 2B uzamsal indeks eklendi. İndeks:
 - Nöronları kimlikleriyle hücrelere kaydeder ve yinelenen kimliği reddeder.
@@ -33,15 +33,15 @@ Kopmuş bağlantıların geri döndürülmesi ile yeni bağlantı oluşturulmas�
 - Kayıt silme ve hücreler arası konum güncellemesini destekler.
 - Bağlantı kurmaz ve yerel uygunluk kararı vermez.
 
-Bu ilk adım henüz `Beyin` olay döngüsüne bağlanmadı; mevcut simülasyon davranışını değiştirmeyen bağımsız bir sorgu bileşenidir. Aday hücre sayısı ve gerçek ağ boyutlarında maliyet profili ayrıca ölçülmelidir.
+Bağlantı indeksi mikroglia için sinaps terminallerini, ayrı `noron_indeksi` ise büyüme sürecindeki yakın nöronları tutar. `Beyin.yapisal_buyume_degerlendir` yalnızca yakın adayları sorgular ve listeyi kaynak nörona verir. Kaynak nöron, kendi konumundaki `buyume` kimyasalını ve hedef dendritin `buyume` reseptör yanıtını değerlendirerek en uygun hedefi yerel olarak seçer. Beyin bağlantı seçmez.
 
-## Henüz karara bağlanmamış teknik ayrıntılar
+## İlk sürümün sınırları ve henüz karara bağlanmamış ayrıntılar
 
-- Uzamsal indeksin sahibi: Beyin içinde salt sorgu hizmeti mi, yoksa ayrı bir uzamsal ortam bileşeni mi?
-- Kaynak terminali ile hedef dendritin büyüme yönünü belirleyen yerel sinyalin matematiksel biçimi.
-- Yeni bağlantının başlangıç ağırlığı, yapısal bütünlüğü ve olgunlaşma zaman sabiti.
-- Aday deneme sıklığının olay yoğunluğundan bağımsız ve hesaplama açısından sınırlı tutulması.
-- Yeni bağlantıların eğitim/test ayrımını ihlal etmeden değerlendirilmesi.
+- İlk sürümde büyüme denemesi açıkça `Beyin.yapisal_buyume_degerlendir(noron_id, arama_yaricapi)` çağrısıyla başlatılır; otomatik deneme sıklığı henüz yoktur.
+- Kaynak büyüme eşiği, hedef reseptör uygunluk eşiği, başlangıç ağırlığı ve yapısal bütünlük kalibrasyon parametreleridir; biyolojik sabit değildir.
+- İlk sürüm hedef adaylarını nöron konumuyla bulur, ardından dendrit konumunu ayrıca yarıçapla denetler.
+- Yeni bağlantının kaynak nöronundaki her dendrit katkısı, nöron kimliğinden türetilen tekrarlanabilir rastgele akışla [-0.1, 0.1] aralığında başlatılır.
+- Yeni bağlantı oluşumunun eğitim/test ayrımını ihlal etmeden değerlendirilmesi ve ölçek profili ayrıca yapılmalıdır.
 
 ## Zorunlu testler
 
@@ -64,4 +64,4 @@ Bu ilk adım henüz `Beyin` olay döngüsüne bağlanmadı; mevcut simülasyon d
 5. Budama ile yaşam döngüsü entegrasyonu.
 6. Deney sürücüsünde yapısal plastisite ölçümleri.
 
-Bu belge tasarım sözleşmesidir; henüz üretim koduna yeni bağlantı oluşturma davranışı eklemez.
+Yeni bağlantı oluşturmanın ilk kontrollü sürümü uygulanmıştır; otomatik büyüme zamanlaması, olgunlaşma dinamiği ve görev düzeyinde katkısı henüz uygulanmamıştır.
