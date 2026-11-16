@@ -9,6 +9,16 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 
 ---
 
+## Güncel yürütme durumu
+
+- **Aşama 1 — teorik veri/topoloji denetimi:** tamamlandı. Ayrıntı: `LEARNING_ARCHITECTURE_AUDIT.md`.
+- **Aşama 2 — deney ve ölçüm protokolü:** tasarlandı ve ilk pasif olay kaydedicisi uygulandı. Ayrıntı: `LEARNING_EXPERIMENT_PROTOCOL.md`, `DeneyKaydi.py`.
+- **Aşama 2 doğrulaması:** yeni testler eklendi; uzak dalda çalıştırma yapılmadı. Yerel test sonucu bekleniyor.
+- **Aşama 3 — baseline görevleri:** görev tanımları protokole eklendi; yürütülebilir deney sürücüsü henüz oluşturulmadı.
+- **Önemli:** Kalıcı gerçek sinaptik etkinlik katsayısı, pre/post izleri, uygunluk izi ve plastisite kuralları henüz kodda yoktur.
+
+---
+
 ## 0. Sprintin başarı tanımı
 
 Sprint sonunda sistemin teorik olarak şu davranışları gösterebilmesi gerekir:
