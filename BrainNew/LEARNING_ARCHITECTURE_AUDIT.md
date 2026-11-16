@@ -13,9 +13,9 @@ Güncel dalda `Baglanti.py`, `Beyin.py`, `Dendrid.py`, `Noron.py`, `KimyasalAlan
 | Değişken | Kodda şu anki işlevi | Sahibi | Ömrü | Kalıcı öğrenme mi? |
 |---|---|---|---|---|
 | `Baglanti.potansiyel` | Dendritik iç-yönlendirme sinyaliyle değişen, terminalin ateşleme anında hazır olup olmadığını belirleyen yerel durum | Baglanti | Kısa; `sonum_tau` ile sıfıra sönümlenir | Hayır |
-| `Baglanti.esik` | Terminalin aktive edilmeye uygunluk eşiği | Baglanti | Sabit parametre | Şu an hayır |
+| `Baglanti.esik` | Terminalin aktive edilmeye uygunluk eşiği | Baglanti; nöronun yerel feedback kararıyla güncellenir | Bağlantı ömrü boyunca sınırlı | Evet; feedback ile değişebilir |
 | `Baglanti.etki` | Gerçek pre→post iletim olayının işaretli temel etki miktarı | Baglanti | Bağlantı ömrü | Hayır |
-| `Baglanti.sinaptik_agirlik` | Temel elektriksel etkiyi ölçekleyen kalıcı, sınırlı katsayı | Baglanti | Bağlantı ömrü | Evet; yerel Hebbian güncellemesi var |
+| `Baglanti.sinaptik_agirlik` | Temel elektriksel etkiyi ölçekleyen işaretli kalıcı katsayı | Baglanti | Bağlantı ömrü | Evet; Hebbian, STDP-LTD ve gecikmiş modülatör yolları var |
 | `Baglanti.iz` | Aktivasyonla artan ve sönümlenen kullanım/bakım izi | Baglanti | Geçici, `sonum_tau` ile sönümlenir | Hayır |
 | `Baglanti.pre_iz` | Kaynak terminal aktive olduğunda artan, üstel sönümlü presinaptik etkinlik izi | Baglanti | Kısa | Hayır |
 | `Baglanti.post_iz` | Hedef nöron ateşlendiğinde artırılan postsinaptik iz | Baglanti | Kısa | Hayır |
@@ -32,7 +32,7 @@ Güncel dalda `Baglanti.py`, `Beyin.py`, `Dendrid.py`, `Noron.py`, `KimyasalAlan
 
 `Baglanti.kaynak`, `Baglanti.hedef` ve `hedef_dendrit_id` yönlü iletim kenarını tanımlar. Kaynak nöronun ateşlenmesi terminali aktive eder; olay gecikmeyle hedef nöronun belirtilen dendritine iletilir. `Baglanti.etki` bu hedef girdinin sabit büyüklüğüdür.
 
-Bu gerçek bağlantı için ayrı kalıcı elektriksel katsayı `sinaptik_agirlik` eklendi. İletilen elektriksel etki `etki * sinaptik_agirlik` olur. Katsayı [0,2] aralığındadır ve şu an yalnızca açıkça ayarlanan parametredir; henüz otomatik öğrenilmez. Kimyasal transmitter salımı bu katsayıyla ölçeklenmez. Bu nedenle mevcut kod gerçek pre→post sinaptik ağırlık öğreniyor diye raporlanamaz.
+Bu gerçek bağlantı için ayrı kalıcı elektriksel katsayı `sinaptik_agirlik` bulunur. İletilen elektriksel etki `etki * sinaptik_agirlik * yapisal_olgunluk` olur. Öğrenilmiş katsayı işaretli `[-2,2]` aralığındadır; Hebbian güçlenme ve STDP zayıflaması mevcut işareti korur, gecikmiş kimyasal modülatör yolu işaret değiştirebilir. Yapısal olgunluk katsayısı fiziksel bütünlükten ve öğrenilmiş ağırlıktan ayrıdır. Kimyasal transmitter salımı elektriksel ağırlıkla ölçeklenmez.
 
 ### 3.2 Nöron-içi dendrit→çıkış-terminali yönlendirmesi
 
@@ -69,7 +69,7 @@ Bu kural, pre→post sıralamasında pozitif ağırlık değişimi üretir. Ayr�
 | Öğrenilebilir durum | Tek güncelleme sahibi | Güncelleme tetikleyicisi | Sınır/ömür |
 |---|---|---|---|
 | Dendrit-terminal katkısı | İlgili Dendrid | Kendi yerel sinyalinin işlendiği nöron entegrasyonu ve ateşlenme sonucu | Dendritin `katki_alt`–`katki_ust` sınırları |
-| Gerçek sinaptik etkinlik katsayısı | İlgili Baglanti | Şu an açık parametre ayarı; ileride doğrulanmış yerel öğrenme kuralı | [0,2] |
+| Gerçek sinaptik etkinlik katsayısı | İlgili Baglanti | Hebbian pre→post, STDP-LTD post→pre ve gecikmiş modülatör × uygunluk izi | [-2,2] |
 | Sinaptik uygunluk izi | İlgili Baglanti | Yerel pre/post sırası | Geçici, sınırlı ve sönümlü |
 | Nöron homeostatik eşik kayması | İlgili Noron | Uzun dönem yerel ateşlenme etkinliği | Sınırlı ve yavaş |
 | Yapısal bütünlük | Durum `Baglanti` üzerinde tutulur; güncelleme kararını bağımsız `Mikroglia` ajanı verir | Mikroglianın yerel bakım değerlendirmesi | [0,1] |
@@ -84,6 +84,7 @@ Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri 
 - Kaynak bağlantı kimliği hedef dendrit entegrasyonuna kadar taşınıyor.
 - Bağlantı bazında pre/post izleri, yerel Hebbian LTP ve ters sıralı STDP-LTD uygulanıyor.
 - İşaretli, sınırlı ve sönümlü uygunluk izi; yerel ödül/ceza kimyasal alanıyla gecikmiş ağırlık güncellemesi ilk sürüm olarak eklendi.
+- Nöron-yerel uzun dönem ateşlenme izi ve sınırlı eşik homeostazı uygulanıyor; episode geçişinde uzun dönem iz korunuyor.
 - Öğrenme durumları ilgili Baglanti nesnesinde tutuluyor; nöron homeostazı ilgili Noron nesnesinde tutuluyor; yapısal bakım kararı bağımsız Mikroglia ajanlarında; Beyin yalnızca olay akışını koordine ediyor.
 
 **Henüz doğrulanmamış noktalar**
@@ -96,13 +97,11 @@ Bir değişkenin değişmesi tek başına öğrenme kanıtı sayılmaz. Bu katma
 
 ## 7. Sonraki kontrollü adım
 
-Sıradaki adım, üç faktörlü öğrenme yolunu gerçek örüntü görevlerine bağlamak ve modülatörün olay akışında yeterli sıklıkta örneklendiğini doğrulamaktır. Ardından:
-- homeostatik dengeleme,
-- yapısal bağlantı oluşumu ve yeniden bağlantılanma,
-- örüntü geri çağırma ve genelleme deneyleri,
-- ablation karşılaştırmaları
-
-kontrollü olarak ele alınacaktır.
+Üç faktörlü öğrenme ve ilk homeostatik eşik düzenlemesi kodda bulunuyor; ağ düzeyindeki görev katkıları henüz kanıtlanmış değil. Sıradaki kontrollü adımlar:
+- otomatik yapısal büyüme zamanlaması, bağlantı onarımı ve bağlantısız nöron toparlanması,
+- örüntü geri çağırma ve kısmi ipucundan tamamlama deneyleri,
+- eğitim/test ayrımı korunarak genelleme ölçümü,
+- mekanizma ablasyonları ve çoklu seed kalibrasyonu.
 
 
 ## 8. İlk yerel Hebbian ağırlık güncellemesi
