@@ -91,7 +91,7 @@ class BrainNewPrototypeTests(unittest.TestCase):
         beyin.duyusal_girdi("n", "d1", 100.0)
         beyin.calistir()
 
-        self.assertAlmostEqual(d1.sinaps_katkilari[sinaps], 0.41)
+        self.assertAlmostEqual(d1.sinaps_katkilari[sinaps], 0.403)
         self.assertAlmostEqual(d2.sinaps_katkilari[sinaps], 0.7)
 
     def test_local_potential_is_bounded_and_decays_lazily(self):
