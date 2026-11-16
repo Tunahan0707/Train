@@ -101,6 +101,8 @@ class Beyin:
             baglanti.uygunluk_izi = 0.0
         self.etkin_baglantilar.clear()
         self._olay_kuyrugu.clear()
+        self.motor_organ.reset()
+        self.reseptor_organ.ciktilar = [0] * len(self.reseptor_noronlari)
 
     def _olaylari_ilet(self):
         while (
