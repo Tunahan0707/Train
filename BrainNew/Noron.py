@@ -38,6 +38,7 @@ class Noron:
         self.durum = self.DINLENME
         self.dendritler = {}
         self.cikis_sinapslari = []
+        self.gelen_sinapslari = []
         self.ateslenme_sayisi = 0
         self._sinaps_dendritik_sinyalleri = {}
 
@@ -46,6 +47,12 @@ class Noron:
         if mevcut is not None and mevcut is not dendrit:
             raise ValueError(f"Aynı kimlikle ikinci bir dendrit eklenemez: {dendrit.kimlik}")
         self.dendritler[dendrit.kimlik] = dendrit
+
+    def gelen_sinapsi_ekle(self, sinaps):
+        if sinaps.hedef is not self:
+            raise ValueError("Gelen sinapsın hedef nöronu bu nöron olmalı.")
+        if sinaps not in self.gelen_sinapslari:
+            self.gelen_sinapslari.append(sinaps)
 
     def cikis_sinapsi_ekle(self, sinaps):
         if sinaps.kaynak is not self:
@@ -137,13 +144,19 @@ class Noron:
             sinaps.yerel_bakim(kimyasal_alan, zaman)
             if sinaps.kopuk:
                 self.cikis_sinapslari.remove(sinaps)
+                if sinaps.hedef is not None and sinaps in sinaps.hedef.gelen_sinapslari:
+                    sinaps.hedef.gelen_sinapslari.remove(sinaps)
                 for dendrit in self.dendritler.values():
                     dendrit.sinaps_katkilari.pop(sinaps, None)
                     dendrit.sinaps_degerlendirmeleri.pop(sinaps, None)
                     dendrit.son_islenen_sinapslar.discard(sinaps)
 
     def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
-        """Nöronun seçtiği sinapsları aktive eder ve transmitter salar."""
+        """Yerel ateşlenme, bu nörona gelen sinapsların postsinaptik izini günceller."""
+        for sinaps in tuple(self.gelen_sinapslari):
+            if not sinaps.kopuk:
+                sinaps.postsinaptik_iz_arttir(zaman)
+
         aktif = []
         for sinaps in self.cikis_sinapslari:
             if not sinaps.aktive_olabilir_mi(zaman):
