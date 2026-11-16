@@ -205,24 +205,24 @@ Bu formül `p ∈ [-1,+1]` ise her sonlu `δ` için sınırların dışına çı
 
 Bir nöronun birden fazla nörotransmitter kullanabilmesi biyolojik olarak gerçektir. Daha da önemlisi, farklı transmitterler aynı nöronun farklı terminallerinden veya aynı terminaldeki farklı vezikül havuzlarından salınabilir; bazı örneklerde birden fazla transmitter aynı vezikülde birlikte paketlenip salınabilir. Dolayısıyla tek bir sinaps/terminalin birden fazla transmitter türünü desteklemesi biyolojik açıdan mümkündür; ancak bütün sinapsların her transmitter türünü birlikte saldığı varsayılmayacaktır.
 
-Önceki konuşmalarda bu kavramın temel temsili açıkça tartışılmıştı: `Q_k(x,t)), k türü nörotransmitterin x konumundaki, t anındaki yerel kimyasal yoğunluğu/etkinliğidir; `R_{ik}) ise i dendritinin k transmitterine karşı işaretli reseptör duyarlılığıdır. Kimyasal sinyalin etkisi, sinaptik elektriksel potansiyelden ayrı bir alandır ve hacimsel iletimle sinaptik boşluk dışında da yayılabilir. Bu önceki kavram korunur. Önceki konuşmada bu alanın tam sayısal güncelleme denklemi kesinleştirilmemişti; aşağıdaki denklem yeni tasarım tercihi olarak önerilir:
+Önceki konuşmalarda bu kavramın temel temsili açıkça tartışılmıştı: `Q_k(x,t)`, k türü nörotransmitterin x konumundaki, t anındaki yerel kimyasal yoğunluğu/etkinliğidir; `R_{ik}` ise i dendritinin k transmitterine karşı işaretli reseptör duyarlılığıdır. Kimyasal sinyalin etkisi, sinaptik elektriksel potansiyelden ayrı bir alandır ve hacimsel iletimle sinaptik boşluk dışında da yayılabilir. Bu önceki kavram korunur. Önceki konuşmada bu alanın tam sayısal güncelleme denklemi kesinleştirilmemişti; aşağıdaki denklem yeni tasarım tercihi olarak önerilir:
 
 `∂Q_k/∂t = D_k ∇²Q_k - λ_k Q_k + S_k(x,t)`
 
-Burada `D_k) yayılım katsayısı, `λ_k) temizlenme/sönüm oranı, `S_k) sinaps/terminal salımlarından gelen kaynak terimidir. 2B simülasyonda bu denklem sürekli uzayda çözülmek zorunda değildir; yerel komşulara sınırlı aktarım ve zamanla azalma biçiminde ayrıklaştırılabilir. Bu, hacimsel iletimi temsil eden hesaplama modelidir; tüm kimyasal türlerin beyinde aynı hızda yayıldığı iddia edilmez.
+Burada `D_k` yayılım katsayısı, `λ_k` temizlenme/sönüm oranı, `S_k` sinaps/terminal salımlarından gelen kaynak terimidir. 2B simülasyonda bu denklem sürekli uzayda çözülmek zorunda değildir; yerel komşulara sınırlı aktarım ve zamanla azalma biçiminde ayrıklaştırılabilir. Bu, hacimsel iletimi temsil eden hesaplama modelidir; tüm kimyasal türlerin beyinde aynı hızda yayıldığı iddia edilmez.
 
 Bir dendritin k transmitterini algılama yanıtı için başlangıçta:
 
 `h_i = Σ_k R_{ik} · f_k(Q_k(x_i,t))`
 
-kullanılabilir. `R_{ik}) pozitif, negatif veya sıfır olabilir: aynı transmitter bir dendritte kolaylaştırıcı, diğerinde baskılayıcı veya etkisiz olabilir. `f_k) reseptör doygunluğunu/yanıt eğrisini temsil eder; başlangıçta basit doğrusal olmayan sınırlı bir fonksiyon seçilebilir. Bu kimyasal yanıt, dendritin elektriksel toplamından ve dendrit-sinaps öğrenilmiş katkısından ayrı tutulur; hangi yerel işlem üzerinden bunları modüle edeceği aşağıda tanımlanır.
+kullanılabilir. `R_{ik}` pozitif, negatif veya sıfır olabilir: aynı transmitter bir dendritte kolaylaştırıcı, diğerinde baskılayıcı veya etkisiz olabilir. `f_k` reseptör doygunluğunu/yanıt eğrisini temsil eder; başlangıçta basit doğrusal olmayan sınırlı bir fonksiyon seçilebilir. Bu kimyasal yanıt, dendritin elektriksel toplamından ve dendrit-sinaps öğrenilmiş katkısından ayrı tutulur; hangi yerel işlem üzerinden bunları modüle edeceği aşağıda tanımlanır.
 
 - Her sinaps/akson terminali, desteklediği transmitter türleri için ayrı salım profilleri taşır. Önceki konuşmalarda bir sinapsın aynı ateşlenme olayında birden fazla transmitter salgılayabilmesi açıkça kabul edilmişti; bu karar korunur.
 - Bir ateşlenme olayı birden fazla transmitter türünün birlikte salınmasına yol açabilir. Türlerin salım miktarları ayrı hesaplanır; her türün aynı miktarda veya her olayda zorunlu olarak salınması gerekmez.
 - Bir sinaps/terminalin birden fazla transmitter türünü desteklemesi, bunların aynı vezikülde paketlenmesini zorunlu kılmaz. Ayrı vezikül havuzları ve bazı biyolojik sistemlerde birlikte paketlenme farklı olasılıklardır.
 - Salım, nöronun aksiyon potansiyeli ve sinapsın aktive olmasıyla tetiklenebilir. Dendritten gelen elektriksel sinyal ve terminalin kimyasal/modülatör durumu, o terminalin hangi transmitter profillerini ne miktarda salacağını belirler.
 - Dendritik sinyal, terminalde bulunmayan bir transmitter türünü aniden yaratmaz. Salınabilecek türler terminalin mevcut repertuvarıyla sınırlıdır.
-- Salım olayı kimyasal alan `Q_k(x,t))'ye kaynak ekler. Alan yerel hacimsel iletimle yayılır ve zamanla temizlenir. Birden fazla transmitter alanı aynı anda bulunabilir.
+- Salım olayı kimyasal alan `Q_k(x,t)`'ye kaynak ekler. Alan yerel hacimsel iletimle yayılır ve zamanla temizlenir. Birden fazla transmitter alanı aynı anda bulunabilir.
 
 Bu, kullanıcının “hangi transmitterin salgılanacağı dendritten gelen sinyale göre değişsin” kararını koruyan, fakat terminalin yalnızca sahip olduğu transmitter repertuvarını salabileceği ilkesini de gözeten soyutlamadır. Dendritin kendisinin her durumda klasik nörotransmitter salgıladığı varsayılmaz; dendritik sinyal, ilgili çıkış terminalinin salım profilini düzenler.
 
@@ -232,7 +232,7 @@ Bu, kullanıcının “hangi transmitterin salgılanacağı dendritten gelen sin
 
 Her dendritin transmitter türlerine karşı reseptör-benzeri duyarlılık profili bulunur.
 
-- Aynı transmitter farklı dendritlerde farklı etki oluşturabilir; bu, `R_{ik}) reseptör duyarlılık işareti ve büyüklüğüyle temsil edilir.
+- Aynı transmitter farklı dendritlerde farklı etki oluşturabilir; bu, `R_{ik}` reseptör duyarlılık işareti ve büyüklüğüyle temsil edilir.
 - Dendritin algıladığı kimyasal bileşim, dendritin sinapslara yüklediği katkının yönünü ve büyüklüğünü değiştirebilir.
 - Presinaptik salım etkisi ile postsinaptik/dendritik algılama etkisi ayrıdır: transmitterin salındığı terminalde salım olasılığı, miktarı veya sonraki salım profili değişebilir; aynı transmitter başka bir dendrit tarafından algılandığında o dendritin yerel elektriksel katkısı veya plastisite davranışı değişebilir. Bunlar tek bir “transmitter etkisi” parametresine indirgenmez.
 - Bir transmitter dendrit-sinaps katkısını güçlendirebilir; başka bir transmitter zayıflatabilir.
@@ -349,7 +349,7 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 - Etkinlik izi artış/sönüm değerleri: deneysel.
 - Feedback dallanma eşiği ve adım başına azalma: deneysel.
 - Feedback potansiyel sınırlandırması: yukarıdaki güvenli formül başlangıç tercihi.
-- Her transmitter türü için terminal repertuvarı, salım profili, `Q_k(x,t)) yayılım/sönüm parametreleri ve dendrit duyarlılığı `R_{ik}): deneysel.
+- Her transmitter türü için terminal repertuvarı, salım profili, `Q_k(x,t)` yayılım/sönüm parametreleri ve dendrit duyarlılığı `R_{ik}`: deneysel.
 - Hacimsel kimyasal iletimin yerel arama/ızgara çözünürlüğü ve komşulara aktarım katsayıları: deneysel.
 - Kimyasal sinyal sınıflarının yerel etki yarıçapı ve sönüm hızları: deneysel.
 - Mikroglia-benzeri ajanların algılama yarıçapı, aktivasyon eşiği ve budama/koruma tepkileri: deneysel.
@@ -384,33 +384,22 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 23. Feedback'in her geriye adımda zayıflaması doğrulanır.
 24. Bir sinaps/terminal aynı ateşlenme olayında desteklediği birden fazla transmitter türünü ayrı miktarlarda salabilir.
 25. Dendritin reseptör profili, aynı transmitterin farklı dendritlerde farklı etkiler oluşturmasını sağlar.
-26. Her transmitter türü için `Q_k(x,t)) alanı diğer transmitter türlerinden bağımsız izlenir; eşzamanlı salımlar birbirinin tür kimliğini veya yoğunluk kaydını ezmez.
-27. `Q_k(x,t)) salım noktasından uzaklaştıkça yayılır/azalır ve zamanla temizlenir; hacimsel iletim yalnızca doğrudan sinaptik eşleşmeye bağlı değildir.
-28. Dendritin `R_{ik}) duyarlılığı pozitif, negatif veya sıfır olduğunda beklenen kolaylaştırıcı, baskılayıcı veya etkisiz yanıt oluşur.
+26. Her transmitter türünün `Q_k(x,t)` kimyasal alanı diğer türlerden ayrı tutulur; eşzamanlı salımlar birbirinin yoğunluk kaydını ezmez.
+27. `Q_k(x,t)` salım noktasından yayılır, uzaklıkla etkisi azalır ve zamanla temizlenir.
+28. Dendritin `R_{ik}` duyarlılığı pozitif, negatif veya sıfır olduğunda beklenen kolaylaştırıcı, baskılayıcı veya etkisiz yanıt oluşur.
 29. Aynı transmitter farklı dendritlerde farklı yanıt oluşturabilir.
-30. Bir sinaps aynı ateşlenme olayında birden fazla transmitter türünü birlikte salabilir; tür başına salım miktarı bağımsız sınanır.
-31. Presinaptik salım modülasyonu ile postsinaptik/dendritik algılama etkisi birbirinden ayrı test edilir.
-32. Yerel yeniden düzenleme sinyali yalnızca hedef dendritin/bağlantı alanının katkılarını etkiler; küresel öğrenilmiş parametreleri sıfırlamaz.
-33. Mikroglia-benzeri ajanlar bağlantı nesnesinden ayrı yerel varlıklar olarak çalışır.
-34. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
-35. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
-36. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
-37. Bağlantısız terminal, 2B yerel aramayla uygun dendrit adayı bulabilir.
-38. Yeni bağlantı zayıf başlar ve kullanım/stabilizasyonla olgunlaşır.
-39. Zayıf ama mevcut bağlantı onarılabilir; kopmuş bağlantı yeni bağlantı oluşumu gerektirir.
-40. Nöron yalnızca bütün kullanılabilir çıkış bağlantılarını kaybettiğinde toparlanma moduna girer.
-41. Olay gecikmeleri sıfırdan büyüktür; kaynak nöronun ateşlenme döngüsü sürerken hedef nöronun eşik aşımıyla ateşlenmesi mümkündür.
-42. Aynı seed ve aynı başlangıç koşulları tekrarlanabilir sonuç verir.
-27. Mikroglia-benzeri ajanlar bağlantı nesnesinden ayrı yerel varlıklar olarak çalışır.
-28. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
-29. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
-30. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
-31. Bağlantısız terminal, 2B yerel aramayla uygun dendrit adayı bulabilir.
-32. Yeni bağlantı zayıf başlar ve kullanım/stabilizasyonla olgunlaşır.
-33. Zayıf ama mevcut bağlantı onarılabilir; kopmuş bağlantı yeni bağlantı oluşumu gerektirir.
-34. Nöron yalnızca bütün kullanılabilir çıkış bağlantılarını kaybettiğinde toparlanma moduna girer.
-35. Olay gecikmeleri sıfırdan büyüktür; kaynak nöronun ateşlenme döngüsü sürerken hedef nöronun eşik aşımıyla ateşlenmesi mümkündür.
-36. Aynı seed ve aynı başlangıç koşulları tekrarlanabilir sonuç verir.
+30. Presinaptik salım modülasyonu ile postsinaptik/dendritik algılama etkisi birbirinden ayrı test edilir.
+31. Yerel yeniden düzenleme sinyali yalnızca hedef dendritin/bağlantı alanının katkılarını etkiler; küresel öğrenilmiş parametreleri sıfırlamaz.
+32. Mikroglia-benzeri ajanlar bağlantı nesnesinden ayrı yerel varlıklar olarak çalışır.
+33. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
+34. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
+35. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
+36. Bağlantısız terminal, 2B yerel aramayla uygun dendrit adayı bulabilir.
+37. Yeni bağlantı zayıf başlar ve kullanım/stabilizasyonla olgunlaşır.
+38. Zayıf ama mevcut bağlantı onarılabilir; kopmuş bağlantı yeni bağlantı oluşumu gerektirir.
+39. Nöron yalnızca bütün kullanılabilir çıkış bağlantılarını kaybettiğinde toparlanma moduna girer.
+40. Olay gecikmeleri sıfırdan büyüktür; kaynak nöronun ateşlenme döngüsü sürerken hedef nöronun eşik aşımıyla ateşlenmesi mümkündür.
+41. Aynı seed ve aynı başlangıç koşulları tekrarlanabilir sonuç verir.
 
 ## 11. Açık araştırma ve karar noktaları
 
@@ -423,10 +412,10 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 - Yerel nöron-nöron birlikte ateşlenme etkileşimi tam olarak hangi parametreleri değiştirecek? Önceki konuşmanın ayrıntılı formülü mevcut notlarda bulunmadığından uydurulmamıştır.
 - Sinaps-sinaps birlikte etkinleşme zaman penceresi ve negatif güncelleme miktarı ne olacak?
 - Feedback'in zaman gecikmesi ve dal sönüm katsayısı ne olacak?
-- Önceki konuşmada tanımlanan `Q_k(x,t)) kimyasal yoğunluk alanının ayrık 2B yayılım/sönüm katsayıları nasıl kalibre edilecek?
+- Önceki konuşmada tanımlanan `Q_k(x,t)` kimyasal yoğunluk alanının ayrık 2B yayılım/sönüm katsayıları nasıl kalibre edilecek?
 - Terminalin transmitter repertuvarı ve dendritten gelen sinyalin çoklu salım profilini nasıl değiştirdiği nasıl kalibre edilecek?
-- Dendrit reseptör duyarlılığı `R_{ik}) zamanla öğrenilecek mi, sabit mi kalacak?
-- Dendritin kimyasal sinyale yanıtı mevcut `a_{dj}) katkılarını hangi koşullarda modüle edecek, yeniden düzenleyecek veya kontrollü biçimde baştan kuracak?
+- Dendrit reseptör duyarlılığı `R_{ik}` zamanla öğrenilecek mi, sabit mi kalacak?
+- Dendritin kimyasal sinyale yanıtı mevcut `a_{dj}` katkılarını hangi koşullarda modüle edecek, yeniden düzenleyecek veya kontrollü biçimde baştan kuracak?
 - İlk prototipte kaç işlevsel kimyasal sinyal sınıfı kullanılacak?
 - Mikroglia-benzeri ajanların sayısı, hareketi/arama davranışı ve yerel kimyasal algılaması nasıl olacak?
 - Bağlantı eliminasyonunda budama işaretinin ne kadar süre devam etmesi gerekecek?
