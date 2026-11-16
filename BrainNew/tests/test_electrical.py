@@ -391,6 +391,57 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             Baglanti("nan", None, None, stdp_depresyon_oran=float("nan"))
 
+    def test_uygunluk_izi_pre_post_eslesmesinde_pozitif_olur(self):
+        sinaps = Baglanti("elig", None, None)
+        sinaps.stdp_presinaptik_olayi_isle(0.0)
+        sinaps.stdp_postsinaptik_olayi_isle(1.0)
+        self.assertGreater(sinaps.uygunluk_izi, 0.0)
+
+    def test_uygunluk_izi_post_pre_eslesmesinde_negatif_olur(self):
+        sinaps = Baglanti("elig", None, None)
+        sinaps.stdp_postsinaptik_olayi_isle(0.0)
+        sinaps.stdp_presinaptik_olayi_isle(1.0)
+        self.assertLess(sinaps.uygunluk_izi, 0.0)
+
+    def test_uygunluk_izi_zamanla_soner_ve_sinirlanir(self):
+        sinaps = Baglanti("elig", None, None, uygunluk_tau=2.0)
+        sinaps.uygunluk_izini_guncelle(0.0, 5.0)
+        self.assertEqual(sinaps.uygunluk_izi, 1.0)
+        sinaps.uygunluk_izini_guncelle(2.0)
+        self.assertAlmostEqual(sinaps.uygunluk_izi, math.exp(-1.0))
+
+    def test_gecikmis_odul_uygunluk_izi_varken_agirligi_artirir(self):
+        alan = KimyasalAlan()
+        sinaps = Baglanti("elig", None, None, modulator_ogrenme_orani=0.1)
+        sinaps.uygunluk_izini_guncelle(0.0, 0.5)
+        sinaps.gecikmis_modulatoru_isle(alan, 0.0)
+        alan.sal("odul", sinaps.terminal_konumu, 100.0, 0.0)
+        sinaps.gecikmis_modulatoru_isle(alan, 1.0)
+        self.assertGreater(sinaps.sinaptik_agirlik, 1.0)
+
+    def test_gecikmis_ceza_pozitif_uygunlugu_zayiflatir(self):
+        alan = KimyasalAlan()
+        sinaps = Baglanti("elig", None, None, modulator_ogrenme_orani=0.1)
+        sinaps.uygunluk_izini_guncelle(0.0, 0.5)
+        sinaps.gecikmis_modulatoru_isle(alan, 0.0)
+        alan.sal("ceza", sinaps.terminal_konumu, 100.0, 0.0)
+        sinaps.gecikmis_modulatoru_isle(alan, 1.0)
+        self.assertLess(sinaps.sinaptik_agirlik, 1.0)
+
+    def test_modulator_uygunluk_izi_yokken_agirligi_degistirmez(self):
+        alan = KimyasalAlan()
+        sinaps = Baglanti("elig", None, None)
+        sinaps.gecikmis_modulatoru_isle(alan, 0.0)
+        alan.sal("odul", sinaps.terminal_konumu, 100.0, 0.0)
+        onceki = sinaps.sinaptik_agirlik
+        sinaps.gecikmis_modulatoru_isle(alan, 1.0)
+        self.assertEqual(sinaps.sinaptik_agirlik, onceki)
+
+    def test_modulator_zamani_geriye_goturulemez(self):
+        sinaps = Baglanti("elig", None, None)
+        sinaps.gecikmis_modulatoru_isle(None, 2.0)
+        with self.assertRaises(ValueError):
+            sinaps.gecikmis_modulatoru_isle(None, 1.0)
     def test_presinaptik_iz_sinaps_aktivasyonunda_artar(self):
         sinaps = Baglanti("s", None, None)
         sinaps.aktive_et(1.0)
