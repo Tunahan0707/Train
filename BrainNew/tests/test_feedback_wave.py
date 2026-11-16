@@ -187,3 +187,31 @@ def test_noron_guncelleme_sirasi_simulasyon_sonucunu_degistirmez():
         ]
 
     assert durum_imzasi(beyin_a) == durum_imzasi(beyin_b)
+
+
+
+def test_hedefi_ateslenmeyen_motor_noron_esik_alti_girdilerden_ogrenir():
+    beyin = Beyin(1, 1, 0, seed=31)
+    baglantilari_temizle(beyin)
+
+    reseptor = beyin.reseptor_noronlari[0]
+    motor = beyin.motor_noronlari[0]
+
+    baglanti = reseptor.aksonlar[0].baglan(
+        motor.dendritler[0],
+        etki_mv=2.0,
+        gecikme_ms=1
+    )
+
+    # Bağlantı sinyali hedefi eşik altı bırakır; motor nöron ateşlenmez.
+    baglanti.aktar(0)
+    assert motor.guncelle() is False
+    assert motor.ateslenme_sayisi == 0
+    assert baglanti.uygunluk_izi == 0.0
+
+    onceki_etki = baglanti.etki_mv
+    beyin.ogren([1])
+
+    assert baglanti.uygunluk_izi > 0.0
+    assert baglanti.etki_mv > onceki_etki
+    assert beyin.motor_organ.ciktilar == [0]
