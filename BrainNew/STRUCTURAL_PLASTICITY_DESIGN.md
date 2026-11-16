@@ -24,6 +24,17 @@ Kopmuş bağlantıların geri döndürülmesi ile yeni bağlantı oluşturulmas�
 6. **Olgunlaşma:** Kullanım izi ve yerel stabilizasyon/büyüme sinyali bağlantıyı korur. Kullanılmayan ve budama sinyali alan yeni bağlantı kopabilir.
 7. **Gözlem:** Oluşum, olgunlaşma, başarısız aday ve kopma olayları pasif deney kaydına yazılır.
 
+## İlk uygulama — uzamsal aday indeksi
+
+`UzamsalIndeks.py` içinde sabit hücreli 2B uzamsal indeks eklendi. İndeks:
+- Nöronları kimlikleriyle hücrelere kaydeder ve yinelenen kimliği reddeder.
+- Yalnızca arama yarıçapıyla kesişebilecek hücreleri tarar; son adayları karesel Öklid uzaklığıyla filtreler.
+- Adayları uzaklık ve kimlik anahtarına göre deterministik sıralar.
+- Kayıt silme ve hücreler arası konum güncellemesini destekler.
+- Bağlantı kurmaz ve yerel uygunluk kararı vermez.
+
+Bu ilk adım henüz `Beyin` olay döngüsüne bağlanmadı; mevcut simülasyon davranışını değiştirmeyen bağımsız bir sorgu bileşenidir. Aday hücre sayısı ve gerçek ağ boyutlarında maliyet profili ayrıca ölçülmelidir.
+
 ## Henüz karara bağlanmamış teknik ayrıntılar
 
 - Uzamsal indeksin sahibi: Beyin içinde salt sorgu hizmeti mi, yoksa ayrı bir uzamsal ortam bileşeni mi?
@@ -46,7 +57,7 @@ Kopmuş bağlantıların geri döndürülmesi ile yeni bağlantı oluşturulmas�
 
 ## Uygulama sırası
 
-1. Salt uzamsal komşuluk sorgusu ve karmaşıklık testi.
+1. Salt uzamsal komşuluk sorgusu ve karmaşıklık testi. (İndeksin ilk uygulaması eklendi; kullanıcı test doğrulaması ve ölçek testi bekleniyor.)
 2. Yerel aday uygunluğu ve deterministik seçim.
 3. Güvenli bağlantı kurma/tekilleştirme API'si.
 4. Zayıf başlangıç ve olgunlaşma.
