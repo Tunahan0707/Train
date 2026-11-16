@@ -68,3 +68,14 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Dört sinaptik bağlantının başlangıç ve öğrenilmiş ağırlıkları ayrı raporlanıyor.
 - Üç test eklendi: iki örüntünün ayrıştırılması, dört bağlantının da öğrenilmesi ve tekrarlanabilirlik.
 - **Durum:** Kod ve testler eklendi; yerel çalıştırma bekleniyor. Bu deney yönlü ve önceden kurulmuş bağlantılarla sınırlı; aynı ipucuna bağlı çelişkili örüntü seçimi veya genel hafıza kapasitesi kanıtı değildir.
+
+
+## Aşama 16 — Bağlama duyarlı geri çağırma deneyi
+
+- `BaglamaDuyarliHafizaDeneyi` eklendi: A+X→B,C ve A+Y→D,E.
+- A ipucu iki önceden kurulmuş bağlam kapısına düşük şiddetle gelir; bağlam girdisi yalnızca ilgili kapıya ek katkı sağlar.
+- Tek başına A, X veya Y'nin kapı eşiğini aşmaması; iki girdinin birlikte yerel membran toplamıyla ilgili kapıyı ateşlemesi ölçülür.
+- Gx ve Gy'nin ayrı çıkış bağlantıları hedef örüntülerin duyusal öğretimi sırasında yerel Hebbian öğrenmeyle güçlendirilir.
+- Eğitim sonrası aynı A ipucunun X ve Y bağlamlarında farklı hedefleri geri çağırması ve karşı yolun sessiz kalması sınanır.
+- Dört test eklendi: tekil girdi negatif kontrolleri, bağlama göre seçici geri çağırma, dört bağlantının öğrenilmesi ve tekrarlanabilirlik.
+- **Sınır:** Bağlam kapıları ve duyusal yakınsama topolojisi deney için önceden kuruludur. Bu deney kapı/topoloji oluşumunun kendiliğinden öğrenildiğini kanıtlamaz; mevcut membran toplaması ve öğrenilmiş çıkış bağlantılarının bağlam seçiciliğine yeterli olup olmadığını sınar.
