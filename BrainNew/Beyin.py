@@ -5,10 +5,11 @@ import itertools
 class Beyin:
     """Simülasyon saatini ve olayların bileşenlere dağıtımını yönetir."""
 
-    def __init__(self, kimyasal_alan=None):
+    def __init__(self, kimyasal_alan=None, deney_kaydi=None):
         self.zaman = 0.0
         self.noronlar = {}
         self.kimyasal_alan = kimyasal_alan
+        self.deney_kaydi = deney_kaydi
         self._olaylar = []
         self._olay_sayaci = itertools.count()
 
@@ -57,6 +58,13 @@ class Beyin:
             return False
         zaman, olay_id, tur, hedef_id, veri = heapq.heappop(self._olaylar)
         self.zaman = zaman
+
+        # Kayıt yalnızca kuyruktan çıkarılmış olayı gözlemler; olay akışına
+        # veya bileşenlerin öğrenme kararlarına müdahale etmez.
+        if self.deney_kaydi is not None:
+            self.deney_kaydi.olay_kaydet(
+                zaman, olay_id, tur, hedef_id, veri
+            )
 
         if tur in ("duyusal_girdi", "sinaptik_girdi"):
             self._girdi_olayini_isle(self.noronlar[hedef_id], veri)
