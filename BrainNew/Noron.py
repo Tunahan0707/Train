@@ -16,14 +16,19 @@ class Noron:
         hiperpolarizasyon=-80.0, homeostatik_hedef_oran=0.02,
         homeostatik_tau=100.0, homeostatik_oran=0.01,
         homeostatik_esik_alt=-10.0, homeostatik_esik_ust=10.0,
-        buyume_esigi=0.01, yeni_baglanti_agirligi=0.1
+        buyume_esigi=0.01, yeni_baglanti_agirligi=0.1,
+        sinaps_iliski_ogrenme_orani=0.01,
+        sinaps_iliski_sonum_tau=100.0,
+        sinaps_iliski_etki_olcegi=0.1
     ):
         sayisal_degerler = (
             dinlenme, esik, sizinti, depolarizasyon,
             repolarizasyon, hiperpolarizasyon, homeostatik_hedef_oran,
             homeostatik_tau, homeostatik_oran,
             homeostatik_esik_alt, homeostatik_esik_ust,
-            buyume_esigi, yeni_baglanti_agirligi
+            buyume_esigi, yeni_baglanti_agirligi,
+            sinaps_iliski_ogrenme_orani, sinaps_iliski_sonum_tau,
+            sinaps_iliski_etki_olcegi
         )
         if not all(math.isfinite(float(v)) for v in sayisal_degerler):
             raise ValueError("Nöron parametreleri sonlu sayılar olmalı.")
@@ -76,6 +81,16 @@ class Noron:
         # yalnızca bu ateşlenmeye gerçekten girdi taşıyan bağlantıları izler.
         self._son_nedensel_girdi_sinapslari = set()
         self._son_aktif_cikis_sinapslari = set()
+
+        # Aynı nöronun çıkış sinapsları arasındaki seyrek, yönlü ilişkiler.
+        if not 0.0 <= sinaps_iliski_ogrenme_orani <= 1.0:
+            raise ValueError("Sinaps ilişki öğrenme oranı [0, 1] aralığında olmalı.")
+        if sinaps_iliski_sonum_tau <= 0 or sinaps_iliski_etki_olcegi < 0:
+            raise ValueError("Sinaps ilişki zaman sabiti ve etki ölçeği geçersiz.")
+        self.sinaps_iliski_ogrenme_orani = float(sinaps_iliski_ogrenme_orani)
+        self.sinaps_iliski_sonum_tau = float(sinaps_iliski_sonum_tau)
+        self.sinaps_iliski_etki_olcegi = float(sinaps_iliski_etki_olcegi)
+        self.sinaps_iliski_agirliklari = {}
 
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
@@ -245,6 +260,69 @@ class Noron:
             sinaps.esik = sinaps.esik_geri_bildirim_uygula(yon_esik, miktar)
             degisimler[sinaps.kimlik] = sinaps.esik - onceki
         return degisimler
+
+    def sinaps_iliski_oku(self, kaynak, hedef, zaman):
+        """Yönlü ilişkiyi tembel zamansal sönümle okuyup döndürür."""
+        if kaynak is hedef:
+            return 0.0
+        anahtar = (kaynak, hedef)
+        kayit = self.sinaps_iliski_agirliklari.get(anahtar)
+        if kayit is None:
+            return 0.0
+        agirlik, son_zaman = kayit
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < son_zaman:
+            raise ValueError("Sinaps ilişki zamanı sonlu olmalı ve geriye gitmemeli.")
+        if zaman > son_zaman:
+            agirlik *= math.exp(
+                -(zaman - son_zaman) / self.sinaps_iliski_sonum_tau
+            )
+        if abs(agirlik) < 1e-8:
+            self.sinaps_iliski_agirliklari.pop(anahtar, None)
+            return 0.0
+        self.sinaps_iliski_agirliklari[anahtar] = (agirlik, zaman)
+        return agirlik
+
+    def sinaps_iliski_guncelle(self, kaynak, hedef, zaman, birlikte):
+        """Tek bir yönlü sinaps ilişkisini yerel birliktelik kuralıyla günceller."""
+        if kaynak is hedef or kaynak.kopuk or hedef.kopuk:
+            return 0.0
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < 0:
+            raise ValueError("Sinaps ilişki zamanı sonlu ve negatif olmayan olmalı.")
+        onceki = self.sinaps_iliski_oku(kaynak, hedef, zaman)
+        oran = self.sinaps_iliski_ogrenme_orani
+        if birlikte:
+            yeni = onceki + oran * (1.0 - onceki)
+        else:
+            yeni = onceki - oran * (1.0 + onceki)
+        yeni = max(-1.0, min(1.0, yeni))
+        if abs(yeni) < 1e-8:
+            self.sinaps_iliski_agirliklari.pop((kaynak, hedef), None)
+        else:
+            self.sinaps_iliski_agirliklari[(kaynak, hedef)] = (yeni, zaman)
+        return yeni
+
+    def sinaps_iliski_etkilesimini_uygula(self, aktif_sinapslar, zaman):
+        """Etkin terminalin öğrendiği yönlü ilişkiyi diğer terminal potansiyeline uygular."""
+        aktifler = tuple(aktif_sinapslar)
+        for kaynak in aktifler:
+            if kaynak.kopuk:
+                continue
+            for hedef in self.cikis_sinapslari:
+                if hedef is kaynak or hedef.kopuk:
+                    continue
+                iliski = self.sinaps_iliski_oku(kaynak, hedef, zaman)
+                if iliski:
+                    hedef.etki_uygula(
+                        iliski * self.sinaps_iliski_etki_olcegi, zaman
+                    )
+
+    def sinaps_iliskilerini_temizle(self, sinaps):
+        """Kopmuş terminale bağlı yerel ilişki kayıtlarını kaldırır."""
+        for anahtar in tuple(self.sinaps_iliski_agirliklari):
+            if sinaps in anahtar:
+                self.sinaps_iliski_agirliklari.pop(anahtar, None)
 
     def geri_bildirim_dali_isle(
         self, zaman, pozitif, miktar, iz_esigi, dallanma_sonum,
@@ -418,6 +496,7 @@ class Noron:
             if not sinaps.kopuk:
                 sinaps.gecikmis_modulatoru_isle(kimyasal_alan, zaman)
             if sinaps.kopuk:
+                self.sinaps_iliskilerini_temizle(sinaps)
                 self.cikis_sinapslari.remove(sinaps)
                 if sinaps.hedef is not None and sinaps in sinaps.hedef.gelen_sinapslari:
                     sinaps.hedef.gelen_sinapslari.remove(sinaps)
@@ -441,7 +520,10 @@ class Noron:
         self._entegrasyon_girdi_sinapslari.clear()
 
         aktif = []
-        for sinaps in self.cikis_sinapslari:
+        degerlendirilen = [
+            sinaps for sinaps in self.cikis_sinapslari if not sinaps.kopuk
+        ]
+        for sinaps in degerlendirilen:
             if not sinaps.aktive_olabilir_mi(zaman):
                 continue
             gecikme = sinaps.aktive_et(zaman)
@@ -453,6 +535,19 @@ class Noron:
 
         aktif_sinapslar = [sinaps for sinaps, _ in aktif]
         self._son_aktif_cikis_sinapslari = set(aktif_sinapslar)
+
+        # Önce eski yönlü ilişkiler geçici terminal potansiyellerini etkiler.
+        self.sinaps_iliski_etkilesimini_uygula(aktif_sinapslar, zaman)
+
+        # Sonra bu ateşlenmenin birliktelik örüntüsü ilişkileri öğrenir.
+        aktif_kumesi = set(aktif_sinapslar)
+        for kaynak in aktif_sinapslar:
+            for hedef in degerlendirilen:
+                if hedef is kaynak:
+                    continue
+                self.sinaps_iliski_guncelle(
+                    kaynak, hedef, zaman, birlikte=(hedef in aktif_kumesi)
+                )
         for dendrit in self.dendritler.values():
             dendrit.firsat_sonucu_ogren(aktif_sinapslar, zaman)
         return aktif
