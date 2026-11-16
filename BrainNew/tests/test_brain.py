@@ -70,7 +70,7 @@ class BrainNewPrototypeTests(unittest.TestCase):
         beyin.duyusal_girdi("n", "d2", 10.0)
         beyin.calistir()
 
-        u = __import__("math").tanh(1.0)
+        u = math.tanh(1.0)
         delta = (0.5 * u + 0.5 * u) / (2.0 ** 0.5)
         expected = delta / (1.0 + delta)
         self.assertAlmostEqual(sinaps.potansiyel, expected)
