@@ -48,4 +48,4 @@ Bir testin geçmesi, test edilen yazılım davranışının yazılmış beklenti
 
 Refrakter dönemde gelen girdiler mevcut tasarım kararı gereği dendritte tamponlanır ve nöron dinlenmeye döndüğünde yeniden bütünleştirilir. Bu davranışın testleri sözleşmeyi korur; farklı bir sönüm modeli ancak ayrı bir tasarım kararıyla ele alınabilir.
 
-Testlerin geçtiği iddiası yalnızca komutlar gerçekten çalıştırıldıktan sonra verilmelidir.\n- `test_contextual_memory.py`: Aynı ipucunun X/Y bağlamlarında farklı örüntüleri geri çağırması, tekil girdi negatif kontrolleri, yanlış yolun sessiz kalması ve tekrarlanabilirlik.\n\nÇalıştırma: `python -m BrainNew.BaglamaDuyarliHafizaDeneyi` ve `python -m pytest BrainNew/tests/test_contextual_memory.py -v`.\n
+Testlerin geçtiği iddiası yalnızca komutlar gerçekten çalıştırıldıktan sonra verilmelidir.\n- `test_contextual_memory.py`: Aynı ipucunun X/Y bağlamlarında farklı örüntüleri geri çağırması, tekil girdi negatif kontrolleri, yanlış yolun sessiz kalması, tekrarlanabilirlik ve ±%5 giriş genliği dayanıklılığı.\n\nÇalıştırma: `python -m BrainNew.BaglamaDuyarliHafizaDeneyi` ve `python -m pytest BrainNew/tests/test_contextual_memory.py -v`.\n
