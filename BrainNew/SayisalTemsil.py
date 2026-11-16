@@ -18,8 +18,14 @@ class SayisalTemsil:
         darbe_araligi=5.0,
         darbe_etkisi=100.0,
     ):
+        try:
+            log_sigma = float(log_sigma)
+            darbe_araligi = float(darbe_araligi)
+            darbe_etkisi = float(darbe_etkisi)
+        except (TypeError, ValueError):
+            raise ValueError("Sayısal temsil parametreleri sayısal olmalı.") from None
         sayisal = (log_sigma, darbe_araligi, darbe_etkisi)
-        if not all(math.isfinite(float(x)) for x in sayisal):
+        if not all(math.isfinite(x) for x in sayisal):
             raise ValueError("Sayısal temsil parametreleri sonlu olmalı.")
         if (
             isinstance(en_kucuk, bool)
@@ -42,6 +48,15 @@ class SayisalTemsil:
         self.azami_darbe = azami_darbe
         self.darbe_araligi = float(darbe_araligi)
         self.darbe_etkisi = float(darbe_etkisi)
+
+        kodlar = {
+            self.darbe_sayilari(sayi)
+            for sayi in self.tercih_edilen_sayilar
+        }
+        if len(kodlar) != len(self.tercih_edilen_sayilar):
+            raise ValueError(
+                "Seçilen ayarlar sayı aralığında birbirinden farklı kodlar üretmiyor."
+            )
 
     def _sayiyi_dogrula(self, sayi):
         if isinstance(sayi, bool) or not isinstance(sayi, int):
