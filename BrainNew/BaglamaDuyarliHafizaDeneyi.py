@@ -111,11 +111,18 @@ class BaglamaDuyarliHafizaDeneyi:
 
     @classmethod
     def _ornek(cls, kimlik, baglam=None, tam_oruntu=None, ipucu=True):
-        if tam_oruntu is None:
+        if tam_oruntu is not None:
+            secilen_oruntu = tam_oruntu
+        elif ipucu and baglam in ("X", "Y"):
+            secilen_oruntu = baglam
+        else:
+            secilen_oruntu = None
+
+        if secilen_oruntu is None:
             beklenen = set()
         else:
             kapı_id, hedefler, _ = (
-                cls.ORUNTU_X if tam_oruntu == "X" else cls.ORUNTU_Y
+                cls.ORUNTU_X if secilen_oruntu == "X" else cls.ORUNTU_Y
             )
             beklenen = {kapı_id, *hedefler}
         return DeneyOrnegi(
