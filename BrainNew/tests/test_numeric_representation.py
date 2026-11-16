@@ -90,6 +90,8 @@ class SayisalTemsilTests(unittest.TestCase):
             self.temsil.kodla(3, self.noronlar[:-1], self.dendritler)
         with self.assertRaises(ValueError):
             self.temsil.coz({"S1": -1}, self.noronlar)
+        with self.assertRaises(ValueError):
+            SayisalTemsil(log_sigma=100.0)
 
 
 if __name__ == "__main__":
