@@ -237,6 +237,10 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
             Dendrid("d").girdi_al(float("inf"))
         with self.assertRaises(ValueError):
             Noron("n", esik=float("nan"))
+        with self.assertRaises(ValueError):
+            Baglanti("s", None, None, iletim_hizi=float("inf"))
+        with self.assertRaises(ValueError):
+            Baglanti("s", None, None, transmitter_profili={"A": float("nan")})
 
 
 if __name__ == "__main__":
