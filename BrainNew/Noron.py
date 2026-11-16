@@ -51,9 +51,13 @@ class Noron:
             if yerel_sinyal == 0.0:
                 continue
             for sinaps, katki in dendrit.sinaps_katkilari.items():
+                etki = katki * yerel_sinyal
+                if etki == 0.0:
+                    continue
                 sinaps_katkilari.setdefault(sinaps, []).append(
-                    (dendrit, katki * yerel_sinyal)
+                    (dendrit, etki)
                 )
+                dendrit.son_islenen_sinapslar.add(sinaps)
 
         # Tasarım belgesindeki normalizasyon sinaps başına, o olaya
         # gerçekten katkı veren dendrit sayısına göre yapılır.
