@@ -47,6 +47,7 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertTrue(n.aksiyon_potansiyeli_baslat())
         self.assertEqual(n.durum, n.DEPOLARIZASYON)
         self.assertEqual(n.membran, n.depolarizasyon_degeri)
+        self.assertEqual(n.faz_gecisi_gecikmesi(), 1.0)
 
     def test_ateslenme_sayaci_ateslenmede_birer_artar(self):
         n = Noron("n")
