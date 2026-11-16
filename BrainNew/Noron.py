@@ -123,6 +123,14 @@ class Noron:
         self.son_yerel_aktivite_guncelleme = 0.0
         self.son_ateslenme_zamani = None
 
+        # Pasif episode tanilamasi: ag davranisini degistirmez.
+        self.tanilama_entegre_sayisi = 0
+        self.tanilama_toplam_membran_girdisi = 0.0
+        self.tanilama_mutlak_membran_girdisi = 0.0
+        self.tanilama_maksimum_membran_girdisi = 0.0
+        self.tanilama_maksimum_membran = self.dinlenme_degeri
+        self.tanilama_maksimum_esik_marji = self.dinlenme_degeri - self.esik
+
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
         if mevcut is not None and mevcut is not dendrit:
@@ -256,6 +264,13 @@ class Noron:
             )
         self.son_membran_guncelleme = zaman
         self.membran += toplam_etki
+        self.tanilama_maksimum_membran = max(
+            self.tanilama_maksimum_membran, self.membran
+        )
+        self.tanilama_maksimum_esik_marji = max(
+            self.tanilama_maksimum_esik_marji,
+            self.membran - self.esik
+        )
         return self.membran >= self.esik
 
     def aksiyon_potansiyeli_baslat(self):
@@ -510,6 +525,12 @@ class Noron:
         if not math.isfinite(zaman) or zaman < 0:
             raise ValueError("Episode zamanı sonlu ve negatif olmayan değer olmalı.")
         self.membran = self.dinlenme_degeri
+        self.tanilama_entegre_sayisi = 0
+        self.tanilama_toplam_membran_girdisi = 0.0
+        self.tanilama_mutlak_membran_girdisi = 0.0
+        self.tanilama_maksimum_membran_girdisi = 0.0
+        self.tanilama_maksimum_membran = self.dinlenme_degeri
+        self.tanilama_maksimum_esik_marji = self.dinlenme_degeri - self.esik
         self.son_membran_guncelleme = zaman
         self.son_entegrasyon_zamani = None
         self.son_girdi_zamani = None
@@ -686,7 +707,13 @@ class Noron:
         if self.durum != self.DINLENME:
             return False, []
 
+        self.tanilama_entegre_sayisi += 1
         toplam = self.girdileri_birlestir(zaman, kimyasal_alan)
+        self.tanilama_toplam_membran_girdisi += toplam
+        self.tanilama_mutlak_membran_girdisi += abs(toplam)
+        self.tanilama_maksimum_membran_girdisi = max(
+            self.tanilama_maksimum_membran_girdisi, abs(toplam)
+        )
         self.baglantilari_bakimdan_gecir(zaman, kimyasal_alan)
         self.son_entegrasyon_zamani = float(zaman)
         self.homeostatik_durumu_guncelle(zaman)
