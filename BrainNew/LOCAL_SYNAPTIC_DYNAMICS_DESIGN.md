@@ -75,6 +75,21 @@ Bir dalda geri yayılım, o dalın etkinlik izi ilgili geri-adım eşiğinin alt
 
 Geri bildirim ulaştığı her konumda etkinlik potansiyeline küçük bir ekleme veya çıkarma yapar. Geriye doğru her adımda etkinin büyüklüğü azalır. Etkinin sayısal katsayıları ve adım başına azalma miktarı henüz kalibre edilmemiştir.
 
+Aynı geri bildirim dalgası içinde aynı yerel konuma birden fazla daldan etki ulaşırsa, bu katkılar o konum için birleştirilir ve tek bir birleşik etki olarak uygulanır. Birleştirme nöronun tamamında değil, etkilenen yerel eleman/konum bazında yapılır; farklı yerel konumlar bağımsız kalır.
+
+Birleşik etkinin uygulanacak büyüklüğü sabit bir etki tavanıyla değil, hedef elemanın mevcut aktiflik potansiyelinin izin verilen aralığın sınırlarına yakınlığıyla belirlenir. Potansiyel ilgili yöndeki sınıra yaklaştıkça o yönde uygulanabilecek etki giderek zayıflar ve sınıra ulaşıldığında sıfıra yaklaşır. Böylece pozitif ve negatif katkılar birbirini dengeleyebilir; ancak kararlılık yalnızca bu nötralizasyona bırakılmaz.
+
+İlk matematiksel öneri, potansiyel aralığı \([P_{min}, P_{max}]\) için şöyledir. Önce aynı konuma gelen katkılar toplanır: \(\Delta P = \sum_i \Delta P_i\). Ardından:
+\[
+\Delta P_{\text{uyg}} =
+\begin{cases}
+\Delta P \cdot \dfrac{P_{max}-P}{P_{max}-P_{min}}, & \Delta P > 0 \\
+\Delta P \cdot \dfrac{P-P_{min}}{P_{max}-P_{min}}, & \Delta P < 0 \\
+0, & \Delta P = 0
+\end{cases}
+\]
+Burada \(P\), etki uygulanmadan önce hedef elemanın mevcut aktiflik potansiyelidir. Bu ölçekleme pozitif ve negatif yönlerde ayrı ayrı yakınsama sağlar. Doğrusal ölçekleme şu an kabul edilen ilk modeldir; üstel veya başka bir yakınsama eğrisiyle karşılaştırılması daha sonraki deney konusudur. \(P_{min}\) ve \(P_{max}\) değerleri henüz belirlenmemiştir.
+
 Etkinlik izi bulunan ve bulunmayan konumlara uygulanacak etki:
 
 | Feedback türü | Etkinlik izi bulunan konum | Etkinlik izi bulunmayan konum |
@@ -128,6 +143,8 @@ Bu sayılar biyolojik sabitler değildir. Ölçeksiz/normalize prototip parametr
 7. Feedback geriye doğru bütün erişilebilir dalları ayrı ayrı izler; bir dalın kesilmesi diğer dalları durdurmaz.
 8. Her dalın yayılımı kendi etkinlik izinin adım sayısına bağlı eşiğin altına düşmesiyle durur.
 9. Feedback etkisi geriye doğru her adımda azalır.
+10. Aynı geri bildirim dalgasında aynı yerel konuma farklı dallardan gelen katkılar birleştirilerek tek etki olarak uygulanır; farklı yerel konumlar birbirinden bağımsız kalır.
+11. Geri bildirim etkisinin uygulanabilir büyüklüğü hedef elemanın mevcut aktiflik potansiyeline göre ölçeklenir; potansiyel ilgili sınıra yaklaştıkça etki sıfıra yaklaşır ve izin verilen aralık aşılmaz.
 10. Geçici iz zamanla kaybolur; episode resetinde temizlenebilir.
 11. Feedback yayılımı için ayrıca kalıcı bir track veri yapısı tutulmaz.
 12. Kullanılmayan bağlantı yaşlanır; tekrar kullanılan bağlantının yaşı sıfırlanır.
