@@ -180,5 +180,6 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Her ara nöron sol ve sağ reseptörden birer dendritik girdi alır ve iki karar nöronuna projekte olur. Reseptörlerden karar nöronlarına doğrudan bağlantı yoktur.
 - Reseptör→ara bağlantılar yerel Hebbian/STDP plastisitesine; ara→karar bağlantıları gecikmiş yerel ödül/ceza modülatörüne açıktır. Görev ortamı ağırlıkları doğrudan değiştirmez.
 - Test örnekleri, eğitim sonrası ağın bağımsız kopyalarında tek tek değerlendirilir. Böylece test örnekleri birbirlerinin parametrelerini değiştirmez; eğitimden kalan kimyasal kaynaklar test kopyasından temizlenir.
-- Testler binary kodlamayı, bit-dendrit olaylarını, ağ boyutunu, bağlantı yönlerini, seed tekrarlanabilirliğini, eğitim/test ayrımını ve test kopyalarının eğitim ağını değiştirmediğini denetler.
+- Tanılama, karar dağılımını ve beklenen sınıfa göre doğruluğu ayrı raporlar; sinaptik ağırlık değişimini reseptör→ara ve ara→karar grupları için ayrı özetler.
+- Testler binary kodlamayı, bit-dendrit olaylarını, ağ boyutunu, bağlantı yönlerini, seed tekrarlanabilirliğini, eğitim/test ayrımını, tanılama özetlerini ve test kopyalarının eğitim ağını değiştirmediğini denetler.
 - **Sınır:** Bu yeni deney henüz kullanıcı ortamında çalıştırılmadı. Ara katman ve BrainOld tarzı binary giriş eklendi; karşılaştırma başarısı veya genelleme iddiası yoktur. İlk çalıştırmada eğitim/test davranışı, sınıf yanlılığı ve öğrenilen bağlantı değişimleri birlikte incelenmelidir.
