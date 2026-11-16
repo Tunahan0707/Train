@@ -269,6 +269,44 @@ class BaglamaDuyarliHafizaDeneyi:
             rapor[kanal] = kanal_raporu
         return rapor
 
+    def coklu_seed_gurultu_ozeti(
+        self, gurultu_oranlari=(0.05, 0.10, 0.20),
+        kanallar=("ipucu", "baglam", "hepsi"), tekrar=100,
+        seedler=(20261117, 20261118, 20261119),
+    ):
+        """Bağımsız seed koşularını birleştirir ve seed'ler arası aralığı raporlar."""
+        seedler = tuple(seedler)
+        if not seedler or any(not isinstance(x, int) for x in seedler):
+            raise ValueError("En az bir tam sayı seed gerekli.")
+        if len(set(seedler)) != len(seedler):
+            raise ValueError("Seed değerleri benzersiz olmalı.")
+        kosular = [
+            self.kanal_bazli_gurultu_taramasi(
+                gurultu_oranlari=gurultu_oranlari, kanallar=kanallar,
+                tekrar=tekrar, seed=seed,
+            )
+            for seed in seedler
+        ]
+        sonuc = {}
+        for kanal in kanallar:
+            sonuc[kanal] = {}
+            for oran in gurultu_oranlari:
+                sonuc[kanal][float(oran)] = {}
+                for baglam in ("X", "Y"):
+                    kayitlar = [x[kanal][float(oran)][baglam] for x in kosular]
+                    dogru = sum(x["dogru"] for x in kayitlar)
+                    toplam = sum(x["toplam"] for x in kayitlar)
+                    oranlar = [x["tam_eslesme_orani"] for x in kayitlar]
+                    sonuc[kanal][float(oran)][baglam] = {
+                        "dogru": dogru, "toplam": toplam,
+                        "tam_eslesme_orani": dogru / toplam,
+                        "yanlis_pozitif": sum(x["yanlis_pozitif"] for x in kayitlar),
+                        "tohum_bazli_oranlar": oranlar,
+                        "en_dusuk_tohum_orani": min(oranlar),
+                        "en_yuksek_tohum_orani": max(oranlar),
+                    }
+        return {"seedler": seedler, "tekrar_seed_basina": tekrar, "sonuc": sonuc}
+
     def eksik_kanal_taramasi(self, kanallar=("ipucu", "baglam")):
         """İpucu veya bağlam kanalı tamamen yokken geri çağırmayı ölçer."""
         import random
