@@ -33,6 +33,13 @@ class Beyin:
 
     def sinyal_gonder(self, sinaps, zaman):
         gecikme = sinaps.aktive_et(zaman)
+        if self.kimyasal_alan is not None:
+            for tur, miktar in sinaps.transmitter_profili.items():
+                self.kimyasal_alan.sal(
+                    tur, sinaps.terminal_konumu, miktar, zaman,
+                    yayilim=sinaps.kimyasal_yayilim,
+                    temizlenme=sinaps.kimyasal_temizlenme
+                )
         if sinaps.hedef is not None:
             if sinaps.hedef_dendrit_id is None:
                 raise ValueError("Hedef sinaps için dendrit kimliği belirtilmeli.")
