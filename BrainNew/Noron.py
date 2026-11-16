@@ -71,6 +71,18 @@ class Noron:
                 raise ValueError("Girdi zamanı sonlu ve negatif olmayan değer olmalı.")
             self.son_girdi_zamani = zaman
 
+    def girdi_kaynagini_isaretle(self, dendrit_id, kaynak_sinaps):
+        """İşlenmekte olan girdinin kaynak bağlantısını yerel dendrite iliştirir."""
+        if dendrit_id not in self.dendritler:
+            raise ValueError(f"Nöronda bulunmayan dendrit: {dendrit_id}")
+        if kaynak_sinaps.hedef is not self:
+            raise ValueError("Kaynak sinapsın hedefi bu nöron olmalı.")
+        if kaynak_sinaps.hedef_dendrit_id != dendrit_id:
+            raise ValueError("Kaynak sinaps farklı bir hedef dendrite bağlı.")
+        self.dendritler[dendrit_id].bekleyen_kaynak_sinapslari.append(
+            kaynak_sinaps
+        )
+
     def bekleyen_girdi_var_mi(self):
         return any(dendrit.girdi_var_mi() for dendrit in self.dendritler.values())
 
