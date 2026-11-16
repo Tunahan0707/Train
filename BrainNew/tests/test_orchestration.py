@@ -58,6 +58,12 @@ class OrkestrasyonTestleri(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     beyin.olay_planla(gecikme, "bilinmeyen", "x")
 
+    def test_float_hassasiyetinde_zamani_ilerletmeyen_gecikme_reddedilir(self):
+        beyin = Beyin()
+        beyin.zaman = 1e20
+        with self.assertRaises(ValueError):
+            beyin.olay_planla(1e-6, "duyusal_girdi", "n")
+
     def test_olay_zamani_planlanan_gecikme_kadar_ilerler(self):
         beyin = Beyin()
         n = Noron("n")
