@@ -32,7 +32,7 @@ def test_ateslenmeye_pozitif_katki_yapan_baglanti_iz_kazanir():
     assert baglanti.uygunluk_izi == 1.0
 
 
-def test_ateslenmeye_negatif_katki_yapan_baglanti_iz_kazanmaz():
+def test_ateslenme_sirasinda_inhibitor_katki_yapan_baglanti_iz_kazanir():
     kaynak = Noron()
     hedef = Noron()
 
@@ -44,7 +44,7 @@ def test_ateslenmeye_negatif_katki_yapan_baglanti_iz_kazanmaz():
     baglanti.aktar(0)
     assert hedef.guncelle()
 
-    assert baglanti.uygunluk_izi == 0.0
+    assert baglanti.uygunluk_izi == 1.0
 
 
 def test_uygunluk_izi_belirlenen_ust_siniri_asmaz():
@@ -95,3 +95,38 @@ def test_beyin_esigi_altindaki_izleri_etkin_listeden_cikarir():
 
     assert baglanti not in beyin.etkin_baglantilar
     assert baglanti.aktif
+
+
+
+def test_basari_geri_bildirimi_inhibitor_baglantiyi_zayiflatir():
+    kaynak = Noron()
+    hedef = Noron()
+    baglanti = kaynak.aksonlar[0].baglan(
+        hedef.dendritler[0],
+        etki_mv=-2.0
+    )
+    hedef.membran_potansiyeli = -50.0
+    baglanti.aktar(0)
+    assert hedef.guncelle()
+    assert baglanti.uygunluk_izi == 1.0
+
+    hedef.geri_bildirim(1.0)
+
+    assert baglanti.etki_mv == -1.5
+
+
+def test_basarisizlik_geri_bildirimi_inhibitor_baglantiyi_guclendirir():
+    kaynak = Noron()
+    hedef = Noron()
+    baglanti = kaynak.aksonlar[0].baglan(
+        hedef.dendritler[0],
+        etki_mv=-2.0
+    )
+    hedef.membran_potansiyeli = -50.0
+    baglanti.aktar(0)
+    assert hedef.guncelle()
+    assert baglanti.uygunluk_izi == 1.0
+
+    hedef.geri_bildirim(-1.0)
+
+    assert baglanti.etki_mv == -2.5
