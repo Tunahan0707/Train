@@ -12,7 +12,30 @@ Belgede kararlar, öneriler ve açık araştırma noktaları birbirinden ayrıl�
 - Aksiyon potansiyeli oluştuğunda, yalnızca kendi yerel durumları ve aktivasyon koşulları uygun olan sinapslar aktive olabilir. Aktivasyon potansiyelinin/eşiğinin aşılmış olması tek başına sinapsı otomatik aktive etmez; nöronun aksiyon potansiyeli oluşturması gerekir.
 - Nöronun çalışma döngüsünde aksiyon potansiyeli, dinlenme ve yeniden polarizasyon aşamaları bulunur. Döngü tamamlandığında nöron yeni sinyale hazır hâle gelir.
 - Aksiyon potansiyeli tamamlandığında sinyal dalga biçiminde gönderilir. Bu dalganın uzamsal/zamansal yayılım ayrıntıları ayrıca modellenebilir.
-- Aksiyon potansiyelinden sonra mutlak ve göreli refrakter dönemler modellenebilir: mutlak dönemde yeni aksiyon potansiyeli başlatılamaz; göreli dönemde başlatılması zorlaşır. Bu sırada sinaptik girdilerin alınması ile yeniden ateşlenmek ayrı olaylardır.
+- Aksiyon potansiyelinden sonra refrakter dönem modellenir. Eski branch'de depolarizasyon, repolarizasyon ve hiperpolarizasyon durumları boyunca yeni ateşlenme kararı engellenir. Mutlak ve göreli refrakter dönemlerin ayrı ayrı modellenmesi yeni tasarımda ayrıca kararlaştırılacaktır. Sinaptik girdilerin alınması ile yeniden ateşlenmek ayrı olaylardır.
+
+
+### 1.1. Eski branch'den korunan membran ve aksiyon potansiyeli mekanizması
+
+`fix/synaptic-contribution-tracking` branch'indeki `Noron.py`, `Dendrid.py` ve ilgili testler incelendi. Aşağıdaki mekanizma önceki tasarımın mevcut davranışıdır ve yeni tasarımda başlangıç referansı olarak korunacaktır. Bu bölümün eklenmesi, yeni yerel sinaps dinamikleriyle entegrasyonun tamamlandığı anlamına gelmez.
+
+Eski mekanizmada nöronun ateşlenme kararı, dendritlerden toplanan toplam etkinin nöron membran potansiyeline uygulanması ve bu potansiyelin eşik değerine ulaşması üzerinden verilir:
+
+- Dinlenme membran potansiyeli: -70 mV.
+- Ateşlenme eşiği: -55 mV.
+- Depolarizasyon durumunda membran potansiyeli +30 mV yapılır.
+- Sonraki adımda repolarizasyon durumunda -40 mV yapılır.
+- Ardından hiperpolarizasyon durumunda -80 mV değerine geçilir ve 2 zaman adımı beklenir.
+- Hiperpolarizasyon tamamlanınca nöron dinlenme durumuna ve -70 mV değerine döner.
+- Dinlenme durumunda dendritlerden alınan toplam etki membran potansiyeline eklenir. Ardından potansiyel dinlenme değerine doğru sızıntı oranı kadar çekilir.
+- Eski kodun varsayılan sızıntı oranı 0.05'tir. Bu oran ve yukarıdaki mV değerleri eski uygulamanın başlangıç parametreleridir; yeni modelde deneysel doğrulama olmadan biyolojik sabit sayılmaz.
+- Pozitif ve negatif sinaptik etkiler aynı toplamda yer alır; uyarıcı etkiler membran potansiyelini yükseltirken baskılayıcı etkiler düşürür.
+- Dış duyusal girdi eski kodda doğrudan membran potansiyeline etki eder ve yalnızca nöron dinlenme durumundayken uygulanır.
+- Eski uygulamada nöron dinlenme dışındaki tüm durumlarda yeni ateşlenme kararı vermez. Bu, tek bir refrakter/durum döngüsüdür; mutlak ve göreli refrakter dönemlerin ayrı fizyolojik mekanizmalar olarak uygulanmış olduğu anlamına gelmez.
+
+Eski uygulamada bağlantıdan gelen etkiler dendritte bekletilir, nöronun dinlenme adımında dendritlerden alınarak membran potansiyeline eklenir. Ateşlenme anında o ana kadar birikmiş ve katkıda bulunan bağlantılar uygunluk izi kazanır. Eski modelde her ateşlenme, nöronun bütün akson bağlantıları üzerinden iletim planlanmasına yol açar.
+
+**Yeni tasarımla entegrasyon için önemli ayrım:** Eski modelde bağlantı etkisi doğrudan dendrit ve oradan membran potansiyeline gider; yeni tasarımda ise dendrit-sinaps çiftlerinin ayrı yerel potansiyelleri ve sinapsların seçici aktivasyonu bulunur. Bu nedenle eski membran toplama mekanizmasının korunması, yerel sinaps potansiyellerinin membran potansiyeline hangi aşamada ve hangi kuralla katkı vereceğinin ayrıca tanımlanmasını gerektirir. Yerel sinaps potansiyelinin eşiği aşması tek başına nöronu ateşletmez; nöronun ateşlenme kararı membran potansiyeli/eşik mekanizmasında kalır.
 
 ## 2. Dendrit-sinaps etkileşimi ve yerel potansiyel
 
@@ -167,9 +190,13 @@ Aşağıdakiler kesin biyolojik sabitler değildir; prototipte deneyle ayarlanac
 6. Hiç ateşlenmemiş sinapsın davranışı, geçmişte ateşlenip uzun süredir ateşlenmeyen sinapstan ayrı test edilir.
 7. Yerel potansiyeli aktivasyon seviyesini aşmış sinaps, nöron aksiyon potansiyeli oluşmadan otomatik aktive olmaz.
 8. Nöron aksiyon potansiyeli oluşturduğunda yalnızca aktivasyon koşullarını sağlayan sinapslar aktive olabilir; uygun olmayan sinapslar zorla aktive edilmez.
-9. Nöronun aksiyon potansiyeli, dinlenme ve yeniden polarizasyon döngüsü tamamlandığında yeni sinyale hazır hâle gelmesi doğrulanır.
-10. Aksiyon potansiyeli tamamlandığında sinyal dalga biçiminde gönderilir.
-11. Refrakter dönemlerde yeni aksiyon potansiyeli başlatma koşulları doğrulanır; sinaptik girdi alımı ile yeniden ateşlenme birbirinden ayrılır.
+9. Membran potansiyeli eşik altında kaldığında nöron ateşlenmez; eşik değerine ulaştığında ateşlenir.
+10. Pozitif ve negatif dendritik/sinaptik etkiler membran potansiyelini doğru yönde değiştirir.
+11. Membran potansiyelinin dinlenme değerine sızıntısı doğru uygulanır ve parametreleri kalibre edilebilir.
+12. Depolarizasyon (+30 mV), repolarizasyon (-40 mV), hiperpolarizasyon (-80 mV / 2 adım) ve dinlenmeye dönüş döngüsü doğrulanır.
+13. Refrakter durumlarda yeni ateşlenme kararı verilmez; bekleyen sinaptik girdilerin nasıl ele alınacağı açıkça test edilir.
+14. Yeni tasarımda yerel sinaps potansiyellerinin membran potansiyeline katkı kuralı belirlendikten sonra, seçici sinaps aktivasyonu ile nöronun ateşlenme kararı birbirinden bağımsız test edilir.
+15. Aksiyon potansiyeli tamamlandığında sinyal dalga biçiminde gönderilir.
 12. Sinaps-sinaps etkileşimleri yönlüdür; k→j ile j→k bağımsız davranır.
 13. Sinaps-sinaps geçici potansiyel aktarımı ile kalıcı ilişki öğrenmesi birbirinden ayrıdır.
 14. Feedback bütün erişilebilir dalları bağımsız izler; bir dalın durması diğer dalları durdurmaz.
@@ -191,7 +218,11 @@ Aşağıdakiler kesin biyolojik sabitler değildir; prototipte deneyle ayarlanac
 - Etkin dendrit sayısına göre normalizasyonun kesin formu ne olacak?
 - Son ateşlenme zamanına bağlı pozitif/negatif güncelleme fonksiyonu ne olacak?
 - Hiç ateşlenmemiş sinaps ilk aktivasyon girişimine kadar nasıl davranacak?
-- Sinapsın aktivasyon koşulu/eşiği ile nöronun aksiyon potansiyeli oluşturma koşulu arasındaki kesin ilişki nasıl kurulacak?
+- Eski branch'deki membran potansiyeli toplama/sızıntı/eşik mekanizması yeni yerel sinaps potansiyelleriyle nasıl bütünleştirilecek: yerel sinaps potansiyelleri dendrit üzerinden membrana hangi koşulda, ne kadar ve hangi zamanlamayla katkı verecek?
+- Sinapsın yerel aktivasyon koşulu/eşiği ile nöronun membran potansiyeli üzerinden aksiyon potansiyeli oluşturma koşulu arasındaki kesin ilişki nasıl kurulacak?
+- Eski modeldeki sabit +30/-40/-80 mV durum geçişleri ve 2 adımlık hiperpolarizasyon yeni simülasyon zaman ölçeğinde korunacak mı, yoksa kalibre edilecek mi?
+- Refrakter dönem tek birleşik kilit olarak mı kalacak, yoksa mutlak ve göreli dönemler ayrı mı modellenmeli?
+- Refrakter dönemde gelen sinaptik etkiler bekletilmeli, sönümlenmeli, yoksa başka bir yerel kurala mı tabi olmalı?
 - Aksiyon potansiyeli dalgasının yayılımı ve terminal/bağlantı üzerindeki zamanlaması nasıl modellenmeli?
 - Sinaps-sinaps ilişkisi hangi zaman penceresinde birlikte etkinleşme sayılmalı?
 - Birlikte etkinleşmeme ilişkiyi azaltmalı mı, yoksa ilişki değişmeden mi kalmalı?
