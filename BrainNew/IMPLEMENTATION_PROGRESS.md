@@ -183,3 +183,12 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Tanılama, karar dağılımını ve beklenen sınıfa göre doğruluğu ayrı raporlar; sinaptik ağırlık değişimini reseptör→ara ve ara→karar grupları için ayrı özetler.
 - Testler binary kodlamayı, bit-dendrit olaylarını, ağ boyutunu, bağlantı yönlerini, seed tekrarlanabilirliğini, eğitim/test ayrımını, tanılama özetlerini ve test kopyalarının eğitim ağını değiştirmediğini denetler.
 - **Sınır:** Bu yeni deney henüz kullanıcı ortamında çalıştırılmadı. Ara katman ve BrainOld tarzı binary giriş eklendi; karşılaştırma başarısı veya genelleme iddiası yoktur. İlk çalıştırmada eğitim/test davranışı, sınıf yanlılığı ve öğrenilen bağlantı değişimleri birlikte incelenmelidir.
+
+
+## M2 — katman-katman pasif tanilama
+
+- Nöronlara episode başına pasif tanılama sayaçları eklendi: entegrasyon sayısı, işaretli/mutlak membran girdisi, en yüksek tek entegrasyon girdisi, görülen maksimum membran ve eşik marjı.
+- Sayaçlar episode başında sıfırlanır; öğrenilmiş parametrelere ve ağ davranışına müdahale etmez.
+- `BrainNew/M2_Tanilama.py` eğitim örneklerini tek tek çalıştırıp reseptör, ara ve karar katmanlarının toplam ateşlenme/entegrasyon verilerini; sinaps terminal aktivasyonlarını ve modülatör değişimlerini raporlar.
+- `BrainNew/tests/test_neuron_episode_diagnostics.py` tanılama sayaçlarının hesaplanmasını ve episode resetini kapsar.
+- Henüz pytest çalıştırılmadı; kullanıcı yerel ortamında odaklı ve tam testleri çalıştırmalı.
