@@ -14,14 +14,14 @@ class Baglanti:
         kimyasal_temizlenme=0.1, transmitter_salimi_duyarliliklari=None,
         yapisal_yaslanma_tau=1000.0, bakim_kazanci=0.01,
         budama_kazanci=0.02, budama_esigi=0.1,
-        kullanim_izi_esigi=0.1, kopma_esigi=0.1
+        kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
             baslangic_potansiyeli, etki, kimyasal_yayilim,
             kimyasal_temizlenme, yapisal_yaslanma_tau,
             bakim_kazanci, budama_kazanci, budama_esigi,
-            kullanim_izi_esigi, kopma_esigi
+            kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -47,6 +47,11 @@ class Baglanti:
             raise ValueError("Hedef nöron için dendrit kimliği zorunlu.")
         self.hedef_dendrit_id = hedef_dendrit_id
         self.etki = float(etki)
+        self.sinaptik_agirlik_alt = 0.0
+        self.sinaptik_agirlik_ust = 2.0
+        if not 0.0 <= sinaptik_agirlik <= 2.0:
+            raise ValueError("Sinaptik ağırlık [0, 2] aralığında olmalı.")
+        self.sinaptik_agirlik = float(sinaptik_agirlik)
         self.uzunluk = float(uzunluk)
         self.iletim_hizi = float(iletim_hizi)
         self.esik = float(esik)
@@ -150,6 +155,16 @@ class Baglanti:
             self.potansiyel *= carp
             self.iz *= carp
             self.son_guncelleme = zaman
+
+    def iletim_etkisi(self):
+        return self.etki * self.sinaptik_agirlik
+
+    def sinaptik_agirligi_ayarla(self, yeni_deger):
+        yeni_deger = float(yeni_deger)
+        if not math.isfinite(yeni_deger):
+            raise ValueError("Sinaptik ağırlık sonlu olmalı.")
+        self.sinaptik_agirlik = max(0.0, min(2.0, yeni_deger))
+        return self.sinaptik_agirlik
 
     def etki_uygula(self, etki, zaman):
         if self.kopuk:
