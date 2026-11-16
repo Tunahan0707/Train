@@ -139,6 +139,50 @@ class TrainingFoundationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             beyin.geri_bildirim_baslat("sessiz")
 
+    def test_coactive_synapses_learn_independent_directed_relations(self):
+        noron = Noron("n")
+        bir = Baglanti("bir", noron, None, esik=0.2)
+        iki = Baglanti("iki", noron, None, esik=0.2)
+        noron.cikis_sinapsi_ekle(bir)
+        noron.cikis_sinapsi_ekle(iki)
+        bir.potansiyel = 0.8
+        iki.potansiyel = 0.8
+
+        noron.ateslenme_sonucunu_isle(0.0)
+
+        self.assertGreater(noron.sinaps_iliski_oku(bir, iki, 0.0), 0.0)
+        self.assertGreater(noron.sinaps_iliski_oku(iki, bir, 0.0), 0.0)
+        self.assertEqual(len(noron.sinaps_iliski_agirliklari), 2)
+
+    def test_one_active_synapse_learns_only_its_outgoing_negative_relation(self):
+        noron = Noron("n")
+        aktif = Baglanti("aktif", noron, None, esik=0.2)
+        sessiz = Baglanti("sessiz", noron, None, esik=0.2)
+        noron.cikis_sinapsi_ekle(aktif)
+        noron.cikis_sinapsi_ekle(sessiz)
+        aktif.potansiyel = 0.8
+
+        noron.ateslenme_sonucunu_isle(0.0)
+
+        self.assertLess(noron.sinaps_iliski_oku(aktif, sessiz, 0.0), 0.0)
+        self.assertEqual(noron.sinaps_iliski_oku(sessiz, aktif, 0.0), 0.0)
+
+    def test_synapse_relation_decays_and_modulates_transient_potential(self):
+        noron = Noron("n")
+        kaynak = Baglanti("kaynak", noron, None)
+        hedef = Baglanti("hedef", noron, None)
+        noron.cikis_sinapsi_ekle(kaynak)
+        noron.cikis_sinapsi_ekle(hedef)
+        noron.sinaps_iliski_guncelle(kaynak, hedef, 0.0, birlikte=True)
+
+        noron.sinaps_iliski_etkilesimini_uygula({kaynak}, 1.0)
+        self.assertGreater(hedef.potansiyel, 0.0)
+        ilk = noron.sinaps_iliski_oku(kaynak, hedef, 1.0)
+        sonraki = noron.sinaps_iliski_oku(
+            kaynak, hedef, noron.sinaps_iliski_sonum_tau
+        )
+        self.assertLess(sonraki, ilk)
+
     def test_training_runner_reuses_same_brain_across_episodes(self):
         beyin = Beyin()
         noron = Noron("N")
