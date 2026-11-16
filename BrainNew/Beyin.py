@@ -156,19 +156,14 @@ class Beyin:
         self.girdi_al(veri)
         return self.calistir(adim_sayisi)
 
-    def geri_bildirim(
-        self,
-        deger,
-        baslangic_noronlari=None,
-        esik_alti=False
-    ):
+    def geri_bildirim(self, deger, baslangic_noronlari=None):
         """
         Geri bildirim dalgasını verilen başlangıç nöronlarından
         geriye doğru koordine eder.
 
         Başlangıç nöronları belirtilmezse ateşlenmiş motor nöronları
-        kullanılır. esik_alti yalnızca başlangıç nöronlarının yerel
-        katkı kayıtlarını değerlendirmesini sağlar.
+        kullanılır. Öğretici sinyalin hedefi ateşlenmemiş bir motor
+        nöronuyse deney katmanı onu açıkça başlangıç olarak verebilir.
 
         Beklenen çıktıyı belirlemek veya hata hesaplamak bu sınıfın
         görevi değildir; bunlar deney/eğitim katmanına aittir.
@@ -191,28 +186,20 @@ class Beyin:
         if any(noron not in motor_kumesi for noron in baslangic_noronlari):
             raise ValueError("Geri bildirim başlangıçları motor nöronları olmalıdır.")
 
-        kuyruk = deque((noron, True) for noron in baslangic_noronlari)
+        kuyruk = deque(baslangic_noronlari)
         ziyaret_edilen = set()
 
         while kuyruk:
-            noron, kok = kuyruk.popleft()
+            noron = kuyruk.popleft()
             if noron in ziyaret_edilen:
                 continue
 
             ziyaret_edilen.add(noron)
-            if kok and esik_alti:
-                onceki_noronlar = noron.geri_bildirim(
-                    deger,
-                    esik_alti_katkilar=True
-                )
-            else:
-                # Normal geri bildirim yolunda nöron API'sinin
-                # tek argümanlı kullanımını koru.
-                onceki_noronlar = noron.geri_bildirim(deger)
+            onceki_noronlar = noron.geri_bildirim(deger)
 
             for onceki_noron in onceki_noronlar:
                 if onceki_noron not in ziyaret_edilen:
-                    kuyruk.append((onceki_noron, False))
+                    kuyruk.append(onceki_noron)
 
     def uygunluk_izlerini_guncelle(self):
         for baglanti in tuple(self.etkin_baglantilar):
