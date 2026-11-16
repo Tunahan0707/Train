@@ -287,6 +287,8 @@ class Noron:
         """Tek bir yönlü sinaps ilişkisini yerel birliktelik kuralıyla günceller."""
         if kaynak is hedef or kaynak.kopuk or hedef.kopuk:
             return 0.0
+        if kaynak.kaynak is not self or hedef.kaynak is not self:
+            raise ValueError("Sinaps ilişkisi aynı nöronun çıkış terminalleri arasında olmalı.")
         zaman = float(zaman)
         if not math.isfinite(zaman) or zaman < 0:
             raise ValueError("Sinaps ilişki zamanı sonlu ve negatif olmayan olmalı.")
@@ -305,7 +307,9 @@ class Noron:
 
     def sinaps_iliski_etkilesimini_uygula(self, aktif_sinapslar, zaman):
         """Etkin terminalin öğrendiği yönlü ilişkiyi diğer terminal potansiyeline uygular."""
-        aktifler = tuple(aktif_sinapslar)
+        aktifler = sorted(
+            set(aktif_sinapslar), key=lambda oge: str(oge.kimlik)
+        )
         for kaynak in aktifler:
             if kaynak.kopuk:
                 continue
