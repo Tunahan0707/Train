@@ -10,7 +10,7 @@ Bu belge tasarım sözleşmesinin yerine geçmez. Kesin kararlar korunur; kalibr
 - `Beyin.py`: Simülasyon saati, deterministik olay kuyruğu ve bileşenler arası koordinasyon. Membranı güncellemez, eşik kontrolü yapmaz, çıkış sinapsı seçmez ve normal ağ akışında sinapsı aktive etmez; yalnızca nöronun aktive ettiği sinapsların iletimini zamanlar.
 - `Noron.py`: Dendrit girdilerini bütünleştirir, membranı günceller, ateşlenme eşiğini değerlendirir, aksiyon potansiyelini başlatır, uygun çıkış sinapslarını seçip aktive eder, terminal kimyasal salımını başlatır ve kendi faz döngüsünü yönetir.
 - `Dendrid.py`: İşaretli girdileri tamponlar, transmitter reseptör yanıtını yerel sinyale modülatör olarak ekler ve dendrit-sinaps katkılarını taşır.
-- `Baglanti.py`: Yerel aktivasyon potansiyeli, eşik, lazy sönüm, etkinlik izi, hedefe iletim gecikmesi ve terminal transmitter repertuvarını taşır.
+- `Baglanti.py`: Yerel aktivasyon potansiyeli, eşik, lazy sönüm, etkinlik izi, hedefe iletim gecikmesi ve terminal transmitter repertuvarını taşır. Ayrıca dendritik sinyale göre transmitter bazında salım modülasyonu ve bağlantı-yerel mikroglia-benzeri yapısal bakım/budama durumunu içerir.
 - `KimyasalAlan.py`: Transmitter türlerini ayrı tutan 2B analitik difüzyon/sönüm alanı.
 
 ## Olay akışı ve sorumluluk sınırı
@@ -44,7 +44,8 @@ Bu, kaybolan/takılı kalan girdi hatasını önleyen geçici bir uygulama polit
 - Bir sinapsa birden fazla dendritten gelen etkiler önce toplamsal hesaplanır; ardından o sinapsa gerçekten katkı veren dendrit sayısının kareköküyle normalize edilir.
 - Dendrit-sinaps öğrenmesi yalnızca gerçekten katkı yükleyen çiftlerde yürür. İlk değerlendirme fırsatında negatif ceza uygulanmaz. Her katkı parametresi kendi alt/üst sınırları içinde tutulur; güncelleme yönündeki sınıra yaklaştıkça toplamsal adım küçülür. İlk prototip varsayılanı [-1, 1] olup biyolojik sabit değil, kalibrasyon parametresidir.
 - Öğrenme uygunluğu yalnızca mevcut entegrasyon olayında katkı veren çiftlerden oluşur; ateşlenmeyen eski entegrasyonlardan kalan çiftler sonraki ateşlenmede yanlışlıkla cezalandırılmaz.
-- Bir terminal aynı aktivasyonda repertuvarındaki birden fazla transmitter türünü salabilir.
+- Bir terminal aynı aktivasyonda repertuvarındaki birden fazla transmitter türünü salabilir. Her türün miktarı, terminale ait işaretli duyarlılık ve o ateşlenmede gerçekten katkı veren dendritik sinyalle toplamsal biçimde modüle edilebilir; repertuvar dışı tür üretilemez.
+- Her bağlantı kendi yapısal bütünlüğünü ve mikroglia-benzeri bakım durumunu taşır. Yerel büyüme/stabilizasyon sinyalleri bütünlüğü destekler; budama sinyali ancak düşük kullanım iziyle birlikte yapısal bütünlüğü azaltır. Kopma kararı bağlantı nesnesinin kendisindedir, Beyin'de veya küresel yöneticide değildir. İlk parametreler kalibrasyon amaçlıdır.
 - Kimyasal alan kaynakları şimdilik saklanır ve sorguda taranır; büyük ağ ölçeği için optimize edilmiş değildir.
 - Girdi, konum, olay zamanı, sinaps ve kimyasal kaynak parametrelerinde sonlu değer kontrolleri bulunur. Sinaps eşiği, potansiyelin [-1, 1] aralığıyla tutarlı tutulur; nöron yalnızca kendi kaynak olduğu çıkış sinapslarını kaydedebilir.
 
@@ -55,8 +56,8 @@ Bunlar unutulmuş veya iptal edilmiş değildir; sonraki aşamalara bırakılmı
 - Yönlü sinaps-sinaps ilişkileri ve birlikte etkinleşme/etkinleşmeme öğrenmesi.
 - Geriye doğru dallanan feedback ve dal başına iz eşiği.
 - Farklı nöronların uzamsal/zamansal yakınlıkla birlikte ateşlenme etkileşimi.
-- Bağlantı-yerel mikroglia-benzeri koruma, yaşlanma, yeniden şekillenme ve budama.
-- Yeni bağlantı oluşumu, bağlantı onarımı ve bağlantısız nöronun toparlanma modu.
+- Bağlantı-yerel mikroglia-benzeri bakım artık ilk uygulama düzeyinde vardır; ancak düzenli bakımın zamanlanması, sinyal ailelerinin biyolojik ayrıntısı ve parametre kalibrasyonu henüz tamamlanmamıştır.
+- Yeni bağlantı oluşumu, mevcut bağlantının kademeli onarımı ve bağlantısız nöronun toparlanma modu. Yeni bağlantı için bağımsız akson terminali/aday dendrit topolojisi ve yeni sinapsın başlangıç dendrit katkı kuralı henüz tanımlanmadığından uygulanmamıştır.
 - Reseptör organı ve motor organı üzerinden tam duyusal/çıktısal arayüz.
 - Geçici izlerin nedensel takibi ve episode yaşam döngüsü.
 - Akson terminalleri ile dendritlerin bağlantı repertuvarı/topolojisi için eşleştirme kuralı.
