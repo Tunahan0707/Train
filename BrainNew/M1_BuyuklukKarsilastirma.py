@@ -142,7 +142,7 @@ class BuyuklukKarsilastirmaDeneyi:
                     stdp_depresyon_oran=0.0,
                     uygunluk_tau=100.0,
                     modulator_ogrenme_orani=self.modulator_ogrenme_orani,
-                    terminal_konumu=kaynak.konum,
+                    terminal_konumu=hedef.konum,
                 )
                 kaynak_dendriti.sinaps_bagla(sinaps, rng.uniform(0.3, 0.8))
                 kaynak.cikis_sinapsi_ekle(sinaps)
@@ -187,16 +187,25 @@ class BuyuklukKarsilastirmaDeneyi:
             raise ValueError("İlk deney yalnızca eşit olmayan sayıları karşılaştırır.")
         return BuyuklukKarsilastirmaDeneyi.SOL if sol_sayi > sag_sayi else BuyuklukKarsilastirmaDeneyi.SAG
 
-    def _geri_bildirim_sal(self, dogru, zaman):
-        """Görev ortamı yalnızca kimyasal ödül/ceza kaynağı bırakır."""
+    def _geri_bildirim_sal(self, dogru, zaman, beklenen, gerceklesen):
+        """Görev ortamı, ilgili karar bölgesine yerel kimyasal sinyal bırakır.
+
+        Doğru kararda ödül doğru çıktı bölgesine; yanlış kararda ceza ateşlenen
+        yanlış çıktı bölgesine salınır. Böylece modülatör bütün bağlantılara
+        eşit dağılmaz; terminal konumundaki yerel alanı Baglanti değerlendirir.
+        Karar çıkmadıysa yanlış bir yolu cezalandırmak için kanıt yoktur.
+        """
+        if gerceklesen is None:
+            return None
+        hedef = beklenen if dogru else gerceklesen
         tur = "odul" if dogru else "ceza"
         miktar = self.odul_miktari if dogru else self.ceza_miktari
-        self.beyin.kimyasal_alan.sal(
+        return self.beyin.kimyasal_alan.sal(
             tur,
-            (5.0, 4.0),
+            self.beyin.noronlar[hedef].konum,
             miktar,
             zaman,
-            yayilim=1000.0,
+            yayilim=1.0,
             temizlenme=100.0,
         )
 
@@ -242,7 +251,9 @@ class BuyuklukKarsilastirmaDeneyi:
         self.episode_sayisi += 1
 
         if feedback:
-            self._geri_bildirim_sal(dogru, self.beyin.zaman)
+            self._geri_bildirim_sal(
+                dogru, self.beyin.zaman, beklenen, gerceklesen
+            )
             # Modülatörün aynı örneğin uygunluk izine uygulanmasını sağlar;
             # bir sonraki örneğin etkinlik izleriyle karışmasını önler.
             self.beyin.calistir(

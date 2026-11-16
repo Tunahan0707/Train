@@ -51,13 +51,26 @@ class BuyuklukKarsilastirmaTests(unittest.TestCase):
     def test_task_feedback_only_adds_chemical_source(self):
         deney = BuyuklukKarsilastirmaDeneyi(seed=4)
         onceki = tuple(s.sinaptik_agirlik for s in deney.sinapslar)
-        deney._geri_bildirim_sal(True, deney.beyin.zaman)
+        deney._geri_bildirim_sal(
+            True, deney.beyin.zaman, deney.SOL, deney.SOL
+        )
         sonraki = tuple(s.sinaptik_agirlik for s in deney.sinapslar)
 
         self.assertEqual(onceki, sonraki)
+        kaynak = deney.beyin.kimyasal_alan.kaynaklar[-1]
+        self.assertEqual(kaynak.tur, "odul")
         self.assertEqual(
-            deney.beyin.kimyasal_alan.kaynaklar[-1].tur, "odul"
+            kaynak.konum, deney.beyin.noronlar[deney.SOL].konum
         )
+
+    def test_input_terminals_are_located_at_their_target_output(self):
+        deney = BuyuklukKarsilastirmaDeneyi(seed=12)
+        for sinaps in deney.sinapslar:
+            if sinaps.kimlik.endswith(":WTA"):
+                continue
+            self.assertEqual(
+                sinaps.terminal_konumu, sinaps.hedef.konum
+            )
 
     def test_episode_returns_explicit_no_decision_when_output_counts_tie(self):
         deney = BuyuklukKarsilastirmaDeneyi(seed=5)

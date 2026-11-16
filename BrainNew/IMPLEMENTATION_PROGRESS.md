@@ -148,7 +148,8 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Sol ve sağ sayılar, mevcut 1–9 popülasyon kodlayıcısıyla iki ayrı duyusal kanala sunulur.
 - Her duyusal nöron iki karar nöronuna da rastgele işaretli projeksiyon yapar. Başlangıç bağlantı düzeni sayısal büyüklük veya doğru cevap bilgisi içermez.
 - Karar nöronları arasında sabit karşılıklı inhibisyon, genel bir rekabet/WTA mekanizması olarak kullanılır; karşılaştırma kuralını kodlamaz.
-- Görev ortamı doğru/yanlış değerlendirmesinden sonra yalnızca kimyasal `odul` veya `ceza` kaynağı bırakır. Sinaptik ağırlıkları doğrudan değiştirmez; mevcut yerel uygunluk izi ve gecikmiş modülatör mekanizması güncellemeyi yapar.
+- Görev ortamı doğru/yanlış değerlendirmesinden sonra yalnızca kimyasal `odul` veya `ceza` kaynağı bırakır. Doğru kararda ödül doğru çıktı bölgesine, yanlış kararda ceza ateşlenen yanlış çıktı bölgesine salınır. Girdi sinapslarının terminal konumları hedef karar bölgesindedir; uzamsal difüzyon böylece modülatörü ilgili bağlantı grubuna sınırlar.
+- Görev ortamı sinaptik ağırlıkları doğrudan değiştirmez; mevcut yerel uygunluk izi ve gecikmiş modülatör mekanizması güncellemeyi yapar. Karar çıkmadığında yanlış bir yol belirlenemediği için kimyasal ceza salınmaz.
 - Eğitim/test ayrımı sırasız sayı çiftleri üzerinden yapılır. Örneğin (2,7) eğitimdeyse (7,2) de eğitimdedir; ters sıralı çift testte tutulamaz.
 - Test ölçümü karar doğruluğunun yanında iki karar nöronunun birlikte ateşlenmesini, hiçbirinin ateşlenmemesini ve kararsız çıktıyı raporlar.
 - **Sınır:** Bu yalnızca ilk öğrenme deney düzeneğidir. Ağın büyüklük karşılaştırmasını öğrendiği veya görülmemiş çiftlere genellediği henüz gösterilmiş değildir. İlk kullanıcı çalıştırması öncesinde başarı iddiası yoktur.
