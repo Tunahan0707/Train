@@ -7,9 +7,9 @@ Bu belge tasarım sözleşmesinin yerine geçmez. Kesin kararlar korunur; kalibr
 
 ## Prototip çekirdeği
 
-- `Beyin.py`: Simülasyon saati, deterministik olay kuyruğu ve bileşenler arası koordinasyon. Membranı güncellemez, eşik kontrolü yapmaz, çıkış sinapsı seçmez ve normal ağ akışında sinapsı aktive etmez; yalnızca nöronun aktive ettiği sinapsların iletimini zamanlar.
-- `Noron.py`: Dendrit girdilerini bütünleştirir, membranı günceller, ateşlenme eşiğini değerlendirir, aksiyon potansiyelini başlatır, uygun çıkış sinapslarını seçip aktive eder, terminal kimyasal salımını başlatır ve kendi faz döngüsünü yönetir.
-- `Dendrid.py`: İşaretli girdileri tamponlar, transmitter reseptör yanıtını yerel sinyale modülatör olarak ekler ve dendrit-sinaps katkılarını taşır.
+- `Beyin.py`: Simülasyon saati, deterministik olay kuyruğu, ayrı nöron/bağlantı uzamsal indeksleri ve bileşenler arası koordinasyon. Membranı güncellemez, eşik kontrolü yapmaz, çıkış sinapsı seçmez ve normal ağ akışında sinapsı aktive etmez; yalnızca nöronun aktive ettiği sinapsların iletimini zamanlar.
+- `Noron.py`: Dendrit girdilerini bütünleştirir, membranı günceller, ateşlenme eşiğini değerlendirir, aksiyon potansiyelini başlatır, uygun çıkış sinapslarını seçip aktive eder, terminal kimyasal salımını başlatır, kendi faz döngüsünü yönetir ve yerel kimyasal/reseptör uygunluğuna göre yeni bağlantı hedefini seçer.
+- `Dendrid.py`: İşaretli girdileri tamponlar, transmitter reseptör yanıtını yerel sinyale modülatör olarak ekler, dendrit-sinaps katkılarını taşır ve büyüme sinyaline reseptör uygunluğunu hesaplar.
 - `Baglanti.py`: Yerel aktivasyon potansiyeli, eşik, lazy sönüm, etkinlik izi, hedefe iletim gecikmesi, terminal transmitter repertuvarı ve mikroglianın değerlendirdiği yapısal durum/bakım parametrelerini taşır.
 - `KimyasalAlan.py`: Transmitter türlerini ayrı tutan 2B analitik difüzyon/sönüm alanı.
 
@@ -57,7 +57,7 @@ Bunlar unutulmuş veya iptal edilmiş değildir; sonraki aşamalara bırakılmı
 - Geriye doğru dallanan feedback ve dal başına iz eşiği.
 - Farklı nöronların uzamsal/zamansal yakınlıkla birlikte ateşlenme etkileşimi.
 - Bağımsız mikroglia ajanları ve açıkça planlanan bakım olayları ilk uygulama düzeyinde vardır; otomatik periyodik zamanlama, sinyal ailelerinin biyolojik ayrıntısı ve parametre kalibrasyonu henüz tamamlanmamıştır.
-- Yeni bağlantı oluşumu, mevcut bağlantının kademeli onarımı ve bağlantısız nöronun toparlanma modu. Yeni bağlantı için bağımsız akson terminali/aday dendrit topolojisi ve yeni sinapsın başlangıç dendrit katkı kuralı henüz tanımlanmadığından uygulanmamıştır.
+- Mevcut bağlantının kademeli onarımı ve bağlantısız nöronun toparlanma modu. Kontrollü yeni bağlantı oluşumu ilk sürümde vardır; otomatik büyüme zamanlaması, olgunlaşma dinamiği ve görev düzeyinde değerlendirme henüz yoktur.
 - Reseptör organı ve motor organı üzerinden tam duyusal/çıktısal arayüz.
 - Geçici izlerin nedensel takibi ve episode yaşam döngüsü.
 - Akson terminalleri ile dendritlerin bağlantı repertuvarı/topolojisi için eşleştirme kuralı.
@@ -70,6 +70,7 @@ Testler güncellendi:
 - `test_electrical.py`: nöronun yerel entegrasyon/ateşlenme sorumluluğu, faz döngüsü, elektriksel toplama, seçici sinaps aktivasyonu, öğrenme ve sonlu değer doğrulaması.
 - `test_chemical.py`: transmitter ayrımı, analitik yayılım, reseptör yanıtı ve geçersiz/sonlu olmayan kaynak-sorgu girdileri.
 - `test_microglia.py`: bağımsız mikroglia taraması, algılama yarıçapı, kimyasal budama/stabilizasyon, fiziksel kopma koşulları ve sonlu zaman aralığında periyodik bakım.
+- `test_structural_plasticity.py`: yerel büyüme sinyali, hedef dendrit reseptör uygunluğu, uzamsal sınır, deterministik hedef seçimi, tekilleştirme ve zayıf başlangıç.
 
 **Önemli:** Bu çalışma ortamında GitHub dosyaları düzenlenebildi; ancak Python test çalıştırıcısı uzak dalın checkout'una erişmediği için bu dalın testleri burada çalıştırılmış değildir. Testlerin geçtiği iddia edilmiyor. Yerel doğrulama için proje kökünde:
 
