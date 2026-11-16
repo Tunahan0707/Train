@@ -17,7 +17,6 @@ Hedef dal: `fix/brainnew-architecture-audit`
 ## Henüz tamamlanmayan sprint başlıkları
 
 - Seed'li seyrek ağ kurucu ve tam ağ yapılandırma sistemi.
-- Feedback'in dallanması, geriye yayılması, gecikmesi ve yerel iz ile sönmesi.
 - Sinaps-sinaps yönlü etkileşimlerin birlikte etkinleşmeden öğrenilmesi.
 - Nöron-nöron yerel birlikte etkinlik etkileşimi.
 - Signed synaptic efficacy: kalıcı sinaptik katsayının işaret değiştirebilmesi.
@@ -28,4 +27,4 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 ## Doğrulama durumu
 
-Bu değişiklikler için testler yazıldı; bu oturumda Python çalışma ortamı üzerinden depo klonlanıp test paketi çalıştırılamadı. GitHub Actions sonucu ayrıca doğrulanmalıdır. Testler çalıştırılmadan başarılı kabul edilmeyecektir.
+Yeni feedback dallanması için regresyon testleri eklendi. Bu oturumda test paketi henüz çalıştırılmadı; yeşil kabul edilmemelidir. Testler çalıştırılmadan başarılı kabul edilmeyecektir.
