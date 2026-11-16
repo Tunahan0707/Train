@@ -5,6 +5,7 @@ from BrainNew.Baglanti import Baglanti
 from BrainNew.Beyin import Beyin
 from BrainNew.Dendrid import Dendrid
 from BrainNew.Noron import Noron
+from BrainNew.KimyasalAlan import KimyasalAlan
 
 
 class ElektrikselMekanizmaTestleri(unittest.TestCase):
@@ -92,8 +93,6 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertIsNotNone(n.son_entegrasyon_zamani)
 
     def test_normal_akista_sinaps_aktivasyonu_ve_kimyasal_salim_noronda_yurutulur(self):
-        from BrainNew.KimyasalAlan import KimyasalAlan
-
         alan = KimyasalAlan()
         beyin = Beyin(alan)
         n = Noron("n")
@@ -187,7 +186,7 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         n.dendrit_ekle(d)
         n.cikis_sinapsi_ekle(s)
         beyin.noron_ekle(n)
-        beyin.duyusal_girdi("n", "d", 10.0)
+        beyin.duyusal_girdi("n", "d", 100.0)
         beyin.calistir()
         self.assertEqual(alan.kaynak_sayisi(), 1)
         self.assertGreater(alan.kaynaklar[0].miktar, 1.0)
