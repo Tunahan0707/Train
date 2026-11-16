@@ -163,6 +163,14 @@ class OrkestrasyonTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             beyin.sinyal_gonder(sinaps, zaman=0.0)
 
+    def test_sinaptik_agirlik_hedefe_iletilen_etkiyi_olcekler(self):
+        beyin, kaynak, hedef, sinaps = ag_kur()
+        sinaps.etki = 20.0
+        sinaps.sinaptik_agirligi_ayarla(0.5)
+        beyin.duyusal_girdi("kaynak", "kaynak_giris", 100.0)
+        beyin.calistir()
+        self.assertEqual(hedef.ateslenme_sayisi, 1)
+        self.assertAlmostEqual(hedef.membran, hedef.depolarizasyon_degeri)
     def test_sinyal_hedefe_baglanti_uzunlugu_bolum_iletim_hizi_gecikmesiyle_ulasir(self):
         beyin, kaynak, hedef, _ = ag_kur()
         hedef = ZamanKayitliNoron("hedef")
