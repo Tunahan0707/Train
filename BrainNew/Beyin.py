@@ -21,6 +21,7 @@ class Beyin:
     def __init__(self, kimyasal_alan=None, deney_kaydi=None):
         self.zaman = 0.0
         self.noronlar = {}
+        self.noron_indeksi = UzamsalIndeks()
         self.baglanti_indeksi = UzamsalIndeks()
         self.mikroglialar = {}
         self.kimyasal_alan = kimyasal_alan if kimyasal_alan is not None else KimyasalAlan()
@@ -36,6 +37,7 @@ class Beyin:
         if mevcut is not None and mevcut is not noron:
             raise ValueError(f"Aynı kimlikle ikinci bir nöron eklenemez: {noron.kimlik}")
         self.noronlar[noron.kimlik] = noron
+        self.noron_indeksi.ekle(noron)
         for sinaps in noron.cikis_sinapslari:
             self.baglanti_ekle(sinaps)
 
@@ -44,6 +46,23 @@ class Beyin:
         if sinaps.kopuk:
             return False
         return self.baglanti_indeksi.ekle(sinaps)
+
+
+    def yapisal_buyume_degerlendir(self, noron_id, arama_yaricapi):
+        """Yakın nöronları bulur; bağlantı kararını kaynak nörona bırakır."""
+        if noron_id not in self.noronlar:
+            raise ValueError(f"Bilinmeyen nöron: {noron_id}")
+        kaynak = self.noronlar[noron_id]
+        adaylar = self.noron_indeksi.yakinindakileri_bul(
+            kaynak.konum, arama_yaricapi, haric=kaynak
+        )
+        yeni_sinaps = kaynak.yeni_baglanti_adayi_degerlendir(
+            adaylar, self.kimyasal_alan, self.zaman, arama_yaricapi
+        )
+        if yeni_sinaps is None:
+            return None
+        self.baglanti_ekle(yeni_sinaps)
+        return yeni_sinaps
 
     def mikroglia_ekle(self, mikroglia):
         if not isinstance(mikroglia, Mikroglia):
