@@ -106,6 +106,19 @@ class KimyasalMekanizmaTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             KimyasalKaynak("A", (0.0, 0.0), 1.0, 0.0, 1.0, -0.1)
 
+    def test_sonsuz_kaynak_parametresi_ve_gecersiz_konum_reddedilir(self):
+        with self.assertRaises(ValueError):
+            KimyasalKaynak("A", (0.0, 0.0), float("inf"), 0.0, 1.0, 0.1)
+        with self.assertRaises(ValueError):
+            KimyasalKaynak("A", (0.0, float("nan")), 1.0, 0.0, 1.0, 0.1)
+
+    def test_gecersiz_alan_sorgu_zamani_ve_konumu_reddedilir(self):
+        alan = KimyasalAlan()
+        with self.assertRaises(ValueError):
+            alan.yogunluk("A", (0.0, 0.0), float("nan"))
+        with self.assertRaises(ValueError):
+            alan.yogunluk("A", (0.0, float("inf")), 1.0)
+
     def test_terminal_profili_birden_fazla_transmitter_tutabilir(self):
         s = Baglanti(
             "s", None, None,
