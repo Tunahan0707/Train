@@ -122,13 +122,104 @@ def _agirlik_gruplari(deney, baslangic):
     return sonuc
 
 
+
+def _sinaps_dendrit_katkisi(sinaps):
+    """Kaynak nöronun bu terminale bağlı dendritik katkısını bulur."""
+    for dendrit in sinaps.kaynak.dendritler.values():
+        if sinaps in dendrit.sinaps_katkilari:
+            return dendrit.sinaps_katkilari[sinaps]
+    return 0.0
+
+
+def _projeksiyon_imzasi(deney):
+    """İşaretli gerçek iletim katsayısını, dendrit kapısını ve olgunluğu ayırır."""
+    sonuc = {}
+    for sinaps in deney.sinapslar:
+        if sinaps.kimlik.endswith(":WTA"):
+            continue
+        sonuc[sinaps.kimlik] = {
+            "kaynak_kanal": "SOL_GIRDI" if sinaps.kaynak.kimlik.startswith("SL") else "SAG_GIRDI",
+            "hedef": sinaps.hedef.kimlik,
+            "baz_etki": sinaps.etki,
+            "sinaptik_agirlik": sinaps.sinaptik_agirlik,
+            "yapisal_olgunluk": sinaps.yapisal_olgunluk,
+            "iletim_katsayisi": sinaps.iletim_etkisi(),
+            "dendrit_katkisi": _sinaps_dendrit_katkisi(sinaps),
+            "terminal_aktivasyon_sayisi": sinaps.aktivasyon_sayisi,
+        }
+    return sonuc
+
+
+def _projeksiyon_ozeti(imza):
+    gruplar = {}
+    for kayit in imza.values():
+        anahtar = (kayit["kaynak_kanal"], kayit["hedef"])
+        gruplar.setdefault(anahtar, []).append(kayit)
+    sonuc = {}
+    for (kanal, hedef), kayitlar in gruplar.items():
+        katsayilar = [x["iletim_katsayisi"] for x in kayitlar]
+        katkilar = [x["dendrit_katkisi"] for x in kayitlar]
+        sonuc[f"{kanal}->{hedef}"] = {
+            "n": len(kayitlar),
+            "uyarici_projeksiyon": sum(x > 0 for x in katsayilar),
+            "baskilayici_projeksiyon": sum(x < 0 for x in katsayilar),
+            "sifir_projeksiyon": sum(x == 0 for x in katsayilar),
+            "ortalama_isaretli_iletim": sum(katsayilar) / len(katsayilar),
+            "ortalama_mutlak_iletim": sum(abs(x) for x in katsayilar) / len(katsayilar),
+            "ortalama_dendrit_katkisi": sum(katkilar) / len(katkilar),
+        }
+    return sonuc
+
+
+def _episode_akisini_ozetle(deney, onceki_terminal_aktivasyonlari):
+    """Gerçekleşen terminal aktivasyonlarını kanal/hedef bazında yaklaşık akışa çevirir."""
+    gruplar = {}
+    for sinaps in deney.sinapslar:
+        if sinaps.kimlik.endswith(":WTA"):
+            continue
+        adet = sinaps.aktivasyon_sayisi - onceki_terminal_aktivasyonlari[sinaps.kimlik]
+        if adet <= 0:
+            continue
+        kanal = "SOL_GIRDI" if sinaps.kaynak.kimlik.startswith("SL") else "SAG_GIRDI"
+        anahtar = (kanal, sinaps.hedef.kimlik)
+        kayit = gruplar.setdefault(anahtar, {
+            "terminal_aktivasyonu": 0,
+            "imzali_iletim_toplami": 0.0,
+            "uyarici_olay": 0,
+            "baskilayici_olay": 0,
+        })
+        katsayi = sinaps.iletim_etkisi()
+        kayit["terminal_aktivasyonu"] += adet
+        kayit["imzali_iletim_toplami"] += adet * katsayi
+        if katsayi > 0:
+            kayit["uyarici_olay"] += adet
+        elif katsayi < 0:
+            kayit["baskilayici_olay"] += adet
+    return {f"{kanal}->{hedef}": kayit for (kanal, hedef), kayit in gruplar.items()}
+
+
+def _duyusal_ateslenme_sayilari(deney):
+    return {
+        kimlik: deney.beyin.noronlar[kimlik].ateslenme_sayisi
+        for kimlik in deney.sol_noronlari + deney.sag_noronlari
+    }
+
+
+def _kanal_ateslenme_farki(deney, onceki):
+    sol = sum(deney.beyin.noronlar[k].ateslenme_sayisi - onceki[k] for k in deney.sol_noronlari)
+    sag = sum(deney.beyin.noronlar[k].ateslenme_sayisi - onceki[k] for k in deney.sag_noronlari)
+    return {"SOL_GIRDI": sol, "SAG_GIRDI": sag}
+
+
 def tanilama_calistir(seed=20261120, parca_boyutu=10):
     if parca_boyutu < 1:
         raise ValueError("Parça boyutu en az 1 olmalı.")
 
     deney = BuyuklukKarsilastirmaDeneyi(seed=seed)
     baslangic = _agirliklar(deney)
+    baslangic_projeksiyon = _projeksiyon_imzasi(deney)
     tum_sonuclar = []
+    toplam_akim = {}
 
     print(f"Seed: {seed}")
     print(f"Eğitim örneği: {len(deney.egitim_ornekleri)}")
@@ -138,10 +229,20 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
     for bas in range(0, len(deney.egitim_ornekleri), parca_boyutu):
         ornekler = deney.egitim_ornekleri[bas:bas + parca_boyutu]
         onceki = _agirliklar(deney)
-        sonuclar = [
-            deney.episode_calistir(sol, sag, feedback=True)
-            for sol, sag in ornekler
-        ]
+        sonuclar = []
+        for sol, sag in ornekler:
+            terminal_onceki = {s.kimlik: s.aktivasyon_sayisi for s in deney.sinapslar}
+            duyusal_onceki = _duyusal_ateslenme_sayilari(deney)
+            sonuclar.append(deney.episode_calistir(sol, sag, feedback=True))
+            akim = _episode_akisini_ozetle(deney, terminal_onceki)
+            for anahtar, kayit in akim.items():
+                toplam = toplam_akim.setdefault(anahtar, {
+                    "terminal_aktivasyonu": 0, "imzali_iletim_toplami": 0.0,
+                    "uyarici_olay": 0, "baskilayici_olay": 0,
+                })
+                for alan, deger in kayit.items():
+                    toplam[alan] += deger
+            sonuclar[-1]["duyusal_ateslenme"] = _kanal_ateslenme_farki(deney, duyusal_onceki)
         tum_sonuclar.extend(sonuclar)
         degisim = _degisim_ozeti(deney, onceki)
         ozet = deney.ozetle(sonuclar)
@@ -157,6 +258,7 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
 
     egitim_degisim = _degisim_ozeti(deney, baslangic)
     egitim_agirlik_gruplari = _agirlik_gruplari(deney, baslangic)
+    son_projeksiyon = _projeksiyon_imzasi(deney)
     test_onceki = _agirliklar(deney)
     test_sonuclari = deney.test_et()
     test_sonrasi = _agirliklar(deney)
@@ -168,6 +270,9 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
     print("\nEğitim toplamı:", deney.ozetle(tum_sonuclar))
     print("Eğitim davranış tanısı:", _davranis_ozeti(tum_sonuclar, deney))
     print("Eğitim ağırlık tanısı:", egitim_degisim)
+    print("Başlangıç işaretli projeksiyonlar:", _projeksiyon_ozeti(baslangic_projeksiyon))
+    print("Eğitim sonrası işaretli projeksiyonlar:", _projeksiyon_ozeti(son_projeksiyon))
+    print("Eğitim boyunca duyusal terminal akışı:", toplam_akim)
     print("Duyusal ağırlık grupları (başlangıç/son/delta):")
     for hedef, ozet in egitim_agirlik_gruplari.items():
         print(f"  {hedef}: {ozet}")
@@ -194,6 +299,9 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
         "egitim_davranis": _davranis_ozeti(tum_sonuclar, deney),
         "test_davranis": _davranis_ozeti(test_sonuclari, deney),
         "egitim_agirlik_gruplari": egitim_agirlik_gruplari,
+        "baslangic_projeksiyon_ozeti": _projeksiyon_ozeti(baslangic_projeksiyon),
+        "son_projeksiyon_ozeti": _projeksiyon_ozeti(son_projeksiyon),
+        "egitim_terminal_akisi": toplam_akim,
         "test_max_agirlik_degisim": test_degisim,
     }
 
