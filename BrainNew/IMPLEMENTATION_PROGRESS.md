@@ -79,3 +79,11 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Eğitim sonrası aynı A ipucunun X ve Y bağlamlarında farklı hedefleri geri çağırması ve karşı yolun sessiz kalması sınanır.
 - Dört test eklendi: tekil girdi negatif kontrolleri, bağlama göre seçici geri çağırma, dört bağlantının öğrenilmesi ve tekrarlanabilirlik.
 - **Sınır:** Bağlam kapıları ve duyusal yakınsama topolojisi deney için önceden kuruludur. Bu deney kapı/topoloji oluşumunun kendiliğinden öğrenildiğini kanıtlamaz; mevcut membran toplaması ve öğrenilmiş çıkış bağlantılarının bağlam seçiciliğine yeterli olup olmadığını sınar.
+
+
+## Aşama 16 — Bağlama duyarlı geri çağırmada genlik gürültüsü
+
+- Eğitimden sonra A ipucu ve X/Y bağlam girdilerinin genliği birlikte ölçeklenerek geri çağırma dayanıklılığı taranıyor.
+- Her ölçek ve bağlam için ağ yeniden kurulup aynı iki örüntüyle eğitiliyor; böylece bir test episode'undaki yerel plastisite başka bir test koşulunu kirletmiyor.
+- ±%5 genlik değişiminde iki bağlamın doğru örüntüyü koruması, eşik altı %10 azaltımda ise kapıların sessiz kalması denetleniyor.
+- **Sınır:** Bu, giriş genliğine karşı kontrollü dayanıklılık ölçümüdür; eksik duyusal kanal, rastgele gürültü dağılımı veya kendiliğinden öğrenilmiş bağlam kapısı kanıtı değildir.
