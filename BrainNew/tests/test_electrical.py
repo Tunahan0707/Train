@@ -322,6 +322,7 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
             hedef_dendrit_id="sessiz_giris", etki=50.0
         )
         kaynak_giris = Dendrid("kaynak_giris")
+        kaynak_giris.sinaps_bagla(aktif_sinaps, 1.0)
         kaynak_aktif.dendrit_ekle(kaynak_giris)
         kaynak_aktif.cikis_sinapsi_ekle(aktif_sinaps)
         kaynak_sessiz.cikis_sinapsi_ekle(sessiz_sinaps)
