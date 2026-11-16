@@ -300,6 +300,67 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertEqual(uygun.aktivasyon_sayisi, 1)
         self.assertEqual(baskilanan.aktivasyon_sayisi, 0)
 
+    def test_presinaptik_iz_sinaps_aktivasyonunda_artar(self):
+        sinaps = Baglanti("s", None, None)
+        sinaps.aktive_et(1.0)
+        self.assertAlmostEqual(sinaps.pre_iz, 1.0)
+        self.assertEqual(sinaps.post_iz, 0.0)
+
+    def test_postsinaptik_iz_hedef_noron_ateslenince_artar(self):
+        beyin = Beyin()
+        kaynak = Noron("kaynak")
+        hedef = Noron("hedef")
+        kaynak_giris = Dendrid("kaynak_giris")
+        hedef_giris = Dendrid("hedef_giris")
+        sinaps = Baglanti(
+            "kaynak_hedef", kaynak, hedef,
+            hedef_dendrit_id="hedef_giris", etki=50.0
+        )
+        kaynak_giris.sinaps_bagla(sinaps, 1.0)
+        kaynak.dendrit_ekle(kaynak_giris)
+        hedef.dendrit_ekle(hedef_giris)
+        kaynak.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(kaynak)
+        beyin.noron_ekle(hedef)
+
+        beyin.duyusal_girdi("kaynak", "kaynak_giris", 100.0)
+        beyin.calistir()
+
+        self.assertEqual(kaynak.ateslenme_sayisi, 1)
+        self.assertEqual(hedef.ateslenme_sayisi, 1)
+        self.assertAlmostEqual(sinaps.pre_iz, 1.0)
+        self.assertAlmostEqual(sinaps.post_iz, 1.0)
+
+    def test_pre_ve_post_izleri_bagimsiz_olarak_soner(self):
+        sinaps = Baglanti("s", None, None)
+        sinaps.pre_iz_tau = 2.0
+        sinaps.post_iz_tau = 4.0
+        sinaps.presinaptik_iz_arttir(0.0)
+        sinaps.postsinaptik_iz_arttir(0.0)
+        sinaps.izleri_guncelle(2.0)
+
+        self.assertAlmostEqual(sinaps.pre_iz, math.exp(-1.0))
+        self.assertAlmostEqual(sinaps.post_iz, math.exp(-0.5))
+
+    def test_etkinlik_izleri_zamani_geriye_goturulemez(self):
+        sinaps = Baglanti("s", None, None)
+        sinaps.izleri_guncelle(2.0)
+        with self.assertRaises(ValueError):
+            sinaps.izleri_guncelle(1.0)
+
+    def test_kopmus_gelen_sinaps_hedefin_gelen_listesinden_temizlenir(self):
+        kaynak = Noron("kaynak")
+        hedef = Noron("hedef")
+        sinaps = Baglanti(
+            "s", kaynak, hedef, hedef_dendrit_id="d"
+        )
+        kaynak.cikis_sinapsi_ekle(sinaps)
+        kaynak.baglantilari_bakimdan_gecir(1.0)
+        # Bu testte kopma, bakım kuralıyla değil açık durumla tetiklenir.
+        sinaps.kopuk = True
+        kaynak.baglantilari_bakimdan_gecir(2.0)
+        self.assertNotIn(sinaps, hedef.gelen_sinapslari)
+
     def test_birden_cok_dendritin_katkisi_sinaps_bazinda_normalize_edilir(self):
         n = Noron("n")
         d1, d2 = Dendrid("d1"), Dendrid("d2")
