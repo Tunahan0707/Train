@@ -71,7 +71,7 @@ Bu kural, pre→post sıralamasında pozitif ağırlık değişimi üretir. Ayr�
 | Dendrit-terminal katkısı | İlgili Dendrid | Kendi yerel sinyalinin işlendiği nöron entegrasyonu ve ateşlenme sonucu | Dendritin `katki_alt`–`katki_ust` sınırları |
 | Gerçek sinaptik etkinlik katsayısı | İlgili Baglanti | Şu an açık parametre ayarı; ileride doğrulanmış yerel öğrenme kuralı | [0,2] |
 | Sinaptik uygunluk izi | İlgili Baglanti | Yerel pre/post sırası | Geçici, sınırlı ve sönümlü |
-| Nöron homeostatik durumu (henüz eklenmedi) | İlgili Noron | Uzun dönem yerel etkinlik ölçümü | Sınırlı ve yavaş |
+| Nöron homeostatik eşik kayması | İlgili Noron | Uzun dönem yerel ateşlenme etkinliği | Sınırlı ve yavaş |
 | Yapısal bütünlük | İlgili Baglanti | Yerel bakım değerlendirmesi | [0,1] |
 
 Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri aktarımını yönetir. Öğrenme değişkenlerinin değerini seçmez veya hangi bağlantının değişeceğine karar vermez.
@@ -84,7 +84,7 @@ Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri 
 - Kaynak bağlantı kimliği hedef dendrit entegrasyonuna kadar taşınıyor.
 - Bağlantı bazında pre/post izleri, yerel Hebbian LTP ve ters sıralı STDP-LTD uygulanıyor.
 - İşaretli, sınırlı ve sönümlü uygunluk izi; yerel ödül/ceza kimyasal alanıyla gecikmiş ağırlık güncellemesi ilk sürüm olarak eklendi.
-- Öğrenme durumları ilgili Baglanti nesnesinde tutuluyor; Beyin yalnızca olay akışını koordine ediyor.
+- Öğrenme durumları ilgili Baglanti nesnesinde tutuluyor; nöron homeostazı ilgili Noron nesnesinde tutuluyor; Beyin yalnızca olay akışını koordine ediyor.
 
 **Henüz doğrulanmamış noktalar**
 - Gecikmiş modülatörün gerçek simülasyon olay akışında hangi sıklıkta örnekleneceği ve kısa ödül darbelerinin kaçırılma riski.
@@ -129,3 +129,14 @@ kontrollü olarak ele alınacaktır.
 - Bu prototipte `odul` ve `ceza` pozitif yoğunluklu ayrı kimyasal türlerdir. İşaret farktan gelir.
 - Bu katman mevcut anlık STDP plastisitesine ek bir gecikmiş geri bildirim yoludur; STDP'yi henüz modülatör kapılı tek mekanizma haline getirmez.
 - Parametreler ve alan yoğunlukları biyolojik kalibrasyon değildir; görev deneyleriyle ayarlanmalıdır.
+
+
+## 11. Nöron-yerel homeostatik etkinlik dengelemesi
+
+- Her nöron kendi ateşlenme etkinliği izini tutar; iz zamanla üstel olarak söner.
+- Nöron, gözlenen uzun dönem etkinliği hedef etkinlikle karşılaştırır.
+- Hedefin üzerinde etkinlik eşik kaymasını yükseltir; hedefin altında etkinlik eşiği düşürür.
+- Eşik kayması nöronun kendi temel `esik_temel` değerine eklenir ve sınırlıdır. Başka nöronların veya Beyin'in eşiklerini değiştirmez.
+- Güncelleme, geçen zaman boyunca izlenen etkinlik hatasının analitik integraline dayanır; çağrı sayısına doğrudan bağlı değildir.
+- Bu ilk homeostaz biçimi ateşlenme eşiğini düzenler. İnhibitör plastisite, sinaptik ölçekleme ve metaplastisite henüz uygulanmış değildir.
+- Parametreler prototip değerleridir; görev deneyleri ve ağ kararlılığı testleriyle kalibre edilmelidir.
