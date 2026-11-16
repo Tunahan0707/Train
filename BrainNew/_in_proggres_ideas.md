@@ -1,6 +1,6 @@
 # BrainNew — İleride İncelenecek Fikirler
 
-> **Durum:** Taslak fikir havuzu. Henüz mimari kararı değildir; mevcut mekanizmaları değiştirmez ve kodlama talimatı oluşturmaz. Bu başlıklar ileride biyolojik literatür ve deney sonuçları ışığında tartışılıp güncellenecektir.
+> **Durum:** Taslak fikir havuzu. Bu belgedeki başlıklar henüz mimari kararı değildir; mevcut mekanizmaları değiştirmez ve kodlama talimatı oluşturmaz. Kabul edilmiş mimari yönelimler için [ARCHITECTURE_DECISIONS.md](./ARCHITECTURE_DECISIONS.md) dosyasına bakın. Bu fikirler ileride biyolojik literatür ve deney sonuçları ışığında tartışılıp güncellenecektir.
 
 ## 1. Az kullanılan sinapsların korunması ve desteklenmesi
 
