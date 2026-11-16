@@ -16,7 +16,8 @@ class Baglanti:
         budama_kazanci=0.02, budama_esigi=0.1,
         kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0,
         hebbian_oran=0.01, stdp_depresyon_oran=0.01,
-        uygunluk_tau=100.0, modulator_ogrenme_orani=0.01
+        uygunluk_tau=100.0, modulator_ogrenme_orani=0.01,
+        baslangic_yapisal_butunluk=1.0
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
@@ -25,7 +26,8 @@ class Baglanti:
             bakim_kazanci, budama_kazanci, budama_esigi,
             kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik,
             hebbian_oran, stdp_depresyon_oran,
-            uygunluk_tau, modulator_ogrenme_orani
+            uygunluk_tau, modulator_ogrenme_orani,
+            baslangic_yapisal_butunluk
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -37,6 +39,8 @@ class Baglanti:
             raise ValueError("Başlangıç potansiyeli [-1, 1] aralığında olmalı.")
         if kimyasal_yayilim <= 0 or kimyasal_temizlenme < 0:
             raise ValueError("Kimyasal yayılım parametreleri geçersiz.")
+        if not 0.0 <= baslangic_yapisal_butunluk <= 1.0:
+            raise ValueError("Başlangıç yapısal bütünlüğü [0, 1] aralığında olmalı.")
         if yapisal_yaslanma_tau <= 0 or bakim_kazanci < 0 or budama_kazanci < 0:
             raise ValueError("Yapısal bakım parametreleri geçersiz.")
         if not 0.0 <= budama_esigi or not 0.0 <= kullanim_izi_esigi:
@@ -121,7 +125,7 @@ class Baglanti:
         self.kimyasal_temizlenme = float(kimyasal_temizlenme)
 
         # Bağlantı-yerel mikroglia-benzeri yapısal durum.
-        self.yapisal_butunluk = 1.0
+        self.yapisal_butunluk = float(baslangic_yapisal_butunluk)
         self.son_bakim_zamani = 0.0
         self.yapisal_yaslanma_tau = float(yapisal_yaslanma_tau)
         self.bakim_kazanci = float(bakim_kazanci)
