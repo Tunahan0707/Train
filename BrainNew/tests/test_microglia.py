@@ -122,6 +122,18 @@ class MikrogliaTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             beyin.calistir()
 
+    def test_otomatik_bakim_durdurulunca_yalnizca_bekleyen_olay_islenir(self):
+        beyin = Beyin()
+        mikroglia = Mikroglia("m", bakim_araligi=1.0)
+        beyin.mikroglia_ekle(mikroglia)
+        beyin.mikroglia_bakim_baslat("m")
+
+        self.assertTrue(beyin.mikroglia_bakim_durdur("m"))
+        beyin.calistir()
+
+        self.assertEqual(mikroglia.son_tarama_zamani, 1.0)
+        self.assertEqual(beyin._olaylar, [])
+
     def test_beyin_mikroglia_bakim_olayini_koordine_eder(self):
         beyin = Beyin()
         kaynak = Noron("kaynak")
