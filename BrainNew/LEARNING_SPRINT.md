@@ -438,3 +438,13 @@ Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında
 - İlk sürüm yalnızca ateşlenme eşiğini homeostatik olarak ayarlar; sinaptik ölçekleme veya inhibitör plastisite değildir.
 - Yeni testler ateşlenme kaydını, iki yönlü eşik tepkisini, sınırları ve zaman monotonluğunu kapsar.
 - Kullanıcı ortamında bu yeni adımın testleri henüz doğrulanmadı.
+
+
+### Yapısal plastisite — adım 1: 2B uzamsal aday indeksi
+
+- `BrainNew/UzamsalIndeks.py` içinde sabit hücreli 2B indeks eklendi.
+- Kayıt, silme, konum güncelleme, yarıçap sorgusu ve deterministik aday sıralaması destekleniyor.
+- İndeks yalnızca aday sunar; bağlantı kurma veya hedef seçme kararı vermez.
+- `BrainNew/tests/test_spatial_index.py` ile yarıçap sınırı, sıralama, kendini hariç tutma, konum güncelleme, kayıt yaşam döngüsü ve geçersiz parametreler için testler eklendi.
+- İndeks henüz Beyin olay döngüsüne entegre edilmedi; bu aşamada üretim simülasyonunun mevcut davranışı değiştirilmedi.
+- Yeni testler kullanıcı ortamında henüz doğrulanmadı.
