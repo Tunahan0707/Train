@@ -456,12 +456,34 @@ Bu aşama, ağın matematik işlemlerini içine kodlamaz. Sayısal gösterim ve 
 
 İlk tercih, tek bir nöronun “7” anlamına geldiği saf one-hot kod yerine, yakın sayıları örtüşen etkinlik örüntüleriyle temsil eden dağıtık/popülasyon kodlamasıdır.
 
-- Sayı büyüklüğü, belirli bir reseptör nöronunun etkinliğiyle değil, bir nöron grubunun uzamsal/etkinlik örüntüsüyle temsil edilir.
-- İki operand için ayrı girdi kanalları bulunur.
-- Çıktı sayısı, motor organının okuduğu sıralı/örtüşen etkinlik örüntüsüyle temsil edilir.
+- Sayı büyüklüğü, belirli bir reseptör nöronunun etkinliğiyle değil, farklı tercih edilen büyüklüklere sahip nöronlardan oluşan bir popülasyon örüntüsüyle temsil edilir.
+- İki operand için ayrı girdi popülasyonları bulunur.
+- Çıktı sayısı, motor organının okuduğu popülasyon etkinliğiyle temsil edilir.
 - Kodlayıcı sayının kendisini ağa sunar; sonucu hesaplamaz.
-- Çözücü etkinlik örüntüsünden ağın ürettiği sayısal cevabı okur; aritmetik işlemi yapmaz.
+- Çözücü ağın ürettiği popülasyon örüntüsünü sayısal etikete dönüştürür; aritmetik işlemi yapmaz.
 - Kodlama/çözme hataları ağın öğrenme performansından ayrı raporlanır.
+
+#### İlk prototipin somut kodlama sözleşmesi
+
+**BrainNew/SayisalTemsil.py** ilk prototipte 1–9 pozitif tam sayı aralığını kullanır. Sıfır şimdilik kapsam dışıdır: sessizlik/eksik girdi ile sayısal sıfır aynı kod olamaz; sıfır için daha sonra açık bir temsil tanımlanacaktır.
+
+Tercih edilen büyüklüğü \(\mu_i\) olan her popülasyon biriminin ideal yanıtı:
+
+\[
+r_i(n)=\exp\left[-\frac{1}{2}
+\left(\frac{\ln n-\ln\mu_i}{\sigma_{\log}}\right)^2\right]
+\]
+
+- Tercih edilen büyüklükler ilk sürümde \(\mu_i\in\{1,2,\ldots,9\}\).
+- Başlangıç ayarı \(\sigma_{\log}=0.25\). Bu biyolojik sabit değil, kalibre edilecek simülasyon parametresidir.
+- İdeal yanıt, en fazla 12 zamansal duyusal darbeye nicemlenir: \(c_i=\operatorname{round}(12r_i)\).
+- Aynı popülasyon biriminin darbeleri 5 ms aralıkla gönderilir. Mevcut nöron faz döngüsünün toplam 4 ms sürmesi nedeniyle bu aralık, her darbenin ayrı ateşlenme oluşturabilmesini sağlayan ilk mühendislik tercihidir; biyolojik ateşleme frekansı iddiası değildir.
+- Her operand kendi nöron/dendrit kimliklerine sahip ayrı popülasyona kodlanır.
+- **MotorOrgan.ateslenme_sayilari_oku** ikili ateşlendi/ateşlenmedi bilgisinin yanında episode içindeki spike sayılarını verir.
+- **SayisalTemsil.coz**, gözlenen spike sayısı vektörünü normalize edip aynı kod kitabındaki ideal örüntülerle karşılaştırır. Bu yalnızca motor okuma/çözme işlemidir; toplama, karşılaştırma veya başka bir matematik işlemi yapmaz.
+- Kodlayıcıdaki log-Gauss ayar eğrileri dış duyusal arayüzde sabittir. Dolayısıyla ilk deney, ham görsel noktalardan sayı algısının kendiliğinden geliştiğini değil, önceden popülasyon biçiminde temsil edilmiş büyüklüklerin ağ tarafından işlenip işlenemediğini sınar.
+
+Bu prototipin ilk kabul kapısı: 1–9 arasındaki her sayının ayrı ve tekrarlanabilir bir popülasyon örüntüsü üretmesi; yakın sayıların örtüşmesi; uzak oranlı sayı çiftlerinin daha kolay ayrılabilir örüntüler üretmesi; kodlanmış girdinin gerçek nöron spike sayılarına dönüşüp motor arayüzünden tekrar çözülebilmesidir.
 
 ### Matematik görev sırası
 
