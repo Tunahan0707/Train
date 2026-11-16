@@ -70,11 +70,18 @@ class DeneySurucusu:
         if not callable(ag_kurucu):
             raise TypeError("ag_kurucu çağrılabilir olmalı.")
         self.ag_kurucu = ag_kurucu
+        self._kullanilmis_aglar = []
 
     def ornegi_calistir(self, ornek):
         beyin = self.ag_kurucu()
         if not hasattr(beyin, "noronlar") or not hasattr(beyin, "duyusal_girdi"):
             raise TypeError("ag_kurucu bir Beyin örneği döndürmeli.")
+
+        if any(beyin is onceki for onceki in self._kullanilmis_aglar):
+            raise ValueError(
+                "Her deney örneği için ag_kurucu yeni ve bağımsız bir Beyin döndürmeli."
+            )
+        self._kullanilmis_aglar.append(beyin)
 
         bilinmeyenler = (
             ornek.beklenen_ciktilar - set(beyin.noronlar)
