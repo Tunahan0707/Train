@@ -55,10 +55,10 @@ class Baglanti:
             raise ValueError("Hedef nöron için dendrit kimliği zorunlu.")
         self.hedef_dendrit_id = hedef_dendrit_id
         self.etki = float(etki)
-        self.sinaptik_agirlik_alt = 0.0
+        self.sinaptik_agirlik_alt = -2.0
         self.sinaptik_agirlik_ust = 2.0
-        if not 0.0 <= sinaptik_agirlik <= 2.0:
-            raise ValueError("Sinaptik ağırlık [0, 2] aralığında olmalı.")
+        if not -2.0 <= sinaptik_agirlik <= 2.0:
+            raise ValueError("İşaretli sinaptik ağırlık [-2, 2] aralığında olmalı.")
         self.sinaptik_agirlik = float(sinaptik_agirlik)
         if hebbian_oran < 0:
             raise ValueError("Hebbian öğrenme oranı negatif olamaz.")
@@ -208,7 +208,10 @@ class Baglanti:
         yeni_deger = float(yeni_deger)
         if not math.isfinite(yeni_deger):
             raise ValueError("Sinaptik ağırlık sonlu olmalı.")
-        self.sinaptik_agirlik = max(0.0, min(2.0, yeni_deger))
+        self.sinaptik_agirlik = max(
+            self.sinaptik_agirlik_alt,
+            min(self.sinaptik_agirlik_ust, yeni_deger)
+        )
         return self.sinaptik_agirlik
 
     def hebbian_ogren(self, zaman):
@@ -224,13 +227,22 @@ class Baglanti:
         if self.pre_iz <= 0.0:
             return 0.0
 
-        aralik = self.sinaptik_agirlik_ust - self.sinaptik_agirlik_alt
-        kalan_pay = (
-            self.sinaptik_agirlik_ust - self.sinaptik_agirlik
-        ) / aralik
-        delta = self.hebbian_oran * self.pre_iz * kalan_pay
         onceki = self.sinaptik_agirlik
-        yeni = self.sinaptik_agirligi_ayarla(onceki + delta)
+        ust_buyukluk = max(
+            abs(self.sinaptik_agirlik_alt),
+            abs(self.sinaptik_agirlik_ust)
+        )
+        buyukluk = abs(onceki)
+        kalan_pay = (ust_buyukluk - buyukluk) / ust_buyukluk
+        delta = self.hebbian_oran * self.pre_iz * kalan_pay
+        isaret = (
+            math.copysign(1.0, onceki)
+            if onceki != 0.0
+            else math.copysign(1.0, self.etki if self.etki != 0.0 else 1.0)
+        )
+        yeni = self.sinaptik_agirligi_ayarla(
+            isaret * (buyukluk + delta)
+        )
         gercek_delta = yeni - onceki
         self.hebbian_guncelleme_sayisi += 1
         self.toplam_hebbian_degisim += gercek_delta
@@ -244,10 +256,23 @@ class Baglanti:
         self.uygunluk_izini_guncelle(zaman, -min(1.0, self.post_iz))
         onceki = self.sinaptik_agirlik
         if self.post_iz > 0.0 and self.stdp_depresyon_oran > 0.0:
-            aralik = self.sinaptik_agirlik_ust - self.sinaptik_agirlik_alt
-            alt_pay = (onceki - self.sinaptik_agirlik_alt) / aralik
-            delta = self.stdp_depresyon_oran * self.post_iz * alt_pay
-            self.sinaptik_agirligi_ayarla(onceki - delta)
+            ust_buyukluk = max(
+                abs(self.sinaptik_agirlik_alt),
+                abs(self.sinaptik_agirlik_ust)
+            )
+            buyukluk = abs(onceki)
+            delta = (
+                self.stdp_depresyon_oran * self.post_iz
+                * buyukluk / ust_buyukluk
+            )
+            isaret = (
+                math.copysign(1.0, onceki)
+                if onceki != 0.0
+                else math.copysign(1.0, self.etki if self.etki != 0.0 else 1.0)
+            )
+            self.sinaptik_agirligi_ayarla(
+                isaret * max(0.0, buyukluk - delta)
+            )
             gercek_delta = onceki - self.sinaptik_agirlik
             if gercek_delta > 0.0:
                 self.stdp_depresyon_sayisi += 1
