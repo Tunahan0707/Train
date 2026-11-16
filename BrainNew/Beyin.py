@@ -64,7 +64,26 @@ class Beyin:
             gecikme, "duyusal_girdi", noron_id, (dendrit_id, float(etki))
         )
 
+    def _iletim_olayini_planla(self, sinaps, gecikme):
+        """Önceden yerel olarak aktive edilmiş sinapsın iletimini zamanlar."""
+        if sinaps.hedef is None:
+            return
+        hedef_id = sinaps.hedef.kimlik
+        if self.noronlar.get(hedef_id) is not sinaps.hedef:
+            raise ValueError("Hedef nöron bu Beyin'e kayıtlı değil.")
+        if sinaps.hedef_dendrit_id not in sinaps.hedef.dendritler:
+            raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
+        self.olay_planla(
+            gecikme, "sinaptik_girdi", hedef_id,
+            (sinaps.kimlik, sinaps.hedef_dendrit_id, sinaps.etki)
+        )
+
     def sinyal_gonder(self, sinaps, zaman):
+        """Tekil/dış kullanım için sinaps aktivasyonunu ve iletimini başlatır.
+
+        Normal ağ akışında aktivasyon kararını Noron verir; bu yardımcı metot
+        yalnızca açıkça istenen doğrudan sinaps aktivasyonu içindir.
+        """
         if zaman != self.zaman:
             raise ValueError("Sinaps aktivasyonu mevcut simülasyon zamanında yapılmalı.")
         if sinaps.hedef is not None:
@@ -73,15 +92,9 @@ class Beyin:
                 raise ValueError("Hedef nöron bu Beyin'e kayıtlı değil.")
             if sinaps.hedef_dendrit_id not in sinaps.hedef.dendritler:
                 raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
-
-        # Aktivasyon eşiğini sinapsın kendisi doğrular ve yerel salımı başlatır.
         gecikme = sinaps.aktive_et(zaman)
         sinaps.kimyasal_sal(self.kimyasal_alan, zaman)
-        if sinaps.hedef is not None:
-            self.olay_planla(
-                gecikme, "sinaptik_girdi", sinaps.hedef.kimlik,
-                (sinaps.kimlik, sinaps.hedef_dendrit_id, sinaps.etki)
-            )
+        self._iletim_olayini_planla(sinaps, gecikme)
 
     def _girdi_olayini_isle(self, noron, veri):
         if len(veri) == 2:
@@ -108,8 +121,8 @@ class Beyin:
                 self.zaman, self.kimyasal_alan
             )
             if ateslendi:
-                for sinaps in aktif_sinapslar:
-                    self.sinyal_gonder(sinaps, self.zaman)
+                for sinaps, gecikme in aktif_sinapslar:
+                    self._iletim_olayini_planla(sinaps, gecikme)
                 self.olay_planla(1.0, "faz", hedef_id)
 
         elif tur == "faz":
