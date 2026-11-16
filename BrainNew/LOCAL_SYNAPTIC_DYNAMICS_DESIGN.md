@@ -352,7 +352,7 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 - Her transmitter türü için terminal repertuvarı, salım profili, `Q_k(x,t)` yayılım/sönüm parametreleri ve dendrit duyarlılığı `R_{ik}`: deneysel.
 - Hacimsel kimyasal iletimin yerel arama/ızgara çözünürlüğü ve komşulara aktarım katsayıları: deneysel.
 - Kimyasal sinyal sınıflarının yerel etki yarıçapı ve sönüm hızları: deneysel.
-- Mikroglia-benzeri ajanların algılama yarıçapı, aktivasyon eşiği ve budama/koruma tepkileri: deneysel.
+- Bağlantı nesnesinin mikroglia-benzeri yerel denetimi için bakım sıklığı, algılama kapsamı ve budama/koruma tepkileri: deneysel.
 - Bağlantı yaşlanması, yapısal bütünlük ve eliminasyon koşulları: deneysel.
 - Bağlantı oluşum yarıçapı, yeni bağlantı başlangıç gücü ve olgunlaşma koşulları: deneysel.
 - İletim hızı ve minimum pozitif olay gecikmesi: deneysel.
@@ -431,5 +431,5 @@ Aşağıdaki bulgular tasarımın biyolojik esinini destekler; simülasyondaki h
 - Birçok nöron birden fazla transmitter kullanabilir. Birden fazla transmitter farklı vezikül havuzlarında bulunup ayrı zamanlarda salınabilir; bazı sistemlerde aynı vezikülde birlikte paketlenmeleri de gösterilmiştir. Bu nedenle çoklu transmitter desteği biyolojik olarak temellidir; bütün sinapsların aynı transmitter kombinasyonunu saldığı varsayımı doğru değildir. Kaynak: Wallace & Sabatini, *Synaptic and circuit functions of multitransmitter neurons in the mammalian brain* (2023), https://pmc.ncbi.nlm.nih.gov/articles/PMC10592565/
 - Sinaptik vezikül salımı aksiyon potansiyeliyle terminale ulaşan elektriksel aktivite ve kalsiyum aracılı süreçlerle tetiklenir; salım olasılığı ve miktarı yerel olarak düzenlenebilir. Kaynak: Branco & Staras, *The probability of neurotransmitter release* (2009), https://www.nature.com/articles/nrn2634
 - Mikroglia nöral aktiviteyi algılayabilir ve sinapsların oluşumu, korunması, işlevsel düzenlenmesi ve eliminasyonuna katılabilir. Ancak sinaps eliminasyonunun hücresel ayrıntıları ve bağlama göre değişimi hâlâ araştırılmaktadır. Kaynak: *Microglia: Activity-dependent regulators of neural circuits* (2024), https://pubmed.ncbi.nlm.nih.gov/38294960/ ; Pereira-Iglesias et al., *Microglia as hunters or gatherers of brain synapses* (2025), https://www.nature.com/articles/s41593-024-01818-w
-- Mikroglia-benzeri ajanların yerel sinyal ve bağlantı işaretlerine göre çalışması biyolojik esin taşır; simülasyondaki belirli onarım, budama ve bağlantı oluşturma kuralları ayrıca tasarlanmış soyutlamalardır. Özellikle kopmuş bir bağlantının doğrudan “tamiri” ile yeni sinaps oluşumu aynı biyolojik olay gibi ele alınmamalıdır.
+- Biyolojik mikroglia, sinapsların oluşumu, korunması ve budanmasında yer alır; BrainNew'de bu davranış bağlantı nesnesine ait yerel bakım/budama kurallarıyla soyutlanır. Bu yazılım temsili gerçek mikroglia hücresinin yapısal konumunu birebir modellemez. Özellikle kopmuş bir bağlantının doğrudan “tamiri” ile yeni sinaps oluşumu aynı biyolojik olay gibi ele alınmamalıdır.
 
