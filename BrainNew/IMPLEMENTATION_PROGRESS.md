@@ -103,3 +103,12 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Rastgele genlik gürültüsü, temiz eğitimden sonra yalnızca geri çağırma ipucu ve bağlam girdilerine bağımsız Gauss pertürbasyonu uygular. Her tekrar temiz eğitilmiş yeni bir ağdan başlar; seed ile tekrarlanabilirlik, tam eşleşme oranı, yanlış pozitifler ve ortalama olay sayısı raporlanır.
 - Eksik kanal deneyi, geri çağırma sırasında ipucunu veya bağlamı tamamen kaldırır. Beklenti, tek başına kalan kanalın kapıyı ateşlememesi ve yanlış örüntü üretmemesidir.
 - Bu deneyler henüz kullanıcı tarafından çalıştırılmadı; sonuç veya dayanıklılık iddiası yoktur.
+
+
+## Aşama 16 — gürültü kaynağını kanala göre ayırma
+
+- Önceki rastgele gürültü deneyi ipucu ve bağlam genliklerini aynı anda bozuyordu; tek başına hangi kanalın kırılgan olduğu ayırt edilemiyordu.
+- Yeni `kanal_bazli_gurultu_taramasi` gürültüyü yalnızca ipucu kanalına, yalnızca bağlam kanalına veya iki kanala birlikte uygular.
+- Varsayılan tekrar sayısı 100'dür; oran, kanal, seed ve tekrar sayısı parametrelenebilir.
+- Her kanal/şiddet/bağlam için tam eşleşme oranı, yanlış pozitif sayısı ve ortalama olay sayısı raporlanır.
+- Bu aşama önceden kurulmuş küçük bağlam kapıları üzerinde dayanıklılık ölçümüdür; kendi kendine bağlam topolojisi öğrenildiğini göstermez.
