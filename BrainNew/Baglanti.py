@@ -22,6 +22,8 @@ class Baglanti:
         self.kimlik = kimlik
         self.kaynak = kaynak
         self.hedef = hedef
+        if hedef is not None and hedef_dendrit_id is None:
+            raise ValueError("Hedef nöron için dendrit kimliği zorunlu.")
         self.hedef_dendrit_id = hedef_dendrit_id
         self.etki = float(etki)
         self.uzunluk = float(uzunluk)
