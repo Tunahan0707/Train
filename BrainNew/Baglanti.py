@@ -2,7 +2,7 @@ import math
 
 
 class Baglanti:
-    """Yerel sinaps, transmitter terminali ve mikroglia-benzeri bakım durumu."""
+    """Yerel sinaps, transmitter terminali ve yapısal durum."""
 
     MINIMUM_GECIKME = 1e-6
 
@@ -93,6 +93,7 @@ class Baglanti:
         ):
             raise ValueError("Terminal konumu sonlu iki boyutlu koordinat olmalı.")
         self.terminal_konumu = tuple(float(v) for v in terminal_konumu)
+        self.konum = self.terminal_konumu
 
         self.transmitter_profili = dict(transmitter_profili or {})
         if any(
@@ -335,45 +336,3 @@ class Baglanti:
                 temizlenme=self.kimyasal_temizlenme
             )
 
-    def yerel_bakim(self, kimyasal_alan, zaman):
-        """Bağlantı-yerel bakım/budama; Beyin veya küresel yönetici karar vermez."""
-        zaman = float(zaman)
-        if not math.isfinite(zaman) or zaman < self.son_bakim_zamani:
-            raise ValueError("Yapısal bakım zamanı sonlu olmalı ve geriye gitmemeli.")
-        if self.kopuk:
-            return False
-
-        self.potansiyeli_guncelle(zaman)
-        self.gecikmis_modulatoru_isle(kimyasal_alan, zaman)
-        gecen = zaman - self.son_bakim_zamani
-        if gecen:
-            self.yapisal_butunluk *= math.exp(
-                -gecen / self.yapisal_yaslanma_tau
-            )
-
-        sinyaller = {"buyume": 0.0, "stabilizasyon": 0.0, "budama": 0.0}
-        if kimyasal_alan is not None:
-            for tur in sinyaller:
-                sinyaller[tur] = kimyasal_alan.yogunluk(
-                    tur, self.terminal_konumu, zaman
-                )
-        self.son_yapisal_sinyaller = sinyaller
-
-        # Büyüme/stabilizasyon sinyalleri mevcut bağlantıyı korur veya
-        # güçlendirir. Budama, yalnızca düşük kullanım iziyle birlikte etkilidir.
-        koruma = sinyaller["buyume"] + sinyaller["stabilizasyon"]
-        self.yapisal_butunluk += self.bakim_kazanci * koruma
-        if self.iz < self.kullanim_izi_esigi:
-            self.yapisal_butunluk -= (
-                self.budama_kazanci * sinyaller["budama"]
-            )
-        self.yapisal_butunluk = max(0.0, min(1.0, self.yapisal_butunluk))
-        self.son_bakim_zamani = zaman
-
-        if (
-            self.iz < self.kullanim_izi_esigi
-            and sinyaller["budama"] >= self.budama_esigi
-            and self.yapisal_butunluk <= self.kopma_esigi
-        ):
-            self.kopuk = True
-        return not self.kopuk
