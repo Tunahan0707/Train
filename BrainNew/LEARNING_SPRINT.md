@@ -316,6 +316,8 @@ Dallanma:
 
 ## Aşama 11 — Sinaps-sinaps yerel etkileşimi
 
+**Uygulama durumu:** İlk yerel sürüm eklendi. Her nöron seyrek ve yönlü terminal ilişkileri saklıyor; birlikte etkinleşme ilişkiyi pozitif, tek taraflı etkinleşme yalnızca etkin terminalden diğerine giden yönü negatif güncelliyor. İlişki, diğer terminalin geçici potansiyelini etkiliyor ve kullanılmadığında tembel üstel sönümle zayıflıyor. Kopan terminalin ilişkileri temizleniyor. Birim testleri yazıldı; henüz çalıştırılmadı.
+
 **Amaç:** Aynı nörona ait sinapsların birlikte etkinleşme geçmişinden yönlü ilişkiler öğrenmesi.
 
 Kurallar:
