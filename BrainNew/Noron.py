@@ -10,24 +10,43 @@ class Noron:
     def __init__(
         self, kimlik, konum=(0.0, 0.0), dinlenme=-70.0, esik=-55.0,
         sizinti=0.05, depolarizasyon=30.0, repolarizasyon=-40.0,
-        hiperpolarizasyon=-80.0
+        hiperpolarizasyon=-80.0, homeostatik_hedef_oran=0.02,
+        homeostatik_tau=100.0, homeostatik_oran=0.01,
+        homeostatik_esik_alt=-10.0, homeostatik_esik_ust=10.0
     ):
         sayisal_degerler = (
             dinlenme, esik, sizinti, depolarizasyon,
-            repolarizasyon, hiperpolarizasyon
+            repolarizasyon, hiperpolarizasyon, homeostatik_hedef_oran,
+            homeostatik_tau, homeostatik_oran,
+            homeostatik_esik_alt, homeostatik_esik_ust
         )
         if not all(math.isfinite(float(v)) for v in sayisal_degerler):
             raise ValueError("Nöron parametreleri sonlu sayılar olmalı.")
         if not 0.0 <= sizinti < 1.0:
             raise ValueError("Sızıntı oranı [0, 1) aralığında olmalı.")
+        if homeostatik_hedef_oran < 0 or homeostatik_tau <= 0 or homeostatik_oran < 0:
+            raise ValueError("Homeostatik hedef, zaman sabiti veya öğrenme oranı geçersiz.")
+        if homeostatik_esik_alt > 0 or homeostatik_esik_ust < 0 or homeostatik_esik_alt > homeostatik_esik_ust:
+            raise ValueError("Homeostatik eşik kayması sınırları sıfırı kapsamalı.")
         if len(konum) != 2 or not all(math.isfinite(float(v)) for v in konum):
             raise ValueError("Nöron konumu sonlu iki boyutlu koordinat olmalı.")
 
         self.kimlik = kimlik
         self.konum = tuple(float(v) for v in konum)
         self.dinlenme_degeri = float(dinlenme)
-        self.esik = float(esik)
+        self.esik_temel = float(esik)
+        self.esik = self.esik_temel
         self.sizinti = float(sizinti)
+
+        # Nöron-yerel homeostaz: etkinlik izi ve eşik kayması.
+        self.homeostatik_hedef_oran = float(homeostatik_hedef_oran)
+        self.homeostatik_tau = float(homeostatik_tau)
+        self.homeostatik_oran = float(homeostatik_oran)
+        self.homeostatik_esik_alt = float(homeostatik_esik_alt)
+        self.homeostatik_esik_ust = float(homeostatik_esik_ust)
+        self.homeostatik_aktivite_izi = 0.0
+        self.homeostatik_esik_kaymasi = 0.0
+        self.son_homeostatik_guncelleme = 0.0
         self.depolarizasyon_degeri = float(depolarizasyon)
         self.repolarizasyon_degeri = float(repolarizasyon)
         self.hiperpolarizasyon_degeri = float(hiperpolarizasyon)
@@ -126,6 +145,37 @@ class Noron:
 
         return toplam_membran_etkisi
 
+    def homeostatik_durumu_guncelle(self, zaman, yeni_ateslenme=False):
+        """Uzun dönem etkinlik hatasını yerel eşik ayarına dönüştürür.
+
+        Aktivite izi ateşlenmeleri üstel olarak toplar. Eşik kayması,
+        hedef ve gözlenen etkinlik arasındaki zaman-integralli hataya göre
+        yavaşça değişir. Beyin bu hesabın hiçbir parçasını yönetmez.
+        """
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < self.son_homeostatik_guncelleme:
+            raise ValueError("Homeostatik güncelleme zamanı sonlu olmalı ve geriye gitmemeli.")
+
+        gecen = zaman - self.son_homeostatik_guncelleme
+        if gecen:
+            carp = math.exp(-gecen / self.homeostatik_tau)
+            gerceklesen_etkinlik = self.homeostatik_aktivite_izi * (1.0 - carp)
+            hedeflenen_etkinlik = self.homeostatik_hedef_oran * gecen
+            self.homeostatik_esik_kaymasi += self.homeostatik_oran * (
+                gerceklesen_etkinlik - hedeflenen_etkinlik
+            )
+            self.homeostatik_esik_kaymasi = max(
+                self.homeostatik_esik_alt,
+                min(self.homeostatik_esik_ust, self.homeostatik_esik_kaymasi)
+            )
+            self.homeostatik_aktivite_izi *= carp
+            self.son_homeostatik_guncelleme = zaman
+
+        if yeni_ateslenme:
+            self.homeostatik_aktivite_izi += 1.0
+
+        self.esik = self.esik_temel + self.homeostatik_esik_kaymasi
+        return self.esik
     def membrani_guncelle(self, toplam_etki, zaman):
         if self.durum != self.DINLENME:
             return False
@@ -199,11 +249,13 @@ class Noron:
         toplam = self.girdileri_birlestir(zaman, kimyasal_alan)
         self.baglantilari_bakimdan_gecir(zaman, kimyasal_alan)
         self.son_entegrasyon_zamani = float(zaman)
+        self.homeostatik_durumu_guncelle(zaman)
         if not self.membrani_guncelle(toplam, zaman):
             return False, []
         if not self.aksiyon_potansiyeli_baslat():
             return False, []
 
+        self.homeostatik_durumu_guncelle(zaman, yeni_ateslenme=True)
         return True, self.ateslenme_sonucunu_isle(zaman, kimyasal_alan)
 
     def faz_gecisi_gecikmesi(self):
