@@ -104,6 +104,40 @@ class Baglanti:
             "buyume": 0.0, "stabilizasyon": 0.0, "budama": 0.0
         }
 
+        # Kısa ömürlü etkinlik izleri; kalıcı sinaptik ağırlık değildir.
+        self.pre_iz_tau = 20.0
+        self.post_iz_tau = 20.0
+        self.pre_iz = 0.0
+        self.post_iz = 0.0
+        self.son_iz_guncelleme = 0.0
+
+        if self.hedef is not None:
+            self.hedef.gelen_sinapsi_ekle(self)
+
+    def izleri_guncelle(self, zaman):
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < self.son_iz_guncelleme:
+            raise ValueError("Etkinlik izi zamanı sonlu olmalı ve geriye gitmemeli.")
+        gecen = zaman - self.son_iz_guncelleme
+        if gecen:
+            self.pre_iz *= math.exp(-gecen / self.pre_iz_tau)
+            self.post_iz *= math.exp(-gecen / self.post_iz_tau)
+            self.son_iz_guncelleme = zaman
+
+    def presinaptik_iz_arttir(self, zaman, miktar=1.0):
+        miktar = float(miktar)
+        if not math.isfinite(miktar) or miktar < 0:
+            raise ValueError("Presinaptik iz artışı sonlu ve negatif olmayan değer olmalı.")
+        self.izleri_guncelle(zaman)
+        self.pre_iz += miktar
+
+    def postsinaptik_iz_arttir(self, zaman, miktar=1.0):
+        miktar = float(miktar)
+        if not math.isfinite(miktar) or miktar < 0:
+            raise ValueError("Postsinaptik iz artışı sonlu ve negatif olmayan değer olmalı.")
+        self.izleri_guncelle(zaman)
+        self.post_iz += miktar
+
     def potansiyeli_guncelle(self, zaman):
         zaman = float(zaman)
         if not math.isfinite(zaman):
@@ -144,6 +178,7 @@ class Baglanti:
         self.son_aktivasyon = float(zaman)
         self.aktivasyon_sayisi += 1
         self.iz += 1.0
+        self.presinaptik_iz_arttir(zaman)
         return max(self.MINIMUM_GECIKME, self.uzunluk / self.iletim_hizi)
 
     def kimyasal_sal(self, kimyasal_alan, zaman, dendritik_sinyal=0.0):
