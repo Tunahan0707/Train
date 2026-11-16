@@ -2,7 +2,7 @@ import math
 
 
 class Dendrid:
-    """İşaretli girdiyi toplar ve yerel sinapslara dağıtır."""
+    """İşaretli girdiyi toplar ve yerel sinapslar için sinyal üretir."""
 
     def __init__(self, kimlik, konum=(0.0, 0.0), sinyal_olcegi=10.0):
         if sinyal_olcegi <= 0:
@@ -31,9 +31,9 @@ class Dendrid:
     def girdi_al(self, etki):
         self.girdiler.append(float(etki))
 
-    def sinyali_isle(self, zaman, kimyasal_alan=None):
+    def sinyali_hazirla(self, zaman, kimyasal_alan=None):
         if not self.girdiler:
-            return 0.0
+            return 0.0, 0.0
 
         elektriksel_toplam = sum(self.girdiler)
         self.girdiler.clear()
@@ -45,16 +45,12 @@ class Dendrid:
         u = math.tanh(
             elektriksel_toplam / self.sinyal_olcegi + kimyasal_modulasyon
         )
-        adet = len(self.sinaps_katkilari)
-        if adet and u != 0.0:
-            normalizasyon = math.sqrt(max(1, adet))
-            for sinaps, katki in self.sinaps_katkilari.items():
-                sinaps.etki_uygula((katki * u) / normalizasyon, zaman)
-                self.son_islenen_sinapslar.add(sinaps)
-        return elektriksel_toplam
+        if u != 0.0:
+            self.son_islenen_sinapslar.update(self.sinaps_katkilari)
+        return elektriksel_toplam, u
 
     def firsat_sonucu_ogren(self, aktif_sinapslar, zaman, adim=0.01):
-        """Yalnızca bu olayda gerçekten katkı yüklenen çiftleri günceller."""
+        """Yalnızca bu dendritin gerçekten katkı yüklediği çiftleri günceller."""
         for sinaps in self.son_islenen_sinapslar:
             if sinaps in aktif_sinapslar:
                 self.sinaps_katkilari[sinaps] += adim
