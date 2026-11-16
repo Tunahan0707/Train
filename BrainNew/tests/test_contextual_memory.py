@@ -107,6 +107,24 @@ class BaglamaDuyarliHafizaTestleri(unittest.TestCase):
                     iki[oran][baglam]["yanlis_pozitif"],
                 )
 
+    def test_kanal_bazli_gurultu_taramasi_kanallari_ayirir(self):
+        rapor = BaglamaDuyarliHafizaDeneyi().kanal_bazli_gurultu_taramasi(
+            gurultu_oranlari=(0.0, 0.10),
+            kanallar=("ipucu", "baglam", "hepsi"),
+            tekrar=2, seed=23,
+        )
+        for kanal in ("ipucu", "baglam", "hepsi"):
+            for baglam in ("X", "Y"):
+                temiz = rapor[kanal][0.0][baglam]
+                self.assertEqual(temiz["tam_eslesme_orani"], 1.0)
+                self.assertEqual(temiz["yanlis_pozitif"], 0)
+
+    def test_kanal_bazli_gurultu_gecersiz_kanali_reddeder(self):
+        with self.assertRaises(ValueError):
+            BaglamaDuyarliHafizaDeneyi().kanal_bazli_gurultu_taramasi(
+                kanallar=("bilinmeyen",), tekrar=1
+            )
+
     def test_eksik_ipucu_veya_baglam_kanali_sessizlik_olusturur(self):
         rapor = BaglamaDuyarliHafizaDeneyi().eksik_kanal_taramasi()
         for kanal in ("ipucu", "baglam"):
