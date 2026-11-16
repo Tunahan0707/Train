@@ -237,6 +237,7 @@ class Beyin:
         return True
 
     def calistir(self, olay_limiti=100000, son_zaman=None):
+        """Olayları çalıştırır; son_zaman verilirse saati o sınıra ilerletir."""
         if not isinstance(olay_limiti, int) or olay_limiti < 0:
             raise ValueError("Olay limiti negatif olmayan bir tam sayı olmalı.")
         if self._otomatik_mikroglialar and son_zaman is None:
