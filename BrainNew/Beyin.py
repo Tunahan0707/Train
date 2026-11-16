@@ -376,4 +376,6 @@ class Beyin:
             raise RuntimeError("Olay limiti aşıldı; olası sonsuz olay zinciri.")
         if son_zaman is not None:
             self.zaman = son_zaman
+        if hasattr(self.kimyasal_alan, "kaynaklari_temizle"):
+            self.kimyasal_alan.kaynaklari_temizle(self.zaman)
         return islenen
