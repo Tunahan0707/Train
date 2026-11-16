@@ -48,3 +48,13 @@ Hedef dal: `fix/brainnew-architecture-audit`
 ## Doğrulama durumu
 
 Önceki kullanıcı doğrulamasında mevcut test paketi geçti. Bu güncellemede eklenen homeostaz testleri ve zaman/episode değişiklikleri henüz çalıştırılmadı; yeni değişiklikler yeşil kabul edilmemelidir. GitHub Actions son denemelerinde job kayıtları `steps=null` ve `logs_url=null` döndü; bu nedenle uzaktaki başarısızlıkların Python test hatası olduğu doğrulanamadı.
+
+
+## Aşama 16 — İlk kontrollü geri çağırma deneyi
+
+- `HafizaDeneyi` eklendi: ayrı eğitilmemiş baseline ağı, zayıf A→B/A→C bağlantılarıyla eğitim ağı ve eğitim sonrası yalnızca A ipucuyla geri çağırma.
+- Eğitim sırasında A önce etkinleşir; B ve C daha sonra duyusal öğretim girdisi alır. Postsinaptik ateşlenmeler, mevcut yerel Hebbian mekanizmayla A çıkış bağlantılarını güçlendirir.
+- Sonraki episode'da yalnızca A sunulur. B ve C'nin ağa gömülü bir örüntü tamamlama algoritması olmadan etkinleşip etkinleşmediği ölçülür.
+- Başlangıç/öğrenilmiş ağırlıklar ve baseline/eğitim/geri çağırma çıktıları raporlanır.
+- İki test eklendi: kısmi ipucuyla geri çağırma ve tekrarlanabilirlik.
+- **Durum:** Kod ve testler eklendi; testler henüz çalıştırılmadı. Bu tek örüntülü kontrollü prototip genel hafıza, gürültü toleransı veya çoklu örüntü ayrımı kanıtı değildir.

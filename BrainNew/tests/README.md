@@ -1,6 +1,6 @@
 # BrainNew — Ayrı test paketleri
 
-Bu testler prototipte uygulanmış davranışları denetler. Bağımsız mikroglia bakımı, yerel budama, kimyasal işaretle kontrollü bağlantı oluşumu, dallanan feedback, seyrek sinaps-sinaps ilişkileri, nöronlar arası zamansal birlikte etkinlik ve nöron-yerel homeostaz için ilk birim/regresyon testleri vardır. Otomatik yapısal büyüme zamanlaması, bağlantı onarımı ve ağ düzeyinde örüntü tamamlama/genelleme henüz kabul kapısından geçmemiştir.
+Bu testler prototipte uygulanmış davranışları denetler. Bağımsız mikroglia bakımı, yerel budama, kimyasal işaretle kontrollü bağlantı oluşumu, dallanan feedback, seyrek sinaps-sinaps ilişkileri, nöronlar arası zamansal birlikte etkinlik ve nöron-yerel homeostaz için ilk birim/regresyon testleri vardır. Otomatik yapısal büyüme zamanlaması ve bağlantı onarımı hâlâ eksiktir. Ağ düzeyinde geri çağırma için tek örüntülü kontrollü bir deney eklendi; genel örüntü tamamlama/genelleme henüz kabul kapısından geçmemiştir.
 
 Proje kökünde ve sanal ortam açıkken:
 
@@ -12,6 +12,7 @@ python -m pytest BrainNew/tests/test_microglia.py -v
 python -m pytest BrainNew/tests/test_structural_plasticity.py -v
 python -m pytest BrainNew/tests/test_experiment_recording.py -v
 python -m pytest BrainNew/tests/test_experiment_runner.py -v
+python -m pytest BrainNew/tests/test_memory_recall.py -v
 ```
 
 Hepsini tek seferde çalıştırmak için:
@@ -39,11 +40,12 @@ python -m BrainNew.main
 - `test_feedback_wave.py`: Pozitif feedback'te aktif/pasif terminal eşik yönleri, nedensel girdiler üzerinden geriye dallanma ve ziyaret edilmiş nöronlarla döngü engelleme.
 - `test_plasticity.py`: Sessiz/aşırı etkin nöronlarda eşik homeostazı, hedef etkinlik civarında kararlılık, episode'lar arası uzun dönem izin korunması, sinaptik öğrenilmiş parametrelerin korunması ve homeostaz ablasyonu.
 - `test_training_foundation.py`: Kalıcı episode öğrenmesi, yerel feedback, sinaps/nöron ilişkileri ve eğitim yürütücüsü temel davranışları.
+- `test_memory_recall.py`: Ayrı baseline ağı, zayıf ilişkilerin yerel Hebbian öğrenmeyle güçlenmesi, sonraki episode'da kısmi ipucuyla geri çağırma ve deney tekrarlanabilirliği.
 
 ## Testlerin yorumlanması
 
 Bir testin geçmesi, test edilen yazılım davranışının yazılmış beklentiyle uyumlu olduğunu gösterir; biyolojik doğruluğu veya tasarımın tamamlandığını kanıtlamaz. Başarısız testleri düzeltmeden önce hatanın koddan mı, test varsayımından mı, yoksa henüz kararlaştırılmamış tasarım davranışından mı kaynaklandığı ayrılmalıdır.
 
-Refrakter dönemde gelen girdilerin yaşam döngüsü tasarım sözleşmesinde hâlâ açık karardır. Mevcut düzeltme dalı bunları tamponda tutup nöron dinlenmeye döndüğünde yeniden bütünleştiren geçici davranışı test eder; bu test nihai biyolojik/tasarım kararının verildiği anlamına gelmez.
+Refrakter dönemde gelen girdiler mevcut tasarım kararı gereği dendritte tamponlanır ve nöron dinlenmeye döndüğünde yeniden bütünleştirilir. Bu davranışın testleri sözleşmeyi korur; farklı bir sönüm modeli ancak ayrı bir tasarım kararıyla ele alınabilir.
 
 Testlerin geçtiği iddiası yalnızca komutlar gerçekten çalıştırıldıktan sonra verilmelidir.

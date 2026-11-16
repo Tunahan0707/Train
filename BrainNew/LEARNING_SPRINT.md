@@ -424,6 +424,9 @@ Yapılacaklar:
 
 ## Aşama 16 — Hafıza, geri çağırma ve örüntü tamamlama
 
+
+**İlk kontrollü deney durumu:** `HafizaDeneyi` eklendi. Ayrı bir eğitilmemiş ağda A kısmi ipucunun yalnızca A'yı etkinleştirmesi baseline olarak ölçülüyor. Eğitim ağında A→B ve A→C zayıf bağlantıları başlangıçta mevcut; tam örüntü sunumunda A önce, B ve C daha sonra etkinleştiriliyor. B/C'nin postsinaptik ateşlenmeleri, mevcut yerel Hebbian kuralı üzerinden A çıkış bağlantılarını güçlendiriyor. Sonraki episode'da yalnızca A sunuluyor ve B/C'nin kendiliğinden geri çağrılması ölçülüyor. Örüntü tamamlama veya cevap seçimi için yeni bir algoritma eklenmedi. İki regresyon testi yazıldı; henüz çalıştırılmadı. Bu yalnızca tek, küçük ve kontrollü bir ilişkisel geri çağırma deneyi; gürültü dayanıklılığı, birbiriyle karışan çoklu örüntüler veya genel hafıza kapasitesi kanıtı değildir.
+
 **Amaç:** Öğrenilmiş parametrelerin yalnızca sayısal olarak değiştiğini değil, davranışta kalıcı iz bıraktığını göstermek.
 
 Yapılacaklar:
