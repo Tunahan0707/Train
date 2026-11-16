@@ -136,6 +136,50 @@ class BinaryBuyuklukKarsilastirmaTests(unittest.TestCase):
         self.assertIn(result["gerceklesen"], (deney.SOL, deney.SAG, None))
         self.assertGreater(result["islenen_olay"], 0)
 
+    def test_summary_reports_decision_bias_and_class_accuracy(self):
+        deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=20)
+        results = (
+            {
+                "dogru": True,
+                "beklenen": deney.SOL,
+                "gerceklesen": deney.SOL,
+                "sol_ateslenme": 2,
+                "sag_ateslenme": 0,
+            },
+            {
+                "dogru": False,
+                "beklenen": deney.SAG,
+                "gerceklesen": deney.SOL,
+                "sol_ateslenme": 1,
+                "sag_ateslenme": 0,
+            },
+            {
+                "dogru": True,
+                "beklenen": deney.SAG,
+                "gerceklesen": deney.SAG,
+                "sol_ateslenme": 0,
+                "sag_ateslenme": 1,
+            },
+        )
+        summary = deney.ozetle(results)
+        self.assertEqual(
+            summary["karar_dagilimi"],
+            {deney.SOL: 2, deney.SAG: 1, None: 0},
+        )
+        self.assertEqual(summary["sinif_bazli"][deney.SOL]["dogruluk"], 1.0)
+        self.assertEqual(summary["sinif_bazli"][deney.SAG]["dogruluk"], 0.5)
+
+    def test_weight_diagnostic_separates_both_connection_stages(self):
+        deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=21)
+        before = deney.sinaptik_agirliklari_oku()
+        deney.duyusal_ara_sinapslari[0].sinaptik_agirlik += 0.1
+        deney.ara_karar_sinapslari[0].sinaptik_agirlik -= 0.1
+        summary = deney.agirlik_degisim_ozetle(deney, before)
+        self.assertEqual(summary["reseptor->ara"]["baglanti_sayisi"], 40)
+        self.assertEqual(summary["ara->karar"]["baglanti_sayisi"], 40)
+        self.assertEqual(summary["reseptor->ara"]["degisen_baglanti"], 1)
+        self.assertEqual(summary["ara->karar"]["degisen_baglanti"], 1)
+
     def test_test_examples_use_independent_brain_copies(self):
         deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=19)
         original_brain = deney.beyin
