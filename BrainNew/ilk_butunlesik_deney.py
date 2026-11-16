@@ -1,5 +1,5 @@
 
-from Beyin import Beyin
+from BrainNew.Beyin import Beyin
 
 
 beyin = Beyin(
