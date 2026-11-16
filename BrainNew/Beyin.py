@@ -263,4 +263,6 @@ class Beyin:
             and (son_zaman is None or self._olaylar[0][0] <= son_zaman)
         ):
             raise RuntimeError("Olay limiti aşıldı; olası sonsuz olay zinciri.")
+        if son_zaman is not None:
+            self.zaman = son_zaman
         return islenen
