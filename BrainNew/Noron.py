@@ -518,8 +518,9 @@ class Noron:
         self._entegrasyon_girdi_sinapslari.clear()
         self._son_nedensel_girdi_sinapslari.clear()
         self._son_aktif_cikis_sinapslari.clear()
-        self.homeostatik_aktivite_izi = 0.0
-        self.son_homeostatik_guncelleme = zaman
+        # Homeostatik etkinlik izi uzun dönem durumdur; episode sınırında
+        # silinmez. Yalnızca geçen zaman kadar doğal biçimde sönümlenir.
+        self.homeostatik_durumu_guncelle(zaman)
         self.yerel_aktivite_izi = 0.0
         self.son_yerel_aktivite_guncelleme = zaman
         self.son_ateslenme_zamani = None
