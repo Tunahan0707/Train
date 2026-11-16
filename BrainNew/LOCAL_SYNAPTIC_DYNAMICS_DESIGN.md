@@ -276,7 +276,7 @@ Mikroglia-benzeri yapılar bağlantı nesnesinin içine gömülmez; 2B uzayda ke
 - Mikroglia yapısal bakım kararını verir. Beyin yalnızca bakım olayını zamanlar ve mikroglianın kopardığı bağlantıyı ağ kayıtlarından temizler; hangi bağlantının değişeceğini seçmez.
 - Dendrit reseptörlerinin transmitter yanıtı ile mikroglianın yapısal sinyal yanıtı ayrı yerel mekanizmalardır. Aynı kimyasal alanı farklı duyarlılıklarla yorumlayabilirler.
 - İşlevsel zayıflama ile fiziksel eliminasyon ayrı süreçlerdir.
-- Bakım olayları bu ilk sürümde açıkça planlanır. `bakim_araligi` yapısal güncellemenin zaman ölçeğini belirler; otomatik sonsuz periyodik olay zinciri henüz kurulmamıştır.
+- Tekrarlanan bakım açıkça başlatılır; `bakim_araligi` sonraki değerlendirme zamanını belirler. Döngü yalnızca `Beyin.calistir(son_zaman=...)` ile verilen sonlu simülasyon aralığında ilerler; sınırsız çalıştırmada sonsuz olay zinciri oluşturulmaz.
 
 Bu yaklaşım, mikroglianın bağımsız bir hücresel aktör olmasını korurken simülasyonu basit tutar. Gerçek hücre göçü, dallanan uzantı geometrisi, fagositoz biyokimyası ve ayrıntılı moleküler repertuvar bu aşamada modellenmez.
 
