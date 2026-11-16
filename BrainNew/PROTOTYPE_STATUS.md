@@ -4,6 +4,14 @@ Dal: `experiment/dendritic-synaptic-potentials`
 
 Bu belge, tasarım sözleşmesinin yerine geçmez. İlk çalışan prototipte hangi parçaların bulunduğunu ve henüz hangi kararların/uygulamaların eksik olduğunu takip eder.
 
+## Öğrenme sprinti — güncel ilerleme
+
+- Aşama 1 teorik denetimi: tamamlandı; `LEARNING_ARCHITECTURE_AUDIT.md` içinde mevcut değişkenlerin anlamı ve sahipliği ayrıldı.
+- Aşama 2 ölçüm protokolü: tasarlandı; `LEARNING_EXPERIMENT_PROTOCOL.md` içinde deterministik deney kaydı, ölçütler ve baseline görevleri tanımlandı.
+- İlk pasif olay kaydı kodu eklendi: `DeneyKaydi.py`; `Beyin` isteğe bağlı kayıt nesnesine kuyruktan çıkarılan olayları iletir.
+- Yeni testler: `test_experiment_recording.py`. Bu uzak dal üzerinde test çalıştırılmadı; yerel kullanıcı doğrulaması bekleniyor.
+- Gerçek kalıcı sinaptik ağırlık, pre/post izleri, uygunluk izi, Hebbian/STDP ve homeostaz henüz uygulanmadı.
+
 ## Prototip 0.1 — Uygulanan çekirdek
 
 - `Beyin.py`: Simülasyon saati ve deterministik, zaman öncelikli olay kuyruğu. Beyin öğrenme kararı vermez; olayları ilgili bileşenlere dağıtır.
