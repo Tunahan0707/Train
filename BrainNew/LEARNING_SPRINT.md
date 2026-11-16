@@ -682,6 +682,9 @@ Bu literatürden çıkarılacak ilke “beyni aynen kopyala” değildir. Her bi
 
 ---
 
+- **Sayı büyüklüğünün nöral popülasyon kodu:** *The calculating brain* (2024), yaklaşık sayı sisteminde farklı tercih edilen büyüklüklere ayarlı, çan eğrisi biçiminde yanıt veren nöronları; logaritmik ölçek ve Weber tipi büyüklük etkilerini derler. https://doi.org/10.1152/physrev.00014.2024
+- **Çoklu duyusal numerosity popülasyonları:** 2026 tarihli insan fMRI çalışması, görsel ve işitsel nicelik için logaritmik Gauss ayar eğrileri ve popülasyon haritaları bildirir. https://www.nature.com/articles/s42003-026-09752-2
+
 # 8. Uygulama sırası ve bağımlılık özeti
 
 Önerilen sıra:
@@ -723,26 +726,23 @@ Sprint tamamlandığında depoda şu bütünlük bulunmalı:
 **Sprintin gerçek başarı ölçütü:** BrainNew'in sinaps ağırlıklarını değiştirmesi değil; aynı ağın deneyimden sonra davranışını kalıcı biçimde değiştirmesi, bu değişimin yerel mekanizmalardan kaynaklanması, kısmi ipucuyla öğrendiğini geri çağırabilmesi ve daha önce görmediği örneklerde genelleme başarısının ölçülebilmesidir.
 
 
-## 8.1. Bağlama duyarlı geri çağırma için sıradaki doğrulama
+## 8.1. Bağlama duyarlı hafıza — son doğrulama tamamlandı
 
-Ortak ölçek taraması, ipucu ve bağlam girdilerini birlikte değiştirdiği için iki kanalın ayrı katkısını göstermiyordu. Sonraki deneyde bu iki genlik bağımsız değiştirilecek. Tek kanalda %10 azalma ile iki kanalda eşzamanlı %10 azalma karşılaştırılacak. Bu sonuç, eşik marjını kanallar bazında yorumlamaya yarar; rastgele gürültü toleransı veya kendiliğinden bağlam kapısı öğrenimi olarak sunulmayacaktır.
+Üç bağımsız seed (\`20261117\`, \`20261118\`, \`20261119\)) ve seed başına 100 tekrar kullanıldı. Her kanal/gürültü/bağlam hücresi toplam 300 denemeden oluşuyor.
 
+| Gürültü kanalı | Gürültü | X tam eşleşme | Y tam eşleşme |
+|---|---:|---:|---:|
+| İpucu | %5 | %100 | %99,3 |
+| İpucu | %10 | %92,7 | %92 |
+| İpucu | %20 | %74,3 | %72,7 |
+| Bağlam | %5 | %99 | %99,3 |
+| Bağlam | %10 | %90 | %89,7 |
+| Bağlam | %20 | %71,3 | %72,7 |
+| İkisi | %5 | %95,3 | %96 |
+| İkisi | %10 | %82 | %77 |
+| İkisi | %20 | %66 | %66,7 |
 
-### Sıradaki doğrulama — rastgele gürültü ve eksik kanal
+Bütün koşullarda raporlanan yanlış pozitif sayısı sıfırdır. Tam eşleşme oranı gürültü arttıkça düşüyor; iki kanala birlikte gürültü uygulamak tek kanalı bozmaktan daha ağır sonuç veriyor. X/Y arasındaki küçük farklar seed'ler arasında kararlı bir mimari asimetri göstermiyor.
 
-Bağımsız genlik taramasını takiben, iki ayrı hata türü ölçülecek:
+**Karar:** Bağlama duyarlı hafıza prototipinin bu doğrulama ailesi donduruldu. Yeni gürültü kombinasyonları eklenmeyecek. Sonuçlar yalnızca küçük, önceden kurulmuş bağlam kapılı ağdaki geri çağırma dayanıklılığını gösterir; kendiliğinden bağlam yönlendirme veya genel hafıza kanıtı değildir.
 
-1. **Rastgele genlik gürültüsü:** Eğitim temiz yapılır. Yalnızca geri çağırmada ipucu ve bağlam girdilerinin her birine bağımsız, sıfır ortalamalı Gauss genlik pertürbasyonu uygulanır. Gürültü oranları ve tekrar sayısı parametrelidir; seed sabittir. Her tekrar temiz eğitilmiş yeni ağla başlar. Tam eşleşme oranı, yanlış pozitif sayısı ve olay sayısı raporlanır.
-2. **Kanal kaybı:** İpucu veya bağlam girdisi tamamen kaldırılır. Tek başına kalan kanalın örüntü çağırmaması ve yanlış pozitif üretmemesi beklenir.
-
-Bu deneyler gürültü dayanıklılığı ve eksik kanal toleransını ayrı ayrı ölçer. Başarı eşiği önceden varsayılmayacak; sonuçlar görüldükten sonra yorumlanacaktır.
-
-
-### Gürültü kaynağını ayırma — kanal bazlı tarama
-
-Önceki gürültü deneyi ipucu ve bağlamı aynı anda bozduğu için kırılganlığın kaynağını ayırt etmiyordu. Yeni tarama üç koşulu ayrı ölçer: yalnızca ipucu gürültülü, yalnızca bağlam gürültülü, ikisi birlikte gürültülü. Varsayılan 100 tekrar ve sabit seed kullanılır. Her koşulda ağ temiz eğitilir; gürültü yalnızca geri çağırma girdisine uygulanır. Tam eşleşme, yanlış pozitif ve olay sayısı raporlanır. Bu, gürültü kaynağı ayrıştırmasıdır; bağlam kapılarının kendiliğinden öğrenildiğini kanıtlamaz.
-
-
-### Son doğrulama — çoklu seed
-
-Kanal bazlı gürültü taramasındaki tek-seed örneklem etkisini görmek için `coklu_seed_gurultu_ozeti` üç bağımsız seed üzerinde aynı koşulları tekrarlar. Toplam tam eşleşme oranını, yanlış pozitif sayısını ve seed bazındaki en düşük/en yüksek başarı oranlarını raporlar. Bu son kontrol tamamlandığında bağlama duyarlı hafıza prototipi dondurulacak; yeni test kombinasyonları açmak yerine matematik öğrenme görevlerine geçilecek.
