@@ -26,28 +26,49 @@ class BinaryBuyuklukKarsilastirmaTests(unittest.TestCase):
     def test_only_one_bits_create_sensory_events(self):
         events = BinaryBuyuklukKarsilastirmaDeneyi.girdi_olaylari_uret(5, 2)
         self.assertEqual(
-            tuple(event[0] for event in events),
-            ("SLB1", "SLB3", "SRB2"),
+            tuple((event[0], event[1]) for event in events),
+            (
+                ("SOL_GIRDI", "SOL_GIRDI:D1"),
+                ("SOL_GIRDI", "SOL_GIRDI:D3"),
+                ("SAG_GIRDI", "SAG_GIRDI:D2"),
+            ),
         )
         self.assertTrue(all(event[2] == 100.0 for event in events))
 
-    def test_network_has_eight_sensory_twenty_hidden_and_two_output_neurons(self):
+    def test_network_has_two_four_dendrite_receptors_twenty_hidden_and_two_outputs(self):
         deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=11)
-        self.assertEqual(len(deney.duyusal_noronlari), 8)
+        self.assertEqual(len(deney.duyusal_noronlari), 2)
         self.assertEqual(len(deney.ara_noronlari), 20)
         self.assertEqual(len(deney.KARAR_NORONLARI), 2)
-        self.assertEqual(len(deney.beyin.noronlar), 30)
+        self.assertEqual(len(deney.beyin.noronlar), 24)
+        for kimlik in deney.duyusal_noronlari:
+            self.assertEqual(len(deney.beyin.noronlar[kimlik].dendritler), 4)
+        self.assertEqual(deney.beyin.ag_ozeti["duyusal_dendrit"], 8)
         self.assertEqual(deney.beyin.ag_ozeti["dogrudan_duyusal_karar_baglantisi"], 0)
 
-    def test_each_hidden_neuron_receives_four_sensory_projections(self):
+    def test_each_hidden_neuron_receives_one_projection_from_each_receptor(self):
         deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=12)
         for ara_id in deney.ara_noronlari:
             gelenler = [
                 sinaps for sinaps in deney.duyusal_ara_sinapslari
                 if sinaps.hedef.kimlik == ara_id
             ]
-            self.assertEqual(len(gelenler), 4)
-            self.assertEqual(len({s.hedef_dendrit_id for s in gelenler}), 4)
+            self.assertEqual(len(gelenler), 2)
+            self.assertEqual(
+                {sinaps.kaynak.kimlik for sinaps in gelenler},
+                set(deney.duyusal_noronlari),
+            )
+            self.assertEqual(len({s.hedef_dendrit_id for s in gelenler}), 2)
+
+    def test_each_receptor_terminal_reads_all_four_bit_dendrites(self):
+        deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=121)
+        for sinaps in deney.duyusal_ara_sinapslari:
+            katkili_dendritler = [
+                dendrit
+                for dendrit in sinaps.kaynak.dendritler.values()
+                if sinaps in dendrit.sinaps_katkilari
+            ]
+            self.assertEqual(len(katkili_dendritler), 4)
 
     def test_sensory_neurons_do_not_project_directly_to_decisions(self):
         deney = BinaryBuyuklukKarsilastirmaDeneyi(seed=13)
