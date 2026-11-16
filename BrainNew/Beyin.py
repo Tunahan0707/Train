@@ -244,7 +244,10 @@ class Beyin:
                 "Otomatik mikroglia bakımı için son_zaman sınırı belirtilmeli."
             )
         if son_zaman is not None:
-            son_zaman = float(son_zaman)
+            try:
+                son_zaman = float(son_zaman)
+            except (TypeError, ValueError):
+                raise ValueError("Son zaman sonlu bir sayı olmalı.") from None
             if not math.isfinite(son_zaman) or son_zaman < self.zaman:
                 raise ValueError("Son zaman sonlu olmalı ve mevcut simülasyon zamanından önce olamaz.")
 
