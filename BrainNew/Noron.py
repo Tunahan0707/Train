@@ -184,6 +184,13 @@ class Noron:
             if not kaynak_baglantisi.aktif:
                 continue
 
+            # İlk yapısal büyüme kuralı yalnızca uyarıcı
+            # bağlantılardan yeni dallanma üretir. İnhibitör
+            # bağlantılar ağırlık öğrenmesine katılır; yeni
+            # inhibitör dallanma için ayrı bir kural gerekir.
+            if kaynak_baglantisi.etki_mv <= 0:
+                continue
+
             for dendrit in self.dendritler:
                 zaten_bagli = any(
                     b.aktif and b.kaynak is akson
