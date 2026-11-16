@@ -259,6 +259,8 @@ Yapılacaklar:
 
 ## Aşama 8 — Yerel sinaptik plastisiteyi tek kurala bağla
 
+**Uygulama durumu:** Sinaptik etkinlik katsayısı artık işaretli `[-2, 2]` aralığında. Hebbian güçlenme mevcut işareti koruyarak büyüklüğü artırır; STDP depresyonu işareti çevirmeden büyüklüğü sıfıra yaklaştırır; gecikmiş ödül/ceza integrali ise katsayının işaretini değiştirebilir. Böylece baz `etki` işareti, öğrenilmiş katsayının işareti ve geçici terminal potansiyeli ayrı kalır. İşaret koruma/değiştirme testleri yazıldı; henüz çalıştırılmadı.
+
 **Amaç:** Mevcut Hebbian, STDP ve uygunluk izi kodunu birbirine karıştırmadan tanımlamak.
 
 Yapılacaklar:
