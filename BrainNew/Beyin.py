@@ -376,6 +376,13 @@ class Beyin:
             raise RuntimeError("Olay limiti aşıldı; olası sonsuz olay zinciri.")
         if son_zaman is not None:
             self.zaman = son_zaman
+        # Modülatör integrali, nöronun yeniden ateşlenmesini beklemez.
+        # Her çalışma diliminin sonunda bütün yerel çıkış bağlantıları
+        # kendi uygunluk izleriyle kimyasal alanı entegre eder.
+        for noron in self.noronlar.values():
+            noron.baglantilari_bakimdan_gecir(
+                self.zaman, self.kimyasal_alan
+            )
         if hasattr(self.kimyasal_alan, "kaynaklari_temizle"):
             self.kimyasal_alan.kaynaklari_temizle(self.zaman)
         return islenen
