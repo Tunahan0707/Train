@@ -17,7 +17,10 @@ class Baglanti:
         kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0,
         hebbian_oran=0.01, stdp_depresyon_oran=0.01,
         uygunluk_tau=100.0, modulator_ogrenme_orani=0.01,
-        baslangic_yapisal_butunluk=1.0
+        baslangic_yapisal_butunluk=1.0,
+        baslangic_yapisal_olgunluk=1.0,
+        olgunlasma_kazanci=0.01,
+        olgunluk_budama_kazanci=0.01
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
@@ -27,7 +30,8 @@ class Baglanti:
             kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik,
             hebbian_oran, stdp_depresyon_oran,
             uygunluk_tau, modulator_ogrenme_orani,
-            baslangic_yapisal_butunluk
+            baslangic_yapisal_butunluk, baslangic_yapisal_olgunluk,
+            olgunlasma_kazanci, olgunluk_budama_kazanci
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -41,6 +45,10 @@ class Baglanti:
             raise ValueError("Kimyasal yayılım parametreleri geçersiz.")
         if not 0.0 <= baslangic_yapisal_butunluk <= 1.0:
             raise ValueError("Başlangıç yapısal bütünlüğü [0, 1] aralığında olmalı.")
+        if not 0.0 <= baslangic_yapisal_olgunluk <= 1.0:
+            raise ValueError("Başlangıç yapısal olgunluğu [0, 1] aralığında olmalı.")
+        if olgunlasma_kazanci < 0 or olgunluk_budama_kazanci < 0:
+            raise ValueError("Olgunlaşma ve budama kazançları negatif olamaz.")
         if yapisal_yaslanma_tau <= 0 or bakim_kazanci < 0 or budama_kazanci < 0:
             raise ValueError("Yapısal bakım parametreleri geçersiz.")
         if not 0.0 <= budama_esigi or not 0.0 <= kullanim_izi_esigi:
@@ -128,6 +136,9 @@ class Baglanti:
 
         # Bağlantı-yerel mikroglia-benzeri yapısal durum.
         self.yapisal_butunluk = float(baslangic_yapisal_butunluk)
+        self.yapisal_olgunluk = float(baslangic_yapisal_olgunluk)
+        self.olgunlasma_kazanci = float(olgunlasma_kazanci)
+        self.olgunluk_budama_kazanci = float(olgunluk_budama_kazanci)
         self.son_bakim_zamani = 0.0
         self.yapisal_yaslanma_tau = float(yapisal_yaslanma_tau)
         self.bakim_kazanci = float(bakim_kazanci)
@@ -188,7 +199,10 @@ class Baglanti:
             self.son_guncelleme = zaman
 
     def iletim_etkisi(self):
-        return self.etki * self.sinaptik_agirlik
+        # Olgunluk, kalıcı öğrenilmiş katsayıdan ve fiziksel bütünlükten ayrıdır.
+        return (
+            self.etki * self.sinaptik_agirlik * self.yapisal_olgunluk
+        )
 
     def esik_geri_bildirim_uygula(self, yon, miktar):
         """Yerel feedback'in sinaps aktivasyon eşiğine etkisini uygular.
