@@ -91,6 +91,44 @@ class KimyasalMekanizmaTestleri(unittest.TestCase):
             nokta / merkez, math.exp(-(x * x) / (4.0 * D * t))
         )
 
+    def test_short_reward_pulse_is_integrated_without_neuron_firing(self):
+        alan = KimyasalAlan()
+        beyin = Beyin(alan)
+        noron = Noron("kaynak")
+        sinaps = Baglanti(
+            "s", noron, None, terminal_konumu=(0.0, 0.0),
+            sinaptik_agirlik=1.0, modulator_ogrenme_orani=0.1,
+            uygunluk_tau=10.0
+        )
+        noron.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(noron)
+
+        sinaps.uygunluk_izini_guncelle(0.5, 0.5)
+        alan.sal(
+            "odul", (0.0, 0.0), 1.0, 1.0,
+            yayilim=1.0, temizlenme=10.0
+        )
+        beyin.calistir(son_zaman=5.0)
+
+        self.assertGreater(sinaps.sinaptik_agirlik, 1.0)
+        self.assertEqual(sinaps.son_modulator_zamani, 5.0)
+
+    def test_no_reward_does_not_change_synaptic_weight(self):
+        alan = KimyasalAlan()
+        beyin = Beyin(alan)
+        noron = Noron("kaynak")
+        sinaps = Baglanti(
+            "s", noron, None, sinaptik_agirlik=1.0,
+            modulator_ogrenme_orani=0.1
+        )
+        noron.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(noron)
+        sinaps.uygunluk_izini_guncelle(0.5, 0.5)
+
+        beyin.calistir(son_zaman=5.0)
+
+        self.assertEqual(sinaps.sinaptik_agirlik, 1.0)
+
     def test_sonmus_kimyasal_kaynaklar_tolerans_butcesiyle_temizlenir(self):
         alan = KimyasalAlan()
         alan.sal("A", (0.0, 0.0), 1.0, 0.0, temizlenme=1.0)
