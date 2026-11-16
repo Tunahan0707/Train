@@ -74,6 +74,48 @@ class MikrogliaTestleri(unittest.TestCase):
         self.assertTrue(sinaps.kopuk)
         self.assertEqual(kopanlar, (sinaps,))
 
+    def test_microglia_matures_active_synapse_and_increases_transmission(self):
+        alan = KimyasalAlan()
+        indeks = UzamsalIndeks()
+        kaynak = Noron("kaynak")
+        sinaps = Baglanti(
+            "s", kaynak, None,
+            baslangic_yapisal_olgunluk=0.2,
+            olgunlasma_kazanci=0.5
+        )
+        sinaps.iz = 1.0
+        indeks.ekle(sinaps)
+        onceki_etki = sinaps.iletim_etkisi()
+        mikroglia = Mikroglia(
+            "m", algilama_yaricapi=2.0, bakim_araligi=1.0
+        )
+
+        mikroglia.bakim_yap(indeks, alan, 1.0)
+
+        self.assertGreater(sinaps.yapisal_olgunluk, 0.2)
+        self.assertGreater(sinaps.iletim_etkisi(), onceki_etki)
+
+    def test_microglia_pruning_signal_reduces_maturity_without_confusing_integrity(self):
+        alan = KimyasalAlan()
+        indeks = UzamsalIndeks()
+        sinaps = Baglanti(
+            "s", None, None, baslangic_yapisal_olgunluk=0.8,
+            olgunluk_budama_kazanci=0.5,
+            budama_esigi=0.0, kopma_esigi=0.0
+        )
+        indeks.ekle(sinaps)
+        alan.sal("budama", sinaps.terminal_konumu, 2.0, 0.0)
+        mikroglia = Mikroglia(
+            "m", algilama_yaricapi=2.0, bakim_araligi=1.0
+        )
+        onceki_butunluk = sinaps.yapisal_butunluk
+
+        mikroglia.bakim_yap(indeks, alan, 1.0)
+
+        self.assertLess(sinaps.yapisal_olgunluk, 0.8)
+        self.assertNotEqual(sinaps.yapisal_olgunluk, sinaps.yapisal_butunluk)
+        self.assertLessEqual(sinaps.yapisal_butunluk, onceki_butunluk)
+
     def test_stabilizasyon_sinyali_butunlugu_korur(self):
         alan = KimyasalAlan()
         indeks = UzamsalIndeks()
