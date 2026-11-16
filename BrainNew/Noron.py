@@ -41,6 +41,7 @@ class Noron:
         self.gelen_sinapslari = []
         self.ateslenme_sayisi = 0
         self._sinaps_dendritik_sinyalleri = {}
+        self._entegrasyon_girdi_sinapslari = set()
 
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
@@ -60,10 +61,10 @@ class Noron:
         if sinaps not in self.cikis_sinapslari:
             self.cikis_sinapslari.append(sinaps)
 
-    def girdi_al(self, dendrit_id, etki, zaman=None):
+    def girdi_al(self, dendrit_id, etki, zaman=None, kaynak_sinaps=None):
         if dendrit_id not in self.dendritler:
             raise ValueError(f"Nöronda bulunmayan dendrit: {dendrit_id}")
-        self.dendritler[dendrit_id].girdi_al(etki)
+        self.dendritler[dendrit_id].girdi_al(etki, kaynak_sinaps)
         if zaman is not None:
             zaman = float(zaman)
             if not math.isfinite(zaman) or zaman < 0:
@@ -76,6 +77,7 @@ class Noron:
     def girdileri_birlestir(self, zaman, kimyasal_alan=None):
         toplam_membran_etkisi = 0.0
         sinaps_katkilari = {}
+        self._entegrasyon_girdi_sinapslari.clear()
         self._sinaps_dendritik_sinyalleri = {}
 
         for dendrit in self.dendritler.values():
@@ -84,6 +86,9 @@ class Noron:
         for dendrit in self.dendritler.values():
             elektriksel_toplam, yerel_sinyal = dendrit.sinyali_hazirla(
                 zaman, kimyasal_alan
+            )
+            self._entegrasyon_girdi_sinapslari.update(
+                dendrit.son_girdi_kaynak_sinapslari
             )
             toplam_membran_etkisi += elektriksel_toplam
             if not math.isfinite(toplam_membran_etkisi):
@@ -152,10 +157,15 @@ class Noron:
                     dendrit.son_islenen_sinapslar.discard(sinaps)
 
     def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
-        """Yerel ateşlenme, bu nörona gelen sinapsların postsinaptik izini günceller."""
-        for sinaps in tuple(self.gelen_sinapslari):
-            if not sinaps.kopuk:
+        """Yalnızca bu entegrasyona kaynak olmuş bağlantılara postsinaptik iz verir."""
+        for sinaps in tuple(self._entegrasyon_girdi_sinapslari):
+            if (
+                sinaps.hedef is self
+                and not sinaps.kopuk
+                and sinaps in self.gelen_sinapslari
+            ):
                 sinaps.postsinaptik_iz_arttir(zaman)
+        self._entegrasyon_girdi_sinapslari.clear()
 
         aktif = []
         for sinaps in self.cikis_sinapslari:
