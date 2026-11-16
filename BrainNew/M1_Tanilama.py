@@ -171,7 +171,7 @@ def _projeksiyon_ozeti(imza):
     return sonuc
 
 
-def _episode_akisini_ozetle(deney, onceki_terminal_aktivasyonlari):
+def _episode_akisini_ozetle(deney, onceki_terminal_aktivasyonlari, episode_iletim_katsayilari):
     """Gerçekleşen terminal aktivasyonlarını kanal/hedef bazında yaklaşık akışa çevirir."""
     gruplar = {}
     for sinaps in deney.sinapslar:
@@ -188,7 +188,7 @@ def _episode_akisini_ozetle(deney, onceki_terminal_aktivasyonlari):
             "uyarici_olay": 0,
             "baskilayici_olay": 0,
         })
-        katsayi = sinaps.iletim_etkisi()
+        katsayi = episode_iletim_katsayilari[sinaps.kimlik]
         kayit["terminal_aktivasyonu"] += adet
         kayit["imzali_iletim_toplami"] += adet * katsayi
         if katsayi > 0:
@@ -232,9 +232,10 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
         sonuclar = []
         for sol, sag in ornekler:
             terminal_onceki = {s.kimlik: s.aktivasyon_sayisi for s in deney.sinapslar}
+            episode_katsayilari = {s.kimlik: s.iletim_etkisi() for s in deney.sinapslar}
             duyusal_onceki = _duyusal_ateslenme_sayilari(deney)
             sonuclar.append(deney.episode_calistir(sol, sag, feedback=True))
-            akim = _episode_akisini_ozetle(deney, terminal_onceki)
+            akim = _episode_akisini_ozetle(deney, terminal_onceki, episode_katsayilari)
             for anahtar, kayit in akim.items():
                 toplam = toplam_akim.setdefault(anahtar, {
                     "terminal_aktivasyonu": 0, "imzali_iletim_toplami": 0.0,
