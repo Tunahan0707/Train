@@ -115,14 +115,19 @@ class Noron:
         self.ateslenme_sayisi += 1
         return True
 
-    def ateslenme_sonucunu_isle(self, zaman):
-        """Çıkış sinapsı seçimini ve yerel dendrit öğrenmesini nöron yürütür."""
-        aktif = [
-            sinaps for sinaps in self.cikis_sinapslari
-            if sinaps.aktive_olabilir_mi(zaman)
-        ]
+    def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
+        """Sinaps uygunluğunu, aktivasyonunu ve terminal salımını yerel yürütür."""
+        aktif = []
+        for sinaps in self.cikis_sinapslari:
+            if not sinaps.aktive_olabilir_mi(zaman):
+                continue
+            gecikme = sinaps.aktive_et(zaman)
+            sinaps.kimyasal_sal(kimyasal_alan, zaman)
+            aktif.append((sinaps, gecikme))
+
+        aktif_sinapslar = [sinaps for sinaps, _ in aktif]
         for dendrit in self.dendritler.values():
-            dendrit.firsat_sonucu_ogren(aktif, zaman)
+            dendrit.firsat_sonucu_ogren(aktif_sinapslar, zaman)
         return aktif
 
     def entegrasyonu_isle(self, zaman, kimyasal_alan=None):
@@ -137,7 +142,7 @@ class Noron:
         if not self.aksiyon_potansiyeli_baslat():
             return False, []
 
-        return True, self.ateslenme_sonucunu_isle(zaman)
+        return True, self.ateslenme_sonucunu_isle(zaman, kimyasal_alan)
 
     def faz_degistir(self):
         """Fazı ilerletir; sonraki faz olayının gecikmesini döndürür."""
