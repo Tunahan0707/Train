@@ -358,7 +358,7 @@ Kurallar:
 
 ## Aşama 13 — Kimyasal sinyal repertuvarı ve transmitter etkileşimi
 
-**Uygulama durumu:** Transmitter repertuvarı, çoklu bağımsız salım miktarları ve dendrit reseptör yanıtları mevcut. Kimyasal kaynak temizliği de eklendi: her kaynak için uzaydaki maksimum yoğunluk üst sınırı hesaplanıyor; silinen kaynakların toplam olası alan hatası verilen toleransla sınırlandırılıyor. Gecikmiş ödül/ceza sinyalinin uygunluk iziyle olay tabanlı entegrasyonu hâlâ tamamlanmadı.
+**Uygulama durumu:** Transmitter repertuvarı, çoklu bağımsız salım miktarları ve dendrit reseptör yanıtları mevcut. Kimyasal kaynak temizliği de eklendi: her kaynak için uzaydaki maksimum yoğunluk üst sınırı hesaplanıyor; silinen kaynakların toplam olası alan hatası verilen toleransla sınırlandırılıyor. Gecikmiş ödül/ceza integrali Aşama 9'da bağlantı-yerel olarak uygulanmıştır; bu aşamada kalan iş, farklı transmitter sınıflarının biyolojik/işlevsel kalibrasyonu ve geniş ölçek davranış doğrulamasıdır.
 
 **Amaç:** Elektriksel iletimden ayrı kimyasal sinyallerin yerel ve tür-bağımlı etkisini tamamlamak.
 
