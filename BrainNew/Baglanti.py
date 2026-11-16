@@ -273,12 +273,16 @@ class Baglanti:
             self.sinaptik_agirligi_ayarla(
                 isaret * max(0.0, buyukluk - delta)
             )
-            gercek_delta = onceki - self.sinaptik_agirlik
-            if gercek_delta > 0.0:
+            gercek_zayiflama = (
+                abs(onceki) - abs(self.sinaptik_agirlik)
+            )
+            if gercek_zayiflama > 0.0:
                 self.stdp_depresyon_sayisi += 1
-                self.toplam_stdp_depresyon += gercek_delta
+                self.toplam_stdp_depresyon += gercek_zayiflama
+        else:
+            gercek_zayiflama = 0.0
         self.presinaptik_iz_arttir(zaman)
-        return onceki - self.sinaptik_agirlik
+        return gercek_zayiflama
 
     def stdp_postsinaptik_olayi_isle(self, zaman):
         """Post olayı: pre izine göre LTP, ardından post izini yenile."""
