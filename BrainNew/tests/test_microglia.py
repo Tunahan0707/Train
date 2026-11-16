@@ -108,6 +108,7 @@ class MikrogliaTestleri(unittest.TestCase):
         self.assertEqual(islenen, 2)
         self.assertEqual(mikroglia.son_tarama_zamani, 2.0)
         self.assertEqual(sinaps.son_bakim_zamani, 2.0)
+        self.assertEqual(beyin.zaman, 2.5)
         self.assertEqual(beyin._olaylar[0][0], 3.0)
 
         beyin.calistir(son_zaman=3.0)
