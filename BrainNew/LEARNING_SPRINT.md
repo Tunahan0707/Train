@@ -699,3 +699,8 @@ Sprint tamamlandığında depoda şu bütünlük bulunmalı:
 - Tam test paketi ve test çalıştırma kayıtları.
 
 **Sprintin gerçek başarı ölçütü:** BrainNew'in sinaps ağırlıklarını değiştirmesi değil; aynı ağın deneyimden sonra davranışını kalıcı biçimde değiştirmesi, bu değişimin yerel mekanizmalardan kaynaklanması, kısmi ipucuyla öğrendiğini geri çağırabilmesi ve daha önce görmediği örneklerde genelleme başarısının ölçülebilmesidir.
+
+
+## 8.1. Bağlama duyarlı geri çağırma için sıradaki doğrulama
+
+Ortak ölçek taraması, ipucu ve bağlam girdilerini birlikte değiştirdiği için iki kanalın ayrı katkısını göstermiyordu. Sonraki deneyde bu iki genlik bağımsız değiştirilecek. Tek kanalda %10 azalma ile iki kanalda eşzamanlı %10 azalma karşılaştırılacak. Bu sonuç, eşik marjını kanallar bazında yorumlamaya yarar; rastgele gürültü toleransı veya kendiliğinden bağlam kapısı öğrenimi olarak sunulmayacaktır.
