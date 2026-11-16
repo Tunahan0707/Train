@@ -414,3 +414,15 @@ Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında
 - Post izi taşımak tek başına ağırlığı değiştirmez; sonraki pre olayı için zamansal bağlam saklar.
 - Testler iki sıralamanın zıt yönlü etkisini, iz yokken değişmemeyi, ağırlık sınırlarını ve geçersiz depresyon oranını kapsıyor.
 - Kullanıcı ortamında yeni STDP testleri henüz çalıştırılmadı.
+
+
+### Adım 7 — Gecikmiş modülatör ve uygunluk izi ilk sürümü
+
+- Her sinaps pre/post olaylarının sırasından işaretli, sınırlı bir uygunluk izi biriktirir.
+- Uygunluk izi tek başına ağırlığı değiştirmez; kendi zaman sabitiyle söner.
+- Terminal konumundaki `odul` ve `ceza` kimyasal alanları yerel olarak örneklenir.
+- `odul - ceza` sinyali, örnekler arası zaman integraliyle uygunluk izini ağırlık değişimine dönüştürür.
+- Gecikmiş ödül pozitif uygunluğu güçlendirir; ceza aynı izi zayıflatır. Negatif uygunlukta işaretler tersine döner.
+- Bu, mevcut anlık STDP'ye ek bir üçüncü-faktör yolu; henüz modülatörsüz STDP'yi kapatmıyor.
+- Yeni testler uygunluk işaretini, sönümünü, sınırını, gecikmiş ödül/cezayı, izsiz ağırlığın sabit kalmasını ve zaman monotonluğunu denetler.
+- Kullanıcı ortamında yeni testler henüz çalıştırılmadı.
