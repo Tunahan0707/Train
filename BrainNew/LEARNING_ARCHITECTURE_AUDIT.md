@@ -72,7 +72,7 @@ Bu kural, pre→post sıralamasında pozitif ağırlık değişimi üretir. Ayr�
 | Gerçek sinaptik etkinlik katsayısı | İlgili Baglanti | Şu an açık parametre ayarı; ileride doğrulanmış yerel öğrenme kuralı | [0,2] |
 | Sinaptik uygunluk izi | İlgili Baglanti | Yerel pre/post sırası | Geçici, sınırlı ve sönümlü |
 | Nöron homeostatik eşik kayması | İlgili Noron | Uzun dönem yerel ateşlenme etkinliği | Sınırlı ve yavaş |
-| Yapısal bütünlük | İlgili Baglanti | Yerel bakım değerlendirmesi | [0,1] |
+| Yapısal bütünlük | Durum `Baglanti` üzerinde tutulur; güncelleme kararını bağımsız `Mikroglia` ajanı verir | Mikroglianın yerel bakım değerlendirmesi | [0,1] |
 
 Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri aktarımını yönetir. Öğrenme değişkenlerinin değerini seçmez veya hangi bağlantının değişeceğine karar vermez.
 
