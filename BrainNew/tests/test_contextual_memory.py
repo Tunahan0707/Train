@@ -125,6 +125,25 @@ class BaglamaDuyarliHafizaTestleri(unittest.TestCase):
                 kanallar=("bilinmeyen",), tekrar=1
             )
 
+    def test_coklu_seed_ozeti_toplamlari_ve_araliklari_raporlar(self):
+        rapor = BaglamaDuyarliHafizaDeneyi().coklu_seed_gurultu_ozeti(
+            gurultu_oranlari=(0.0,), kanallar=("ipucu",),
+            tekrar=2, seedler=(31, 32),
+        )
+        kayit = rapor["sonuc"]["ipucu"][0.0]["X"]
+        self.assertEqual(kayit["toplam"], 4)
+        self.assertEqual(kayit["dogru"], 4)
+        self.assertEqual(kayit["tam_eslesme_orani"], 1.0)
+        self.assertEqual(kayit["en_dusuk_tohum_orani"], 1.0)
+        self.assertEqual(kayit["en_yuksek_tohum_orani"], 1.0)
+
+    def test_coklu_seed_ozeti_bos_ve_tekrarlanan_seedleri_reddeder(self):
+        deney = BaglamaDuyarliHafizaDeneyi()
+        with self.assertRaises(ValueError):
+            deney.coklu_seed_gurultu_ozeti(seedler=())
+        with self.assertRaises(ValueError):
+            deney.coklu_seed_gurultu_ozeti(seedler=(1, 1))
+
     def test_eksik_ipucu_veya_baglam_kanali_sessizlik_olusturur(self):
         rapor = BaglamaDuyarliHafizaDeneyi().eksik_kanal_taramasi()
         for kanal in ("ipucu", "baglam"):
