@@ -355,3 +355,16 @@ Aşağıdaki kaynaklar farklı öğrenme/plastisite biçimlerinin biyolojik daya
 BrainNew'in öğrenme iddiası, “sinaps ağırlıkları değişiyor” gözlemine dayandırılmayacaktır. Öğrenme; tekrar kullanılabilir örüntü, sıra ayrımı, kısmi ipucundan geri çağırma, test örneklerine genelleme ve eski-yeni bilgi dengesinin ölçülebilir biçimde iyileşmesiyle değerlendirilecektir.
 
 Bu sprintin her adımı ayrı ayrı uygulanır ve doğrulanır. **Teorik tasarım tamamlanmadan bütün mekanizmalar tek seferde koda dökülmez.** Böylece hızlı görünen fakat hangi mekanizmanın ne öğrendiği bilinmeyen bir sistem yerine, kontrollü biçimde sınanabilen bir öğrenme mimarisi elde edilir.
+
+
+---
+
+## Güncel uygulama durumu — 16.11.2026
+
+- Kullanıcı tarafından son test sonucu: mevcut test paketi 1.77 saniyede başarılı tamamlandı (pre/post iz düzeltmesi sonrası).
+- Öğrenme mimarisi denetimi aktif `fix/brainnew-architecture-audit` dalındaki gerçek kodla yeniden hizalandı.
+- Yeni denetimde kritik bir olay-atıf kusuru bulundu: hedef nöron ateşlenince bütün gelen sinapsların postsinaptik izi artırılıyordu; ayrıca iletim olayı kaynak bağlantı kimliğini hedef dendrite taşımıyordu.
+- Kaynak bağlantı kimliği artık sinaptik olay verisinde korunuyor; hedef dendrit bu entegrasyonda gelen kaynak bağlantıları kaydediyor; hedef nöron ateşlenirse yalnızca o entegrasyona gerçekten kaynak olmuş, hâlâ geçerli bağlantıların postsinaptik izi artırılıyor.
+- Bu adım kalıcı sinaptik ağırlık veya STDP eklemez. Olay-atıf altyapısını düzeltir; STDP için gerekli nedensel veri yolunu hazırlar.
+- Yeni test eklendi: bir hedef nöron ateşlendiğinde, etkin olmayan başka bir gelen bağlantının postsinaptik izi yanlışlıkla artmamalı.
+- **Bu son kod değişikliklerinin testleri henüz kullanıcı tarafından çalıştırılıp doğrulanmadı.** Bir sonraki kapı, tam test paketi ve ana prototip smoke testidir.
