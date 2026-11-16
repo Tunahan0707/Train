@@ -1,7 +1,10 @@
 import unittest
 
 from BrainNew.M1_BuyuklukKarsilastirma import BuyuklukKarsilastirmaDeneyi
-from BrainNew.M1_Tanilama import (\n    _agirlik_gruplari, _davranis_ozeti, _projeksiyon_imzasi,\n    _projeksiyon_ozeti, _episode_akisini_ozetle,\n)
+from BrainNew.M1_Tanilama import (
+    _agirlik_gruplari, _davranis_ozeti, _projeksiyon_imzasi,
+    _projeksiyon_ozeti, _episode_akisini_ozetle,
+)
 
 
 class BuyuklukKarsilastirmaTests(unittest.TestCase):
