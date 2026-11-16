@@ -326,6 +326,8 @@ def test_deneme_sonu_sifirlama_gecici_izleri_temizler_ve_ogrenmeyi_korur():
     baglanti.uygunluk_izi = 1.5
     beyin.etkin_baglantilar.add(baglanti)
     beyin._iletim_planla(baglanti)
+    beyin.motor_organ.noron_ateslendi(0)
+    beyin.reseptor_organ.ciktilar = [1]
     kaynak.membran_potansiyeli = -60.0
 
     beyin.deneme_sonu_sifirla()
@@ -335,4 +337,6 @@ def test_deneme_sonu_sifirlama_gecici_izleri_temizler_ve_ogrenmeyi_korur():
     assert baglanti.etki_mv == 4.25
     assert baglanti.aktif
     assert beyin._olay_kuyrugu == []
+    assert beyin.motor_organ.ciktilar == [0]
+    assert beyin.reseptor_organ.ciktilar == [0]
     assert kaynak.membran_potansiyeli == kaynak.dinlenme_mv
