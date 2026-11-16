@@ -19,7 +19,7 @@ Bu belge, tasarım sözleşmesinin yerine geçmez. İlk çalışan prototipte ha
 
 ## İlk doğrulama
 
-`BrainNew/tests/test_brain.py` içinde sekiz test bulunur:
+`BrainNew/tests/test_brain.py` içinde dokuz test bulunur:
 
 1. Duyusal girdiden nöron ateşlenmesine ve hedef nörona iletime.
 2. Yalnızca yerel eşiği geçen çıkış sinapsının aktive olması.
@@ -28,15 +28,17 @@ Bu belge, tasarım sözleşmesinin yerine geçmez. İlk çalışan prototipte ha
 5. Yerel potansiyelin sınırlar içinde kalması ve lazy sönümü.
 6. Refrakter durumdayken yeniden aksiyon potansiyeli başlatılamaması.
 7. Tek terminalden birden fazla transmitter türünün birlikte salınması.
-8. Kimyasal türlerin ayrı tutulması ve alanın uzay/zamanda azalması.
+8. Reseptör profilinin dendritik yerel sinyali modüle etmesi.
+9. Kimyasal türlerin ayrı tutulması ve alanın uzay/zamanda azalması.
 
 Çalıştırma komutu:
 
 ```bash
+python -m BrainNew.main
 python -m unittest discover -s BrainNew/tests -v
 ```
 
-Mevcut dosya içeriklerinin izole bir yerel kopyasında sekiz testin tamamı geçti. GitHub dalının doğrudan checkout'u bu çalışma ortamında yapılamadığı için testler uzak dal üzerinde çalıştırılmış sayılmaz; yerel kopya doğrulamasıdır.
+İlk iki nöronlu demo izole yerel kopyada çalıştırıldı: kaynak ve hedef nöron birer kez ateşlendi, çıkış sinapsı bir kez aktive oldu ve iki kimyasal tür hedefte ölçüldü. Mevcut dosya içeriklerinin izole yerel kopyasında dokuz testin tamamı geçti. GitHub dalının doğrudan checkout'u bu çalışma ortamında yapılamadığı için testler uzak dal üzerinde çalıştırılmış sayılmaz; yerel kopya doğrulamasıdır.
 
 ## Henüz uygulanmayan tasarım parçaları
 
