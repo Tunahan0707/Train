@@ -1,7 +1,7 @@
 # BrainNew — Öğrenme Yeteneği Sprinti (Teorik Tasarım)
 
-Durum: **Tasarım sprinti — kod uygulaması henüz yapılmadı**  
-Çalışma dalı: `experiment/dendritic-synaptic-potentials`
+Durum: **Aşamalı uygulama sürüyor**  
+Çalışma dalı: `fix/brainnew-architecture-audit`
 
 Bu sprintin hedefi BrainNew'i yalnızca sinyal ileten ve birkaç yerel parametresi değişen bir ağ olmaktan çıkarıp, deneyimden kalıcı ve seçici biçimde öğrenebilen bir sisteme dönüştürmek için gereken teorik mimariyi tamamlamaktır. Sprint tek bir bütün olarak yürütülür; fakat her adımın kendi kabul ölçütü vardır. Bir adım kabul edilmeden sonraki adıma geçilmez.
 
@@ -13,8 +13,9 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 
 - **Aşama 1 — teorik veri/topoloji denetimi:** tamamlandı. Ayrıntı: `LEARNING_ARCHITECTURE_AUDIT.md`.
 - **Aşama 2 — deney ve ölçüm protokolü:** tasarlandı ve ilk pasif olay kaydedicisi uygulandı. Ayrıntı: `LEARNING_EXPERIMENT_PROTOCOL.md`, `DeneyKaydi.py`.
-- **Aşama 2 doğrulaması:** yeni testler eklendi; uzak dalda çalıştırma yapılmadı. Yerel test sonucu bekleniyor.
-- **Aşama 3 — baseline görevleri:** görev tanımları protokole eklendi; yürütülebilir deney sürücüsü henüz oluşturulmadı.
+- **Aşama 2 — deney ve ölçüm altyapısı:** pasif olay kaydı ve deterministik baseline yürütücüsü eklendi. Baseline yürütücüsü örnek başına bağımsız ağ kurar; eğitim/test örneklerini kimlik düzeyinde ayırır; tam eşleşme, doğru pozitif, yanlış pozitif ve yanlış negatif ölçer.
+- **Aşama 2 doğrulaması:** kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi. Baseline yürütücüsüne ait yeni testler bu son commit'te eklendi; henüz kullanıcı ortamında çalıştırılmadı.
+- **Aşama 3 — baseline görevleri:** B1–B6 görev aileleri protokolde tanımlı. Şu anki yürütücü genel örnek/görev ölçüm altyapısıdır; zamansal sıra, örüntü tamamlama ve genelleme için görev-özel deney sürücüleri henüz uygulanmadı.
 - **Önemli:** Kalıcı gerçek sinaptik etkinlik katsayısı, pre/post izleri, uygunluk izi ve plastisite kuralları henüz kodda yoktur.
 
 ---
