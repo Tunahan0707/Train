@@ -19,6 +19,8 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] Gecikmiş ödül/ceza, zaman damgalı uygunluk değişimleriyle birlikte zaman boyunca entegre edilir; nöron yeniden ateşlenmese bile çalışma dilimi sonunda işlenir.
 - [x] Sinaptik etkinlik katsayısı işaretli [-2, 2] aralığına alındı; Hebbian güçlenme/STDP zayıflaması işareti korur, modülatör etkisi işaret değiştirebilir.
 - [x] Yeni davranışlar için regresyon testleri eklendi.
+- [x] İşaretli sinaptik ağırlık aralığına göre eski STDP alt-sınır testi düzeltildi; negatif ağırlıkta LTD'nin işareti koruması için regresyon testi eklendi.
+- [x] Dallanmış feedback için aktif/pasif eşik yönü, nedensel önceki nörona yayılım ve döngü koruması testleri eklendi.
 - [x] Seed'li, 2B uzamsal ve seyrek başlangıç ağı kurucusu eklendi; topoloji ve başlangıç parametreleri seed ile tekrarlanabilir.
 
 ## Henüz tamamlanmayan sprint başlıkları
