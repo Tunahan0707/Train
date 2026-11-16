@@ -1,6 +1,6 @@
 # Yerel Dendrit-Sinaps Dinamikleri — Tasarım
 
-Bu belge `experiment/dendritic-synaptic-potentials` dalındaki yeni mekanizmanın uygulama sözleşmesidir. Mevcut `fix/synaptic-contribution-tracking` dalı değiştirilmez.
+Bu belge `experiment/dendritic-synaptic-potentials` dalındaki sıfırdan başlatılan yeni BrainNew tasarımının uygulama sözleşmesidir. Eski `fix/synaptic-contribution-tracking` dalı bu tasarımın çalışma dalı değildir.
 
 ## 1. Temel ayrım
 
@@ -19,29 +19,33 @@ Her hedef nöron için:
 - Her dendritin aktivitesi yalnızca o zaman adımında matrise katkı verir.
 
 Bir zaman adımında:
-[
-P_j leftarrow ho P_j + sum_i W_{ij}D_i
-]
-Burada (P_j) sinapsın yerel potansiyeli, (D_i) dendritin o adımda aldığı yerel etkinlik, (ho) potansiyel sızıntı katsayısıdır.
+
+\[
+P_j \leftarrow \rho P_j + \sum_i W_{ij}D_i
+\]
+
+Burada (P_j) sinapsın yerel potansiyeli, (D_i) dendritin o adımda aldığı yerel etkinlik, (\rho) potansiyel sızıntı katsayısıdır.
 
 ### Sinapsın bağımsız durumu
 
 Her sinaps:
 - yerel potansiyel (P_j),
-- salınım eşiği (	heta_j),
+- salınım eşiği (\theta_j),
 - geçici etkinlik izi (T_j),
 - son etkinleşme zamanı,
 - yapısal dayanıklılık / kullanılmama yaşı
 taşır.
 
-Sinaps yalnızca (P_j geq 	heta_j) olduğunda etkinleşir. Eşiği geçmeyen sinapsın akson ucu uyarılmış olsa bile salınım gerçekleşmez.
+Sinaps yalnızca (P_j \geq \theta_j) olduğunda etkinleşir. Eşiği geçmeyen sinapsın akson ucu uyarılmış olsa bile salınım gerçekleşmez.
 
 ### Sinaps-sinaps etkileşimi
 
 Başlangıçta sinapslar arası etkileşim matrisi (L_{kj}=0) olur. Aynı nörondaki iki sinaps tekrar tekrar birlikte etkinleştiğinde aralarındaki ilişki küçük adımlarla artar:
-[
-L_{kj} leftarrow operatorname{clip}(L_{kj} + eta_c C_{kj}, -L_{max}, L_{max})
-]
+
+\[
+L_{kj} \leftarrow \operatorname{clip}(L_{kj} + \eta_c C_{kj}, -L_{max}, L_{max})
+\]
+
 (C_{kj}), iki sinapsın örtüşen geçici etkinlik izidir. İlk sürümde birlikte-etkinleşme pozitif ilişkiyi artırır; işaretin öğretici feedback ile tersine çevrilebilmesi ayrıca test edilir. Böylece sıfır başlangıç, keyfî bir sinaptan-sinapsa bağlantı örüntüsü dayatmaz.
 
 Sinaps (k) etkinleştiğinde (L_{kj}) üzerinden diğer sinapsların potansiyellerine yerel etki aktarılır. Kendine etki ((k=j)) yoktur.
@@ -49,38 +53,40 @@ Sinaps (k) etkinleştiğinde (L_{kj}) üzerinden diğer sinapsların potansiyell
 ## 3. Geçici iz
 
 Her sinaps etkinleştiğinde (T_j) artar. Zamanla üstel olarak azalır:
-[
-T_j(t+1)=gamma T_j(t)
-]
-İz, üç iş için kullanılır:
-1. Feedback geldiğinde hangi sinapsların gerçekten etkinleştiğini belirlemek.
+
+\[
+T_j(t+1)=\gamma T_j(t)
+\]
+
+İz, kısa süreli yerel etkinlik geçmişini taşır ve şu işlerde kullanılır:
+1. Feedback geldiğinde hangi yerel konumların etkin/etkin değil olduğunu belirlemek.
 2. Birlikte-etkinleşme ilişkisini hesaplamak.
-3. Geri bildirim dalgasının önceki yerel adımlarını ayırt etmek.
+3. Feedback'in geriye doğru hangi dallardan ilerleyebileceğini, güncel adım verileriyle birlikte belirlemek.
+
+Feedback için ayrıca kalıcı bir nedensel yol/iz (track) veri yapısı tutulmayacaktır. Geriye dönük erişim, geçici etkinlik izleri ve güncel adım verileri üzerinden sağlanır. Dolayısıyla ayrı bir track bulunmaması geçmiş bilgisinin hiç bulunmadığı anlamına gelmez; bu bilgi kısa ömürlü yerel izlerde taşınır.
 
 İz tek başına kalıcı öğrenme değildir; deneme/episode sonunda temizlenebilir. Öğrenilmiş matris ve eşikler korunur.
 
 ## 4. Geri bildirim ve yayılım
 
-Feedback doğrudan sinaptik iletim genliğini güncellemez. Öncelikle sinaps eşiklerini ve dendrit-sinaps katsayılarını etkiler.
+Feedback, yalnızca tek bir merkezi yol kaydını izlemek yerine, yerel etkinlik izleri ve güncel adım verileri üzerinden geriye doğru takip edilebilen bütün dallara yayılabilir. Her dal kendi iz değerine göre bağımsız değerlendirilir.
 
-Bir nörona pozitif feedback ulaştığında:
-- izli/etkinleşmiş sinapsların eşiği çok az düşer,
-- izsiz/etkinleşmemiş sinapsların eşiği çok az yükselir.
+Bir dalda geri yayılım, o dalın etkinlik izi ilgili geri-adım eşiğinin altına düştüğünde durur. Eşik geri gidilen adım sayısına göre değişebilir. Bir dalın durması diğer dalların ilerlemesini durdurmaz. Sabit bir maksimum derinlik, temel durdurma kuralı değildir; yayılımın sınırını dal bazındaki iz eşiği belirler.
 
-Negatif feedback'te bunun tersi olur.
+Geri bildirim ulaştığı her konumda etkinlik potansiyeline küçük bir ekleme veya çıkarma yapar. Geriye doğru her adımda etkinin büyüklüğü azalır. Etkinin sayısal katsayıları ve adım başına azalma miktarı henüz kalibre edilmemiştir.
 
-Her bağlantı/önceki neden adımında etki zayıflar:
-[
-Delta	heta_j(h)=scdoteta_fcdot r^h
-]
-- (s=+1): pozitif feedback; etkin sinaps eşiğini düşürür.
-- (s=-1): negatif feedback; etkin sinaps eşiğini yükseltir.
-- (h): geri yayılım derinliği.
-- (0<r<1): her önceki basamakta azalan etki.
+Etkinlik izi bulunan ve bulunmayan konumlara uygulanacak etki:
 
-İşaret ve etkin/etkin değil eşlemesi ters yönde uygulanır. Feedback dalgası yalnızca geçici iz taşıyan nedensel yollardan geriye yürür; tüm ağı taramaz. Aynı nöron bir dalgada en fazla bir kez işlenir.
+| Feedback türü | Etkinlik izi bulunan konum | Etkinlik izi bulunmayan konum |
+|---|---|---|
+| Pozitif | Küçük kolaylaştırıcı etki | Çok küçük engelleyici etki |
+| Negatif | Küçük engelleyici etki | Kolaylaştırıcı etki |
 
-Dendrit-sinaps katsayıları da feedback ile güncellenir; yalnızca eşik güncellemesi yeterli değildir. Katsayı güncellemesinde her (W_{ij}) için o dendritin o sinapsın etkinleşmesine katkı izi kullanılır. Böylece kullanıcının ilk fikrindeki asıl öğrenme nesnesi korunur.
+Negatif feedback, pozitif feedback tablosunun tam tersini uygular. Buradaki kolaylaştırma/engelleme, etkinlik potansiyeline yapılan küçük yerel etkiyi ifade eder; tek başına belirli bir sinaptik parametrenin kesin olarak artırılıp azaltıldığı anlamına gelmez.
+
+Feedback'in dendrit-sinaps katsayılarını (W_{ij}) ve sinaps eşiklerini nasıl güncelleyeceği, yukarıdaki yerel potansiyel etkisinden ayrı bir parametre-güncelleme kuralı olarak ele alınmalıdır. Önceki taslaktaki eşik ve katsayı güncelleme yönleri, bu yeni feedback davranışından otomatik olarak çıkarılmış kesin kararlar sayılmaz; ayrıca netleştirilmelidir.
+
+Beyin feedback'in içeriğine veya hangi sinapsların değişeceğine karar vermez. Beyin yalnızca simülasyon zamanını ve bileşenler arası koordinasyonu yönetir; feedback'in yerel değerlendirilmesi ve öğrenme kararları nöronlar/yerel mekanizmalar tarafından yapılır.
 
 ## 5. Bağlantı yaşlanması ve budama
 
@@ -103,11 +109,11 @@ Yeni bağlantının başlangıç eşiği ve dendrit-sinaps katsayısı küçük/
 İlk denemede:
 - (W_{ij}): seed'li uniform ([-0.1, +0.1])
 - (L_{kj}): sıfır
-- (	heta_j): seed'li dar dağılım; önerilen ilk aralık ([0.2, 0.4]) normalize potansiyel birimi
+- (\theta_j): seed'li dar dağılım; önerilen ilk aralık ([0.2, 0.4]) normalize potansiyel birimi
 - potansiyel sızıntısı: her adımda küçük, sabit oran
 - etkinlik izi: her adımda üstel sönüm
-- feedback derinlik çarpanı (r): ilk deneme için (0.5)
-- feedback başına eşik değişimi: başlangıçta küçük; eşik pozitif alt sınırla korunur.
+- feedback'in geriye doğru adımlarda azalma katsayısı: henüz belirlenmedi
+- feedback başına yerel potansiyel değişimi: küçük olmalı; sayısal değer henüz belirlenmedi.
 
 Bu sayılar biyolojik sabitler değildir. Ölçeksiz/normalize prototip parametreleridir. Başlangıç testleri her sinapsı tek tek, iki dendriti eşzamanlı ve çoklu dendrit kombinasyonlarını ayrı ayrı sınamalıdır. Parametreler eğitim başarısına göre değil, önce deterministik yerel davranış testlerine göre kalibre edilir.
 
@@ -118,13 +124,16 @@ Bu sayılar biyolojik sabitler değildir. Ölçeksiz/normalize prototip parametr
 3. Nöron spike'ı bütün sinapsları zorunlu çalıştırmaz.
 4. Bir sinapsın çalışması diğer sinapsları (L) üzerinden etkiler.
 5. Sıfır (L) başlangıcı, birlikte etkinleşme olmadan sinapslar arası etki üretmez.
-6. Pozitif ve negatif feedback eşikleri ters yönde günceller.
-7. Feedback etkisi her geri adımda azalır.
-8. Geçici iz zamanla kaybolur; episode resetinde temizlenir.
-9. Kullanılmayan bağlantı yaşlanır; tekrar kullanılan bağlantının yaşı sıfırlanır.
-10. Bağlı olmayan akson terminalinin etkinleşme girişimi büyüme adayı oluşturur; pozitif feedback ile bağlantı kurulur.
-11. Seed aynıysa başlangıç matrisi ve deney sonuçları tekrarlanabilir.
-12. Öğrenilmiş (W), (L), eşikler ve yapısal bağlantılar denemeler arasında korunur.
+6. Pozitif ve negatif feedback'in etkin ve etkin olmayan izlere etkileri tabloda belirtilen şekilde ters yönlüdür.
+7. Feedback geriye doğru bütün erişilebilir dalları ayrı ayrı izler; bir dalın kesilmesi diğer dalları durdurmaz.
+8. Her dalın yayılımı kendi etkinlik izinin adım sayısına bağlı eşiğin altına düşmesiyle durur.
+9. Feedback etkisi geriye doğru her adımda azalır.
+10. Geçici iz zamanla kaybolur; episode resetinde temizlenebilir.
+11. Feedback yayılımı için ayrıca kalıcı bir track veri yapısı tutulmaz.
+12. Kullanılmayan bağlantı yaşlanır; tekrar kullanılan bağlantının yaşı sıfırlanır.
+13. Bağlı olmayan akson terminalinin etkinleşme girişimi büyüme adayı oluşturur; pozitif feedback ile bağlantı kurulur.
+14. Seed aynıysa başlangıç matrisi ve deney sonuçları tekrarlanabilir.
+15. Öğrenilmiş (W), (L), eşikler ve yapısal bağlantılar denemeler arasında korunur.
 
 ## 9. Açık araştırma noktaları
 
@@ -133,5 +142,8 @@ Bu sayılar biyolojik sabitler değildir. Ölçeksiz/normalize prototip parametr
 - Dendritin sinaps üzerindeki etkisi doğrudan potansiyel değişimi mi, yoksa eşik/iletim olasılığı modülasyonu mu olmalı?
 - Akson terminali etkinleşmesi ile postsinaptik sinapsın salınım kararı arasındaki zamanlama nasıl modellenmeli?
 - Sinapsın kendi potansiyeli ve bağlantının yapısal dayanıklılığı birbirinden ayrı tutulmalı.
+- Feedback'in yerel etkinlik potansiyelini değiştirmesi ile öğrenilmiş parametreleri (eşikler, dendrit-sinaps katsayıları vb.) güncellemesi arasındaki kesin ilişki nasıl kurulmalı?
+- Dallar için adım sayısına bağlı iz eşiğinin matematiksel biçimi ne olmalı?
+- Aynı geri yayılım dalında birden fazla iz/konum bulunursa dallanma ve tekrar ziyaret nasıl ele alınmalı?
 
 Bu belgenin kapsamı tasarım sözleşmesidir; henüz çalışan entegrasyon veya test başarısı iddiası değildir.
