@@ -136,7 +136,7 @@ Amaç: Ağın yalnızca mevcut ağırlıkları değiştirmesi değil, gerektiği
 - Bağlantı bakımı kaynak nöron entegrasyonundan bağımsız zamanlanır.
 - Bağımsız Mikroglia ajanları kendi 2B konumları ve algılama yarıçapları içindeki bağlantıları uzamsal indeks üzerinden tarar.
 - Bağlantı kendi kullanım izini, yapısal bütünlüğünü ve bakım parametrelerini taşır; yapısal değişim kararını mikroglia verir.
-- Beyin yalnızca mikroglia bakım olayını olay kuyruğuna koyar; ilk sürümde olaylar açıkça planlanır, otomatik periyodik tekrar henüz yoktur.
+- Beyin yalnızca mikroglia bakım olayını olay kuyruğuna koyar. Tekrarlanan bakım açıkça başlatılır ve yalnızca sonlu `son_zaman` sınırı verilen simülasyon çalıştırmalarında yinelenir.
 - Kullanım izi zamanla azalır; kullanım izi tek başına kopma kararı değildir.
 - Uzun süre düşük kullanım/zayıf işlev ve yerel budama işaretleri birlikteyse bağlantı önce zayıflamaya, sonra kopmaya aday olur.
 - Stabilizasyon/büyüme işaretleri bakım/budama baskısını azaltabilir.
