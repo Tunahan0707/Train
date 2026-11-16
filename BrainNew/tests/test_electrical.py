@@ -248,6 +248,27 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertAlmostEqual(d1.sinaps_katkilari[s], 0.41)
         self.assertAlmostEqual(d2.sinaps_katkilari[s], 0.7)
 
+    def test_ateslenmeyen_onceki_entegrasyonun_ogrenme_izi_sonraki_ateslenmeye_tasinmaz(self):
+        n = Noron("n")
+        d1, d2 = Dendrid("d1"), Dendrid("d2")
+        s = Baglanti("s", n, None, esik=0.2)
+        d1.sinaps_bagla(s, 0.4)
+        d1.sinaps_degerlendirmeleri[s] = 1
+        n.dendrit_ekle(d1)
+        n.dendrit_ekle(d2)
+
+        # İlk entegrasyon sinapsa katkı yükler fakat nöronu ateşletmez.
+        d1.girdi_al(1.0)
+        self.assertLess(n.girdileri_birlestir(0.0), n.esik - n.dinlenme_degeri)
+        self.assertIn(s, d1.son_islenen_sinapslar)
+
+        # Sonraki entegrasyonda d1 katkı sunmaz; d2 nöronu ateşletir.
+        # Eski d1 izi taşınırsa s etkin olmadığı için hatalı negatif öğrenme olur.
+        d2.girdi_al(100.0)
+        ateslendi, _ = n.entegrasyonu_isle(1.0)
+        self.assertTrue(ateslendi)
+        self.assertAlmostEqual(d1.sinaps_katkilari[s], 0.4)
+
     def test_yeni_degerlendirme_olmayan_cifte_ilk_firsatta_ceza_verilmez(self):
         d = Dendrid("d")
         s = Baglanti("s", None, None)
