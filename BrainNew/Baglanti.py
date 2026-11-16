@@ -32,7 +32,6 @@ class Baglanti:
         self.son_guncelleme = 0.0
         self.son_aktivasyon = None
         self.aktivasyon_sayisi = 0
-        self.degerlendirme_sayisi = 0
         self.iz = 0.0
         self.terminal_konumu = tuple(
             terminal_konumu if terminal_konumu is not None
