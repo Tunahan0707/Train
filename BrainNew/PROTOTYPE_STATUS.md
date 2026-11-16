@@ -1,73 +1,78 @@
-# BrainNew — İlk Prototip Durumu
+# BrainNew — Prototip durumu ve uygulama notları
 
-Dal: `experiment/dendritic-synaptic-potentials`
+Dal: `fix/brainnew-architecture-audit`
+Temel tasarım sözleşmesi: `LOCAL_SYNAPTIC_DYNAMICS_DESIGN.md`
 
-Bu belge, tasarım sözleşmesinin yerine geçmez. İlk çalışan prototipte hangi parçaların bulunduğunu ve henüz hangi kararların/uygulamaların eksik olduğunu takip eder.
+Bu belge tasarım sözleşmesinin yerine geçmez. Kesin kararlar korunur; kalibrasyon gerektiren sayısal değerler biyolojik sabit olarak sunulmaz; henüz kararlaştırılmamış davranışlar nihai tasarım kararı sayılmaz.
 
-## Prototip 0.1 — Uygulanan çekirdek
+## Prototip çekirdeği
 
-- `Beyin.py`: Simülasyon saati ve deterministik, zaman öncelikli olay kuyruğu. Beyin öğrenme kararı vermez; olayları ilgili bileşenlere dağıtır.
-- `Noron.py`: Membran potansiyeli, zamana bağlı lazy sızıntı ve depolarizasyon → repolarizasyon → hiperpolarizasyon döngüsü.
-- `Dendrid.py`: İşaretli elektriksel girdileri toplar; transmitter reseptör yanıtını yerel sinyale modülatör olarak ekler; dendrit-sinaps katkılarını taşır.
-- `Baglanti.py`: Yerel aktivasyon potansiyeli, eşik, lazy sönüm, etkinlik izi başlangıcı ve hedefe pozitif iletim gecikmesi.
-- `KimyasalAlan.py`: Her transmitter türü için ayrı kaynakları tutan, 2B analitik difüzyon/sönüm alanı.
-- Bir terminalin aynı aktivasyon olayında birden fazla transmitter türü salabilmesi desteklenir.
-- Bir nöron ateşlendiğinde yalnızca yerel potansiyeli eşiği karşılayan çıkış sinapsları aktive edilir.
-- Bir sinapsa birden fazla dendritten gelen etkiler önce toplamsal hesaplanır, sonra o sinapsa o olayda katkı veren dendrit sayısının kareköküyle normalize edilir.
-- Dendrit-sinaps öğrenmesi yalnızca gerçekten sıfırdan farklı katkı yüklenmiş çiftlerde yürür. İlk değerlendirme fırsatında negatif ceza uygulanmaz.
-- Olay kuyruğunda aynı zamanlı girdiler, entegrasyon olayından önce toplanır; olay kimliği eşit zamanlarda deterministik sıra sağlar.
+- `Beyin.py`: Simülasyon saati, deterministik olay kuyruğu ve bileşenler arası koordinasyon. Membranı güncellemez, eşik kontrolü yapmaz ve ateşlenme kararı vermez.
+- `Noron.py`: Dendrit girdilerini bütünleştirir, membranı günceller, ateşlenme eşiğini değerlendirir, aksiyon potansiyelini başlatır, uygun çıkış sinapslarını seçer ve kendi faz döngüsünü yönetir.
+- `Dendrid.py`: İşaretli girdileri tamponlar, transmitter reseptör yanıtını yerel sinyale modülatör olarak ekler ve dendrit-sinaps katkılarını taşır.
+- `Baglanti.py`: Yerel aktivasyon potansiyeli, eşik, lazy sönüm, etkinlik izi, hedefe iletim gecikmesi ve terminal transmitter repertuvarını taşır.
+- `KimyasalAlan.py`: Transmitter türlerini ayrı tutan 2B analitik difüzyon/sönüm alanı.
 
-## İlk doğrulama
+## Olay akışı ve sorumluluk sınırı
 
-`BrainNew/tests/test_brain.py` içinde dokuz test bulunur:
+1. Beyin duyusal veya sinaptik girdiyi hedef nörona iletir.
+2. Nöron girdiyi kendi dendrit tamponuna alır.
+3. Beyin yalnızca bir entegrasyon zamanı planlar; aynı nöron ve aynı zaman için yinelenen entegrasyon olaylarını tekilleştirir.
+4. Entegrasyon anında nöron kendi girdilerini birleştirir, dendritik sinaps katkılarını günceller, membranını değerlendirir ve gerekiyorsa ateşlenir.
+5. Nöron yalnızca yerel potansiyeli eşiği karşılayan çıkış sinapslarını seçer.
+6. Beyin seçilmiş sinapsların iletim ve kimyasal salım olaylarını zamanlar.
+7. Faz geçişlerini nöronun kendi faz mekanizması yürütür; Beyin yalnızca sonraki faz olayının zamanını kuyruğa koyar.
 
-1. Duyusal girdiden nöron ateşlenmesine ve hedef nörona iletime.
-2. Yalnızca yerel eşiği geçen çıkış sinapsının aktive olması.
-3. Bir sinapsa katkı veren birden fazla dendrit için sinaps-başına karekök normalizasyonu.
-4. Yalnızca gerçekten katkı yükleyen dendrit-sinaps çiftinin öğrenilmesi.
-5. Yerel potansiyelin sınırlar içinde kalması ve lazy sönümü.
-6. Refrakter durumdayken yeniden aksiyon potansiyeli başlatılamaması.
-7. Tek terminalden birden fazla transmitter türünün birlikte salınması.
-8. Reseptör profilinin dendritik yerel sinyali modüle etmesi.
-9. Kimyasal türlerin ayrı tutulması ve alanın uzay/zamanda azalması.
+Aynı zaman damgasındaki olaylarda girdi olayları entegrasyondan önce, faz geçişleri entegrasyondan önce işlenir. Eşit öncelik ve zamanda kararlı olay kimliği sırası korunur. Olay gecikmesi pozitif ve sonlu olmalı; planlanan olay zamanı da sonlu kalmalıdır.
 
-Çalıştırma komutu:
+## Refrakter dönemde gelen girdiler — geçici uygulama
 
-```bash
-python -m BrainNew.main
-python -m unittest discover -s BrainNew/tests -v
-```
+Tasarım sözleşmesi, refrakter girdinin bekletilmesi, sönümlenmesi veya kaybolması seçenekleri arasında nihai karar vermemiştir.
 
-İlk iki nöronlu demo izole yerel kopyada çalıştırıldı: kaynak ve hedef nöron birer kez ateşlendi, çıkış sinapsı bir kez aktive oldu ve iki kimyasal tür hedefte ölçüldü. Mevcut dosya içeriklerinin izole yerel kopyasında dokuz testin tamamı geçti. GitHub dalının doğrudan checkout'u bu çalışma ortamında yapılamadığı için testler uzak dal üzerinde çalıştırılmış sayılmaz; yerel kopya doğrulamasıdır.
+Bu düzeltme dalındaki geçici davranış:
+- Refrakter sırada gelen girdi dendrit tamponunda korunur.
+- Refrakter sırada gerçekleşen entegrasyon denemesi yeni ateşlenme başlatmaz ve tamponu temizlemez.
+- Nöron dinlenmeye döndüğünde bekleyen girdiler için entegrasyon yeniden planlanır.
+
+Bu, kaybolan/takılı kalan girdi hatasını önleyen geçici bir uygulama politikasıdır; tasarım sözleşmesindeki açık kararı kalıcı olarak kapatmaz. Alternatif sönüm veya atma davranışı eklenmemiştir.
+
+## Mevcut çekirdek davranışları
+
+- Nöron ateşlenmesi ve çıkış sinapsı aktivasyonu ayrı koşullardır.
+- Nöron ateşlendiğinde yalnızca yerel eşiği geçen çıkış sinapsları aktive edilir.
+- Aynı ateşlenme olayında uygun sinapslar seri rastgele seçimle değil, tek yerel seçim turuyla belirlenir.
+- Bir sinapsa birden fazla dendritten gelen etkiler önce toplamsal hesaplanır; ardından o sinapsa gerçekten katkı veren dendrit sayısının kareköküyle normalize edilir.
+- Dendrit-sinaps öğrenmesi yalnızca gerçekten katkı yükleyen çiftlerde yürür. İlk değerlendirme fırsatında negatif ceza uygulanmaz.
+- Bir terminal aynı aktivasyonda repertuvarındaki birden fazla transmitter türünü salabilir.
+- Kimyasal alan kaynakları şimdilik saklanır ve sorguda taranır; büyük ağ ölçeği için optimize edilmiş değildir.
+- Girdi, konum, olay zamanı, sinaps ve kimyasal kaynak parametrelerinde sonlu değer kontrolleri bulunur.
 
 ## Henüz uygulanmayan tasarım parçaları
 
-Bunlar unutulmuş veya iptal edilmiş değildir; sonraki prototip aşamalarına bırakılmıştır.
+Bunlar unutulmuş veya iptal edilmiş değildir; sonraki aşamalara bırakılmıştır.
 
-- Yönlü sinaps-sinaps ilişkileri, birlikte etkinleşme ve etkinleşmeme öğrenmesi.
-- Geriye doğru dallanan feedback, dal başına iz eşiği ve sıralı feedback olayları.
+- Yönlü sinaps-sinaps ilişkileri ve birlikte etkinleşme/etkinleşmeme öğrenmesi.
+- Geriye doğru dallanan feedback ve dal başına iz eşiği.
 - Farklı nöronların uzamsal/zamansal yakınlıkla birlikte ateşlenme etkileşimi.
-- Bağlantı nesnesine ait mikroglia-benzeri yerel koruma, yaşlanma, yeniden şekillenme ve budama.
-- Kopmuş bağlantı yerine yeni bağlantı oluşumu, mevcut zayıf bağlantının onarımı ve bağlantısız nöronun toparlanma modu.
-- Reseptör organı ve motor organı üzerinden tam duyusal/çıktısal arayüz. Şimdilik duyusal girdi doğrudan dendrite olay olarak verilir.
-- Geçici izlerin dallar boyunca nedensel takibi ve episode yaşam döngüsü.
-- Bağlantı repertuvarı/topolojisi için dendritlerle akson terminallerinin eşleştirilme kuralı.
-- Büyük ağlarda kimyasal kaynak sorgusunun hızlandırılması ve kaynak belleğinin yaşam döngüsü.
+- Bağlantı-yerel mikroglia-benzeri koruma, yaşlanma, yeniden şekillenme ve budama.
+- Yeni bağlantı oluşumu, bağlantı onarımı ve bağlantısız nöronun toparlanma modu.
+- Reseptör organı ve motor organı üzerinden tam duyusal/çıktısal arayüz.
+- Geçici izlerin nedensel takibi ve episode yaşam döngüsü.
+- Akson terminalleri ile dendritlerin bağlantı repertuvarı/topolojisi için eşleştirme kuralı.
+- Büyük ağlarda kimyasal kaynak sorgusu ve kaynak belleği yaşam döngüsü optimizasyonu.
 
-## Bilinçli olarak açık bırakılan davranış
+## Doğrulama durumu
 
-Refrakter dönemde gelen girdilerin tutulması, sönümlenmesi veya kaybolması henüz tasarımda kararlaştırılmadı. İlk kodda dendrit giriş tamponunda kalırlar; refrakter dönemdeki entegrasyon olayı ateşlenme üretmez. Dinlenmeye dönüşten sonra otomatik entegrasyon henüz planlanmadığından, bekleyen girdiler sonraki bir entegrasyon olayı gelene kadar bekleyebilir. Bu geçici uygulama nihai davranış kararı değildir.
+Testler güncellendi:
+- `test_orchestration.py`: olay önceliği, entegrasyon tekilleştirme, tam hedefe varış zamanı, refrakter tamponun dinlenmeye dönüşte işlenmesi, olay limiti ve deterministiklik.
+- `test_electrical.py`: nöronun yerel entegrasyon/ateşlenme sorumluluğu, faz döngüsü, elektriksel toplama, seçici sinaps aktivasyonu, öğrenme ve sonlu değer doğrulaması.
+- `test_chemical.py`: transmitter ayrımı, analitik yayılım, reseptör yanıtı ve geçersiz/sonlu olmayan kaynak-sorgu girdileri.
 
-Kimyasal alanın kaynakları şimdilik silinmez; yoğunluk sorgusu bütün kayıtlı kaynakları dolaşır. Bu, küçük prototip için kabul edilen geçici sınırlamadır; büyük ağ performansı olarak sunulamaz.
+**Önemli:** Bu çalışma ortamında GitHub dosyaları düzenlenebildi; ancak Python test çalıştırıcısı uzak dalın checkout'una erişmediği için bu dalın testleri burada çalıştırılmış değildir. Testlerin geçtiği iddia edilmiyor. Yerel doğrulama için proje kökünde:
 
-Kimyasal reseptör yanıtının dendritik yerel sinyale eklenişi, difüzyon parametreleri ve diğer sayısal değerler kalibrasyon gerektiren başlangıç tercihleridir; biyolojik sabit değildir.
+```powershell
+python -m pytest BrainNew/tests -v
+python -m BrainNew.main
+```
 
-## Sonraki sıra
-
-1. Refrakter dönemde gelen girdilerin yaşam döngüsünü kesinleştir ve test et.
-2. Aktivite izi ve yönlü sinaps-sinaps ilişkilerini ekle.
-3. Feedback dallanmasını, gecikmelerini ve deterministik sıralamasını ekle.
-4. Kimyasal sinyal sınıflarını bağlantı-yerel mikroglia-benzeri kurallara bağla.
-5. Yapısal plastisite, yeni bağlantı oluşumu ve toparlanma modunu ekle.
-6. Yerel nöron-nöron etkileşimini, ardından reseptör/motor organlarını tamamla.
-7. Her aşamada davranış testleri ve performans ölçümleri ekle.
+Bir test başarısız olursa önce kod hatası, test varsayımı ve açık tasarım kararı birbirinden ayrılmalıdır. Başarısız testi yalnızca yeşile çevirmek için tasarım davranışı değiştirilmemelidir.
