@@ -14,10 +14,11 @@ class Beyin:
         "entegrasyon": 2,
     }
 
-    def __init__(self, kimyasal_alan=None):
+    def __init__(self, kimyasal_alan=None, deney_kaydi=None):
         self.zaman = 0.0
         self.noronlar = {}
         self.kimyasal_alan = kimyasal_alan
+        self.deney_kaydi = deney_kaydi
         self._olaylar = []
         self._olay_sayaci = itertools.count()
         self._entegrasyon_planlari = set()
@@ -114,8 +115,12 @@ class Beyin:
         if not self._olaylar:
             return False
 
-        zaman, _, _, tur, hedef_id, veri = heapq.heappop(self._olaylar)
+        zaman, _, olay_id, tur, hedef_id, veri = heapq.heappop(self._olaylar)
         self.zaman = zaman
+
+        # Pasif gözlem: kayıt olay akışına ve öğrenme kararlarına müdahale etmez.
+        if self.deney_kaydi is not None:
+            self.deney_kaydi.olay_kaydet(zaman, olay_id, tur, hedef_id, veri)
 
         if tur in ("duyusal_girdi", "sinaptik_girdi"):
             self._girdi_olayini_isle(self.noronlar[hedef_id], veri)
