@@ -13,12 +13,20 @@ class Baglanti:
         transmitter_profili=None, kimyasal_yayilim=1.0,
         kimyasal_temizlenme=0.1
     ):
+        sayisal = (
+            uzunluk, iletim_hizi, esik, sonum_tau,
+            baslangic_potansiyeli, etki, kimyasal_yayilim,
+            kimyasal_temizlenme
+        )
+        if not all(math.isfinite(float(v)) for v in sayisal):
+            raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
         if uzunluk < 0 or iletim_hizi <= 0 or sonum_tau <= 0:
             raise ValueError("Bağlantı parametreleri geçersiz.")
         if not -1.0 <= baslangic_potansiyeli <= 1.0:
             raise ValueError("Başlangıç potansiyeli [-1, 1] aralığında olmalı.")
         if kimyasal_yayilim <= 0 or kimyasal_temizlenme < 0:
             raise ValueError("Kimyasal yayılım parametreleri geçersiz.")
+
         self.kimlik = kimlik
         self.kaynak = kaynak
         self.hedef = hedef
@@ -35,17 +43,31 @@ class Baglanti:
         self.son_aktivasyon = None
         self.aktivasyon_sayisi = 0
         self.iz = 0.0
-        self.terminal_konumu = tuple(
-            terminal_konumu if terminal_konumu is not None
-            else getattr(kaynak, "konum", (0.0, 0.0))
-        )
+
+        if terminal_konumu is None:
+            terminal_konumu = getattr(kaynak, "konum", (0.0, 0.0))
+        if len(terminal_konumu) != 2 or not all(
+            math.isfinite(float(v)) for v in terminal_konumu
+        ):
+            raise ValueError("Terminal konumu sonlu iki boyutlu koordinat olmalı.")
+        self.terminal_konumu = tuple(float(v) for v in terminal_konumu)
+
         self.transmitter_profili = dict(transmitter_profili or {})
-        if any(miktar < 0 for miktar in self.transmitter_profili.values()):
-            raise ValueError("Transmitter salım miktarları negatif olamaz.")
+        if any(
+            not math.isfinite(float(miktar)) or miktar < 0
+            for miktar in self.transmitter_profili.values()
+        ):
+            raise ValueError("Transmitter salım miktarları sonlu ve negatif olmayan değerler olmalı.")
+        self.transmitter_profili = {
+            tur: float(miktar) for tur, miktar in self.transmitter_profili.items()
+        }
         self.kimyasal_yayilim = float(kimyasal_yayilim)
         self.kimyasal_temizlenme = float(kimyasal_temizlenme)
 
     def potansiyeli_guncelle(self, zaman):
+        zaman = float(zaman)
+        if not math.isfinite(zaman):
+            raise ValueError("Simülasyon zamanı sonlu olmalı.")
         if zaman < self.son_guncelleme:
             raise ValueError("Simülasyon zamanı geriye gidemez.")
         gecen = zaman - self.son_guncelleme
@@ -56,6 +78,9 @@ class Baglanti:
             self.son_guncelleme = zaman
 
     def etki_uygula(self, etki, zaman):
+        etki = float(etki)
+        if not math.isfinite(etki):
+            raise ValueError("Sinaptik etki sonlu olmalı.")
         self.potansiyeli_guncelle(zaman)
         r = abs(etki) / (1.0 + abs(etki))
         if etki >= 0:
