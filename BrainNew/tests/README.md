@@ -1,6 +1,6 @@
 # BrainNew — Ayrı test paketleri
 
-Bu testler prototipte uygulanmış davranışları denetler. Bağımsız mikroglia bakımı, yerel budama ve kontrollü yeni bağlantı oluşumu için birim testleri vardır; otomatik büyüme zamanlaması, feedback dallanması, sinaps-sinaps öğrenmesi ve yerel nöron-nöron etkileşimi henüz uygulanmamıştır.
+Bu testler prototipte uygulanmış davranışları denetler. Bağımsız mikroglia bakımı, yerel budama, kimyasal işaretle kontrollü bağlantı oluşumu, dallanan feedback, seyrek sinaps-sinaps ilişkileri, nöronlar arası zamansal birlikte etkinlik ve nöron-yerel homeostaz için ilk birim/regresyon testleri vardır. Otomatik yapısal büyüme zamanlaması, bağlantı onarımı ve ağ düzeyinde örüntü tamamlama/genelleme henüz kabul kapısından geçmemiştir.
 
 Proje kökünde ve sanal ortam açıkken:
 
@@ -36,6 +36,9 @@ python -m BrainNew.main
 - `test_chemical.py`: Transmitter kaynakları, çoklu salım, tür ayrımı, 2B uzamsal yayılım, zamansal sönüm, analitik yoğunluk formülü, reseptör duyarlılığı ve geçersiz kimyasal kaynak/sorgu değerleri.
 - `test_microglia.py`: Bağımsız mikroglia ajanı, algılama yarıçapı, düşük kullanım ile budama sinyalinin birlikte gerekliliği, stabilizasyon, sonlu zaman aralığında periyodik bakım ve Beyin'in yalnızca olay koordinasyonu yapması.
 - `test_structural_plasticity.py`: Yerel büyüme sinyali, hedef dendritin pozitif reseptör uygunluğu, yarıçap sınırı, deterministik hedef seçimi, aynı üçlünün tekilleştirilmesi ve yeni bağlantının zayıf/olgunlaşmamış başlangıcı.
+- `test_feedback_wave.py`: Pozitif feedback'te aktif/pasif terminal eşik yönleri, nedensel girdiler üzerinden geriye dallanma ve ziyaret edilmiş nöronlarla döngü engelleme.
+- `test_plasticity.py`: Sessiz/aşırı etkin nöronlarda eşik homeostazı, hedef etkinlik civarında kararlılık, episode'lar arası uzun dönem izin korunması, sinaptik öğrenilmiş parametrelerin korunması ve homeostaz ablasyonu.
+- `test_training_foundation.py`: Kalıcı episode öğrenmesi, yerel feedback, sinaps/nöron ilişkileri ve eğitim yürütücüsü temel davranışları.
 
 ## Testlerin yorumlanması
 
