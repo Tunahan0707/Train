@@ -212,8 +212,7 @@ def test_hedefi_ateslenmeyen_motor_noron_esik_alti_girdilerden_ogrenir():
     onceki_etki = baglanti.etki_mv
     beyin.geri_bildirim(
         1.0,
-        baslangic_noronlari=[motor],
-        esik_alti=True
+        baslangic_noronlari=[motor]
     )
 
     assert baglanti.uygunluk_izi > 0.0
