@@ -28,6 +28,8 @@ class Beyin:
         self._olaylar = []
         self._olay_sayaci = itertools.count()
         self._entegrasyon_planlari = set()
+        self._mikroglia_bakim_bekleyen = set()
+        self._otomatik_mikroglialar = set()
 
     def noron_ekle(self, noron):
         mevcut = self.noronlar.get(noron.kimlik)
@@ -55,7 +57,33 @@ class Beyin:
     def mikroglia_bakim_planla(self, mikroglia_id, gecikme):
         if mikroglia_id not in self.mikroglialar:
             raise ValueError(f"Bilinmeyen mikroglia: {mikroglia_id}")
-        return self.olay_planla(gecikme, "mikroglia_bakim", mikroglia_id)
+        if mikroglia_id in self._mikroglia_bakim_bekleyen:
+            return None
+        olay_id = self.olay_planla(gecikme, "mikroglia_bakim", mikroglia_id)
+        self._mikroglia_bakim_bekleyen.add(mikroglia_id)
+        return olay_id
+
+    def mikroglia_bakim_baslat(self, mikroglia_id, ilk_gecikme=None):
+        """Sonlu simülasyon aralıklarında tekrarlanan yerel bakımı etkinleştirir."""
+        if mikroglia_id not in self.mikroglialar:
+            raise ValueError(f"Bilinmeyen mikroglia: {mikroglia_id}")
+        if mikroglia_id in self._otomatik_mikroglialar:
+            return False
+        mikroglia = self.mikroglialar[mikroglia_id]
+        gecikme = mikroglia.bakim_araligi if ilk_gecikme is None else ilk_gecikme
+        if mikroglia_id not in self._mikroglia_bakim_bekleyen:
+            self.mikroglia_bakim_planla(mikroglia_id, gecikme)
+        self._otomatik_mikroglialar.add(mikroglia_id)
+        return True
+
+    def mikroglia_bakim_durdur(self, mikroglia_id):
+        """Bekleyen son bakım olayını koruyup sonraki tekrarları durdurur."""
+        if mikroglia_id not in self.mikroglialar:
+            raise ValueError(f"Bilinmeyen mikroglia: {mikroglia_id}")
+        if mikroglia_id not in self._otomatik_mikroglialar:
+            return False
+        self._otomatik_mikroglialar.remove(mikroglia_id)
+        return True
 
     def _kopuk_baglantiyi_temizle(self, sinaps):
         if sinaps.kaynak is not None and sinaps in sinaps.kaynak.cikis_sinapslari:
@@ -191,25 +219,45 @@ class Beyin:
                 self._entegrasyon_planla(noron.kimlik)
 
         elif tur == "mikroglia_bakim":
+            self._mikroglia_bakim_bekleyen.discard(hedef_id)
             mikroglia = self.mikroglialar[hedef_id]
             kopanlar = mikroglia.bakim_yap(
                 self.baglanti_indeksi, self.kimyasal_alan, self.zaman
             )
             for sinaps in kopanlar:
                 self._kopuk_baglantiyi_temizle(sinaps)
+            if hedef_id in self._otomatik_mikroglialar:
+                self.mikroglia_bakim_planla(
+                    hedef_id, mikroglia.bakim_araligi
+                )
 
         else:
             raise ValueError(f"Bilinmeyen olay türü: {tur}")
 
         return True
 
-    def calistir(self, olay_limiti=100000):
+    def calistir(self, olay_limiti=100000, son_zaman=None):
         if not isinstance(olay_limiti, int) or olay_limiti < 0:
             raise ValueError("Olay limiti negatif olmayan bir tam sayı olmalı.")
+        if self._otomatik_mikroglialar and son_zaman is None:
+            raise ValueError(
+                "Otomatik mikroglia bakımı için son_zaman sınırı belirtilmeli."
+            )
+        if son_zaman is not None:
+            son_zaman = float(son_zaman)
+            if not math.isfinite(son_zaman) or son_zaman < self.zaman:
+                raise ValueError("Son zaman sonlu olmalı ve mevcut simülasyon zamanından önce olamaz.")
+
         islenen = 0
         while self._olaylar and islenen < olay_limiti:
+            if son_zaman is not None and self._olaylar[0][0] > son_zaman:
+                break
             self.adim()
             islenen += 1
-        if self._olaylar and islenen >= olay_limiti:
+        if (
+            self._olaylar
+            and islenen >= olay_limiti
+            and (son_zaman is None or self._olaylar[0][0] <= son_zaman)
+        ):
             raise RuntimeError("Olay limiti aşıldı; olası sonsuz olay zinciri.")
         return islenen
