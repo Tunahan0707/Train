@@ -200,10 +200,15 @@ class Beyin:
                 continue
 
             ziyaret_edilen.add(noron)
-            onceki_noronlar = noron.geri_bildirim(
-                deger,
-                esik_alti_katkilar=(kok and esik_alti)
-            )
+            if kok and esik_alti:
+                onceki_noronlar = noron.geri_bildirim(
+                    deger,
+                    esik_alti_katkilar=True
+                )
+            else:
+                # Normal geri bildirim yolunda nöron API'sinin
+                # tek argümanlı kullanımını koru.
+                onceki_noronlar = noron.geri_bildirim(deger)
 
             for onceki_noron in onceki_noronlar:
                 if onceki_noron not in ziyaret_edilen:
