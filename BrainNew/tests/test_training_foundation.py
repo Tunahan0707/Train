@@ -199,6 +199,17 @@ class TrainingFoundationTests(unittest.TestCase):
         self.assertGreater(onceki.noron_iliski_oku(sonraki, 2.0), 0.0)
         self.assertEqual(sonraki.noron_iliski_oku(onceki, 2.0), 0.0)
 
+    def test_simultaneous_neuron_activity_learns_both_directions(self):
+        bir = Noron("bir", konum=(0.0, 0.0))
+        iki = Noron("iki", konum=(1.0, 0.0))
+        bir.yerel_aktivite_izini_guncelle(1.0, yeni_ateslenme=True)
+        iki.yerel_aktivite_izini_guncelle(1.0, yeni_ateslenme=True)
+
+        iki.yakin_noron_ateslenmelerini_isle([bir], 1.0)
+
+        self.assertGreater(bir.noron_iliski_oku(iki, 1.0), 0.0)
+        self.assertGreater(iki.noron_iliski_oku(bir, 1.0), 0.0)
+
     def test_distant_or_out_of_window_neurons_do_not_form_relation(self):
         onceki = Noron("onceki", konum=(0.0, 0.0))
         uzak = Noron("uzak", konum=(100.0, 0.0))
