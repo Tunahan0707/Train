@@ -16,6 +16,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] 2B kimyasal difüzyon çekirdeğinin salım anı tekilliği pozitif başlangıç yaşıyla düzenlendi.
 - [x] Kimyasal kaynak temizliği eklendi; uzaydaki merkez-yoğunluk üst sınırıyla silinen kaynakların toplam olası alan hatası tolerans altında tutulur.
 - [x] Gecikmiş ödül/ceza, zaman damgalı uygunluk değişimleriyle birlikte zaman boyunca entegre edilir; nöron yeniden ateşlenmese bile çalışma dilimi sonunda işlenir.
+- [x] Sinaptik etkinlik katsayısı işaretli [-2, 2] aralığına alındı; Hebbian güçlenme/STDP zayıflaması işareti korur, modülatör etkisi işaret değiştirebilir.
 - [x] Yeni davranışlar için regresyon testleri eklendi.
 - [x] Seed'li, 2B uzamsal ve seyrek başlangıç ağı kurucusu eklendi; topoloji ve başlangıç parametreleri seed ile tekrarlanabilir.
 
@@ -24,7 +25,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Seed'li seyrek ağ kurucunun kapsamlı yapılandırma, erişilebilirlik ve istatistik raporları.
 
 
-- Signed synaptic efficacy: kalıcı sinaptik katsayının işaret değiştirebilmesi.
+
 - Feedback'in çoklu dal, döngü, gecikme, iz eşiği ve pozitif/negatif yönlerde kapsamlı davranış doğrulaması.
 
 - Bağlantı olgunlaşması, onarımı ve bağlantısız nöron toparlanma döngüsünün tamamlanması.
