@@ -33,7 +33,10 @@ def test_inhibitor_baglanti_tek_basina_yeni_baglanti_olusturmaz():
 
     hedef.geri_bildirim(1.0)
 
-    assert baglanti.uygunluk_izi == 0.0
+    # İnhibitör bağlantı iz kazanır ve ağırlık öğrenmesine katılır,
+    # ancak mevcut yapısal büyüme kuralı inhibitör dal üretmez.
+    assert baglanti.uygunluk_izi == 1.0
+    assert baglanti.etki_mv == -1.5
     assert len(akson.baglantilar) == onceki_sayi
 
 
