@@ -215,6 +215,28 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         s.yerel_bakim(alan, 1.0)
         self.assertGreater(s.yapisal_butunluk, once * math.exp(-0.1))
 
+    def test_ateslenme_olmasa_da_entegrasyon_olayinda_yerel_budama_isler(self):
+        from BrainNew.KimyasalAlan import KimyasalAlan
+
+        alan = KimyasalAlan()
+        n = Noron("n")
+        d = Dendrid("d")
+        s = Baglanti(
+            "s", n, None, budama_kazanci=1.0,
+            budama_esigi=0.1, kopma_esigi=0.5
+        )
+        d.sinaps_bagla(s, 0.4)
+        n.dendrit_ekle(d)
+        n.cikis_sinapsi_ekle(s)
+        alan.sal("budama", s.terminal_konumu, 10.0, 0.0)
+        d.girdi_al(0.1)
+
+        ateslendi, _ = n.entegrasyonu_isle(1.0, alan)
+        self.assertFalse(ateslendi)
+        self.assertTrue(s.kopuk)
+        self.assertNotIn(s, n.cikis_sinapslari)
+        self.assertNotIn(s, d.sinaps_katkilari)
+
     def test_kopmus_baglanti_yeniden_aktive_edilemez(self):
         s = Baglanti("s", None, None)
         s.kopuk = True
