@@ -172,12 +172,13 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Yeni testler imzalı katsayı formülünü, dendrit katkısını ve aktivasyon farkı hesabını kontrol eder.
 
 
-## Aşama M2 — Binary büyüklük karşılaştırması ve ara nöron katmanı
+## Aşama M2 — BrainOld tarzı binary giriş ve ara nöron katmanı
 
-- `M2_BinaryBuyuklukKarsilastirma.py` eklendi: 1–9 aralığındaki sayılar dört bitlik binary kodla temsil edilir; sol ve sağ operandlar ayrı dört duyusal nörona dağıtılır.
-- Toplam 8 duyusal, 20 ara ve 2 karar nöronu kullanılır. 20 ara nöronun her biri sekiz duyusal kanaldan seed ile rastgele seçilmiş dört tanesine bağlanır.
-- Duyusal nöronlardan karar nöronlarına doğrudan bağlantı yoktur. Ara nöronlar iki karar popülasyonuna da rastgele işaretli projeksiyon yapar.
-- Duyusal→ara bağlantılar yerel Hebbian/STDP plastisitesine; ara→karar bağlantıları gecikmiş yerel ödül/ceza modülatörüne açıktır. Görev ortamı ağırlıkları doğrudan değiştirmez.
+- `M2_BinaryBuyuklukKarsilastirma.py` eklendi: 1–9 aralığındaki sayılar dört bitlik binary kodla temsil edilir.
+- BrainOld'daki reseptör düzenine yaklaştırıldı: sol ve sağ operand için **iki reseptör nöronu**, her birinde dört bit dendriti bulunur. Böylece 8 bit kanalı yalnızca 2 duyusal nöronun dendritleri üzerinden sunulur.
+- Ağda 2 reseptör, 20 ara ve 2 karar nöronu olmak üzere toplam 24 nöron vardır. Her reseptör nöronundan her ara nörona bir terminal gider; bu terminal dört bit dendritinin ayrı ve işaretli katkılarını toplar.
+- Her ara nöron sol ve sağ reseptörden birer dendritik girdi alır ve iki karar nöronuna projekte olur. Reseptörlerden karar nöronlarına doğrudan bağlantı yoktur.
+- Reseptör→ara bağlantılar yerel Hebbian/STDP plastisitesine; ara→karar bağlantıları gecikmiş yerel ödül/ceza modülatörüne açıktır. Görev ortamı ağırlıkları doğrudan değiştirmez.
 - Test örnekleri, eğitim sonrası ağın bağımsız kopyalarında tek tek değerlendirilir. Böylece test örnekleri birbirlerinin parametrelerini değiştirmez; eğitimden kalan kimyasal kaynaklar test kopyasından temizlenir.
-- Testler binary kodlamayı, giriş olaylarını, ağ boyutunu, bağlantı yönlerini, seed tekrarlanabilirliğini, eğitim/test ayrımını ve test kopyalarının eğitim ağını değiştirmediğini denetler.
-- **Sınır:** Bu yeni deney henüz kullanıcı ortamında çalıştırılmadı. Ara katman ve binary kodlama eklendi; karşılaştırma başarısı veya genelleme iddiası yoktur. İlk çalıştırmada eğitim/test davranışı, sınıf yanlılığı ve öğrenilen bağlantı değişimleri birlikte incelenmelidir.
+- Testler binary kodlamayı, bit-dendrit olaylarını, ağ boyutunu, bağlantı yönlerini, seed tekrarlanabilirliğini, eğitim/test ayrımını ve test kopyalarının eğitim ağını değiştirmediğini denetler.
+- **Sınır:** Bu yeni deney henüz kullanıcı ortamında çalıştırılmadı. Ara katman ve BrainOld tarzı binary giriş eklendi; karşılaştırma başarısı veya genelleme iddiası yoktur. İlk çalıştırmada eğitim/test davranışı, sınıf yanlılığı ve öğrenilen bağlantı değişimleri birlikte incelenmelidir.
