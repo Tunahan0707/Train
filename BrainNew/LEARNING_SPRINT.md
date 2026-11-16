@@ -17,7 +17,7 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 - **Aşama 2 doğrulaması:** kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi. Baseline yürütücüsüne ait yeni testler bu son commit'te eklendi; henüz kullanıcı ortamında çalıştırılmadı.
 - **Aşama 3 — baseline yürütücü:** genel örnek/görev ölçüm altyapısı kodlandı. Kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi; yeni baseline yürütücü testlerinin son commit sonrası tekrar çalıştırılması gerekiyor.
 - **Aşama 4 — kısa ömürlü etkinlik izleri:** ilk uygulama eklendi. Her bağlantıda ayrı presinaptik ve postsinaptik iz, bağımsız üstel sönüm ve hedef nöronun yerel ateşlenmesiyle postsinaptik iz güncellemesi var. İzler henüz kalıcı sinaptik ağırlığı değiştirmiyor; bu ayrım korunuyor. Yeni iz testleri son commit sonrası henüz çalıştırılmadı.
-- **Güncel:** Kalıcı sinaptik katsayı, bağlantı-yerel pre/post izleri, Hebbian LTP ve ters sıralı LTD içeren ilk çift-izli STDP prototipi kodda var. Yapısal bakım, sinaps içine gömülü kurallardan bağımsız Mikroglia ajanlarına taşındı. Uygunluk izi/modülatör katmanı ve görev düzeyinde öğrenme başarısı henüz doğrulanmadı.
+- **Güncel:** Kalıcı sinaptik katsayı, bağlantı-yerel pre/post izleri, Hebbian LTP ve ters sıralı LTD içeren ilk çift-izli STDP prototipi kodda var. Yapısal bakım bağımsız Mikroglia ajanlarında; yerel kimyasal/reseptör uygunluğuyla kontrollü yeni bağlantı oluşumu da ilk sürümde uygulanmış durumda. Otomatik büyüme zamanlaması, bağlantı olgunlaşması ve görev düzeyinde öğrenme başarısı henüz doğrulanmadı.
 
 ---
 
