@@ -12,6 +12,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] Aynı nöronun çıkış sinapsları arasında seyrek, yönlü sinaps-sinaps ilişkileri eklendi; birlikte etkinleşme, tek taraflı etkinleşme, geçici potansiyel etkisi ve tembel sönüm testleri yazıldı.
 - [x] Yakın nöronlar arasında zaman pencereli yerel birlikte etkinlik izi ve yönlü ilişki eklendi; aynı zaman damgasında iki yön öğrenilir, sıralı etkinlikte önceki→sonraki yön öğrenilir. İlişki bağlantı büyüme uygunluğunu sınırlı ölçüde etkiler.
 - [x] Kopmuş bağlantıdan daha önce kuyruğa alınmış sinaptik olayın hedefe ulaşması engellendi.
+- [x] Bağlantı olgunluğu fiziksel bütünlükten ayrıldı; mikroglia kullanımla/stabilizasyonla olgunlaştırır, budama sinyaliyle işlevsel olgunluğu düşürür. Yeni bağlantılar düşük olgunlukla başlar.
 - [x] Refrakter dönemde gelen girdi dendritte tamponlanır; faz döngüsü tamamlandığında bir kez entegre edilir.
 - [x] 2B kimyasal difüzyon çekirdeğinin salım anı tekilliği pozitif başlangıç yaşıyla düzenlendi.
 - [x] Kimyasal kaynak temizliği eklendi; uzaydaki merkez-yoğunluk üst sınırıyla silinen kaynakların toplam olası alan hatası tolerans altında tutulur.
@@ -28,7 +29,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 - Feedback'in çoklu dal, döngü, gecikme, iz eşiği ve pozitif/negatif yönlerde kapsamlı davranış doğrulaması.
 
-- Bağlantı olgunlaşması, onarımı ve bağlantısız nöron toparlanma döngüsünün tamamlanması.
+- Bağlantısız nöron toparlanması, otomatik büyüme zamanlaması ve onarım kalibrasyonu.
 - Davranışsal örüntü geri çağırma, genelleme ve matematik görevleri.
 - Ablasyon, çoklu seed kalibrasyonu ve ölçek ölçümleri.
 
