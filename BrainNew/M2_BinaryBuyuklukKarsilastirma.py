@@ -13,9 +13,10 @@ from BrainNew.ReseptorOrgan import ReseptorOrgan
 class BinaryBuyuklukKarsilastirmaDeneyi:
     """Binary duyusal kodlama ve ara nöron katmanıyla büyüklük karşılaştırması.
 
-    1-9 sayıları dört bit olarak kodlanır. Sol ve sağ operandlar ayrı dört
-    duyusal nöronla temsil edilir. Duyusal nöronlar doğrudan karar nöronlarına
-    bağlanmaz; rastgele işaretli seyrek projeksiyonlarla 20 ara nörona ulaşır.
+    1-9 sayıları dört bit olarak kodlanır. BrainOld'daki gibi sol ve sağ
+    operandın her biri dört dendritli bir reseptör nöronuna sunulur. Böylece
+    sekiz bit kanalı iki nöronun dendritlerinde temsil edilir. Reseptör
+    nöronları doğrudan karar nöronlarına bağlanmaz; 20 ara nörona projekte olur.
     Ara nöronlar iki karar nöronuna projekte olur.
 
     Duyusal->ara bağlantılar yerel Hebbian/STDP plastisitesine açıktır.
@@ -28,7 +29,7 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
     KARAR_NORONLARI = (SOL, SAG)
     BIT_SAYISI = 4
     ARA_NORON_SAYISI = 20
-    ARA_GIRDI_SAYISI = 4
+    ARA_GIRDI_SAYISI = 2
 
     def __init__(
         self,
@@ -53,10 +54,10 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
         self.modulator_ogrenme_orani = float(modulator_ogrenme_orani)
         self.geri_bildirim_araligi = float(geri_bildirim_araligi)
 
-        self.sol_girdi_noronlari = tuple(f"SLB{i}" for i in range(self.BIT_SAYISI))
-        self.sag_girdi_noronlari = tuple(f"SRB{i}" for i in range(self.BIT_SAYISI))
+        self.sol_girdi_noronu = "SOL_GIRDI"
+        self.sag_girdi_noronu = "SAG_GIRDI"
         self.duyusal_noronlari = (
-            self.sol_girdi_noronlari + self.sag_girdi_noronlari
+            self.sol_girdi_noronu, self.sag_girdi_noronu
         )
         self.ara_noronlari = tuple(
             f"ARA{i}" for i in range(self.ARA_NORON_SAYISI)
@@ -97,14 +98,19 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
         sol_kod = cls.binary_kodla(sol_sayi)
         sag_kod = cls.binary_kodla(sag_sayi)
         olaylar = []
-        for kod, kimlikler in (
-            (sol_kod, tuple(f"SLB{i}" for i in range(cls.BIT_SAYISI))),
-            (sag_kod, tuple(f"SRB{i}" for i in range(cls.BIT_SAYISI))),
+        for kod, noron_id in (
+            (sol_kod, "SOL_GIRDI"),
+            (sag_kod, "SAG_GIRDI"),
         ):
-            for bit, noron_id in zip(kod, kimlikler):
+            for bit_indeksi, bit in enumerate(kod):
                 if bit == "1":
                     olaylar.append(
-                        (noron_id, f"{noron_id}:D", 100.0, 1e-6)
+                        (
+                            noron_id,
+                            f"{noron_id}:D{bit_indeksi}",
+                            100.0,
+                            1e-6,
+                        )
                     )
         return tuple(olaylar)
 
@@ -138,16 +144,17 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
         beyin = Beyin(kimyasal_alan=KimyasalAlan())
         noronlar = {}
 
-        # Sekiz duyusal nöron: sol ve sağ sayıların dört bit konumları.
+        # BrainOld düzeni: iki reseptör nöronu, her birinde dört bit dendriti.
         for i, kimlik in enumerate(self.duyusal_noronlari):
-            kanal_y = float(i if i < 4 else i + 1)
-            noron = Noron(kimlik, konum=(0.0, kanal_y))
-            noron.dendrit_ekle(Dendrid(f"{kimlik}:D"))
+            noron = Noron(kimlik, konum=(0.0, float(i * 5)))
+            for bit_indeksi in range(self.BIT_SAYISI):
+                noron.dendrit_ekle(
+                    Dendrid(f"{kimlik}:D{bit_indeksi}")
+                )
             noronlar[kimlik] = noron
 
-        # BrainOld'daki 20 ara nöron fikrini koruyoruz; her biri dört ayrı
-        # dendritik giriş alır. Giriş seçimi ve işaretleri sayısal etiketten
-        # bağımsızdır, yalnızca seed ile belirlenir.
+        # BrainOld'daki 20 ara nöron fikrini koruyoruz; her biri sol ve sağ
+        # reseptörden birer dendritik giriş alır.
         ara_konumlari = {}
         for i, kimlik in enumerate(self.ara_noronlari):
             konum = (5.0, float(i))
@@ -167,17 +174,18 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
                 noron.dendrit_ekle(Dendrid(f"{kimlik}:D{i}"))
             noronlar[kimlik] = noron
 
-        # Her ara nöron sekiz duyusal kanaldan rastgele dördünü örnekler.
-        # Böylece doğrudan duyusal->karar kestirmesi yoktur.
-        for ara_id in self.ara_noronlari:
-            ara = noronlar[ara_id]
-            secilen_girdiler = rng.sample(self.duyusal_noronlari, self.ARA_GIRDI_SAYISI)
-            for dendrit_indeksi, kaynak_id in enumerate(secilen_girdiler):
-                kaynak = noronlar[kaynak_id]
+        # Her reseptör nöronundan her ara nörona bir terminal gider.
+        # Terminalin potansiyelini dört bit dendritinin ayrı, işaretli
+        # katkıları belirler; dolayısıyla bit konumları ayırt edilebilir.
+        for kaynak_id in self.duyusal_noronlari:
+            kaynak = noronlar[kaynak_id]
+            for ara_id in self.ara_noronlari:
+                ara = noronlar[ara_id]
+                dendrit_indeksi = self.duyusal_noronlari.index(kaynak_id)
                 dendrit_id = f"{ara_id}:D{dendrit_indeksi}"
                 isaret = 1.0 if rng.random() < 0.5 else -1.0
                 sinaps = Baglanti(
-                    f"{kaynak_id}->{ara_id}:{dendrit_indeksi}",
+                    f"{kaynak_id}->{ara_id}",
                     kaynak,
                     ara,
                     uzunluk=1.0,
@@ -191,9 +199,8 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
                     modulator_ogrenme_orani=0.0,
                     terminal_konumu=ara.konum,
                 )
-                kaynak.dendritler[f"{kaynak_id}:D"].sinaps_bagla(
-                    sinaps, rng.uniform(0.3, 0.8)
-                )
+                for dendrit in kaynak.dendritler.values():
+                    dendrit.sinaps_bagla(sinaps, rng.uniform(-0.8, 0.8))
                 kaynak.cikis_sinapsi_ekle(sinaps)
 
         # Ara nöronların iki karar popülasyonuna çıkışları rastgele işaretlidir.
@@ -219,7 +226,7 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
                     terminal_konumu=karar.konum,
                 )
                 for dendrit in ara.dendritler.values():
-                    dendrit.sinaps_bagla(sinaps, rng.uniform(0.3, 0.8))
+                    dendrit.sinaps_bagla(sinaps, rng.uniform(-0.8, 0.8))
                 ara.cikis_sinapsi_ekle(sinaps)
 
         for noron in noronlar.values():
@@ -228,6 +235,7 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
         beyin.ag_ozeti = {
             "seed": self.seed,
             "duyusal_noron": len(self.duyusal_noronlari),
+            "duyusal_dendrit": len(self.duyusal_noronlari) * self.BIT_SAYISI,
             "ara_noron": len(self.ara_noronlari),
             "karar_noron": len(self.KARAR_NORONLARI),
             "duyusal_ara_baglantisi": len(self.ara_noronlari) * self.ARA_GIRDI_SAYISI,
