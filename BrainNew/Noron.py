@@ -1,3 +1,6 @@
+import math
+
+
 class Noron:
     DINLENME = "dinlenme"
     DEPOLARIZASYON = "depolarizasyon"
@@ -9,6 +12,8 @@ class Noron:
         sizinti=0.05, depolarizasyon=30.0, repolarizasyon=-40.0,
         hiperpolarizasyon=-80.0
     ):
+        if not 0.0 <= sizinti < 1.0:
+            raise ValueError("Sızıntı oranı [0, 1) aralığında olmalı.")
         self.kimlik = kimlik
         self.konum = tuple(konum)
         self.dinlenme_degeri = float(dinlenme)
@@ -18,12 +23,11 @@ class Noron:
         self.repolarizasyon_degeri = float(repolarizasyon)
         self.hiperpolarizasyon_degeri = float(hiperpolarizasyon)
         self.membran = self.dinlenme_degeri
+        self.son_membran_guncelleme = 0.0
         self.durum = self.DINLENME
         self.dendritler = {}
         self.cikis_sinapslari = []
         self.ateslenme_sayisi = 0
-        self._entegrasyon_zamani = None
-        self._entegrasyon_planlandi = False
 
     def dendrit_ekle(self, dendrit):
         self.dendritler[dendrit.kimlik] = dendrit
@@ -35,19 +39,47 @@ class Noron:
         self.dendritler[dendrit_id].girdi_al(etki)
 
     def girdileri_birlestir(self, zaman, kimyasal_alan=None):
-        toplam = 0.0
-        for dendrit in self.dendritler.values():
-            toplam += dendrit.sinyali_isle(zaman, kimyasal_alan)
-        return toplam
+        toplam_membran_etkisi = 0.0
+        sinaps_katkilari = {}
 
-    def membrani_guncelle(self, toplam_etki):
+        for dendrit in self.dendritler.values():
+            elektriksel_toplam, yerel_sinyal = dendrit.sinyali_hazirla(
+                zaman, kimyasal_alan
+            )
+            toplam_membran_etkisi += elektriksel_toplam
+
+            if yerel_sinyal == 0.0:
+                continue
+            for sinaps, katki in dendrit.sinaps_katkilari.items():
+                sinaps_katkilari.setdefault(sinaps, []).append(
+                    (dendrit, katki * yerel_sinyal)
+                )
+
+        # Tasarım belgesindeki normalizasyon sinaps başına, o olaya
+        # gerçekten katkı veren dendrit sayısına göre yapılır.
+        for sinaps, katkilar in sinaps_katkilari.items():
+            toplam = sum(deger for _, deger in katkilar)
+            normalizasyon = math.sqrt(max(1, len(katkilar)))
+            sinaps.etki_uygula(toplam / normalizasyon, zaman)
+
+        return toplam_membran_etkisi
+
+    def membrani_guncelle(self, toplam_etki, zaman):
         if self.durum != self.DINLENME:
             return False
+        if zaman < self.son_membran_guncelleme:
+            raise ValueError("Simülasyon zamanı geriye gidemez.")
+
+        gecen = zaman - self.son_membran_guncelleme
+        if gecen and self.sizinti:
+            carp = (1.0 - self.sizinti) ** gecen
+            self.membran = (
+                self.dinlenme_degeri
+                + (self.membran - self.dinlenme_degeri) * carp
+            )
+        self.son_membran_guncelleme = zaman
         self.membran += toplam_etki
-        self.membran += (self.dinlenme_degeri - self.membran) * self.sizinti
-        if self.membran >= self.esik:
-            return True
-        return False
+        return self.membran >= self.esik
 
     def aksiyon_potansiyeli_baslat(self):
         if self.durum != self.DINLENME or self.membran < self.esik:
