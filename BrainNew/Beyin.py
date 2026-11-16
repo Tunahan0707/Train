@@ -19,7 +19,7 @@ class Beyin:
         "geri_bildirim": 3,
     }
 
-    def __init__(self, kimyasal_alan=None, deney_kaydi=None):
+    def __init__(self, kimyasal_alan=None, deney_kaydi=None, aktivasyon_izi=None):
         self.zaman = 0.0
         self.noronlar = {}
         self.noron_indeksi = UzamsalIndeks()
@@ -27,6 +27,7 @@ class Beyin:
         self.mikroglialar = {}
         self.kimyasal_alan = kimyasal_alan if kimyasal_alan is not None else KimyasalAlan()
         self.deney_kaydi = deney_kaydi
+        self.aktivasyon_izi = aktivasyon_izi
         self._olaylar = []
         self._olay_sayaci = itertools.count()
         self._geri_bildirim_sayaci = itertools.count()
@@ -161,7 +162,7 @@ class Beyin:
             gecikme, "duyusal_girdi", noron_id, (dendrit_id, float(etki))
         )
 
-    def _iletim_olayini_planla(self, sinaps, gecikme):
+    def _iletim_olayini_planla(self, sinaps, gecikme, aktivasyon_izi_sira=None):
         """Önceden yerel olarak aktive edilmiş sinapsın iletimini zamanlar."""
         if sinaps.hedef is None:
             return
@@ -170,10 +171,14 @@ class Beyin:
             raise ValueError("Hedef nöron bu Beyin'e kayıtlı değil.")
         if sinaps.hedef_dendrit_id not in sinaps.hedef.dendritler:
             raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
-        self.olay_planla(
+        olay_id = self.olay_planla(
             gecikme, "sinaptik_girdi", hedef_id,
             (sinaps, sinaps.hedef_dendrit_id, sinaps.iletim_etkisi())
         )
+        if self.aktivasyon_izi is not None:
+            self.aktivasyon_izi.iletim_olayi_planlandi(
+                olay_id, aktivasyon_izi_sira
+            )
 
     def sinyal_gonder(self, sinaps, zaman):
         """Tekil/dış kullanım için sinaps aktivasyonunu ve iletimini başlatır.
@@ -193,7 +198,14 @@ class Beyin:
             return False
         gecikme = sinaps.aktive_et(zaman)
         sinaps.kimyasal_sal(self.kimyasal_alan, zaman)
-        self._iletim_olayini_planla(sinaps, gecikme)
+        aktivasyon_izi_sira = None
+        if self.aktivasyon_izi is not None:
+            aktivasyon_izi_sira = self.aktivasyon_izi.sinaps_aktivasyonunu_kaydet(
+                zaman, None, sinaps, gecikme
+            )
+        self._iletim_olayini_planla(
+            sinaps, gecikme, aktivasyon_izi_sira
+        )
         return True
 
     def geri_bildirim_baslat(
@@ -263,6 +275,10 @@ class Beyin:
         # Pasif gözlem: kayıt olay akışına ve öğrenme kararlarına müdahale etmez.
         if self.deney_kaydi is not None:
             self.deney_kaydi.olay_kaydet(zaman, olay_id, tur, hedef_id, veri)
+        if self.aktivasyon_izi is not None:
+            self.aktivasyon_izi.olay_kaydet(
+                zaman, olay_id, tur, hedef_id, veri
+            )
 
         if tur in ("duyusal_girdi", "sinaptik_girdi"):
             self._girdi_olayini_isle(self.noronlar[hedef_id], veri)
@@ -274,8 +290,21 @@ class Beyin:
                 self.zaman, self.kimyasal_alan
             )
             if ateslendi:
+                if self.aktivasyon_izi is not None:
+                    self.aktivasyon_izi.noron_ateslenmesini_kaydet(
+                        self.zaman, olay_id, noron, aktif_sinapslar
+                    )
                 for sinaps, gecikme in aktif_sinapslar:
-                    self._iletim_olayini_planla(sinaps, gecikme)
+                    aktivasyon_izi_sira = None
+                    if self.aktivasyon_izi is not None:
+                        aktivasyon_izi_sira = (
+                            self.aktivasyon_izi.sinaps_aktivasyonunu_kaydet(
+                                self.zaman, olay_id, sinaps, gecikme
+                            )
+                        )
+                    self._iletim_olayini_planla(
+                        sinaps, gecikme, aktivasyon_izi_sira
+                    )
                 # Beyin yalnızca uzamsal adayları bulur; ilişki öğrenme kararı
                 # ateşlenen nöronun yerel mekanizmasında kalır.
                 komsular = self.noron_indeksi.yakinindakileri_bul(

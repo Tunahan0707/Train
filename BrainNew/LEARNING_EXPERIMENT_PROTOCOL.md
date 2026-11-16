@@ -84,3 +84,24 @@ Tek başarılı koşu yeterli değildir. İlk deterministik testlerde tek seed d
 ## 9. İlk uygulama sınırı
 
 İlk kodlama adımında yalnızca yan etkisiz deney kayıt katmanı eklenir. Öğrenme kuralları, sinaps davranışı, ateşleme eşiği, kimyasal yayılım veya olay zamanlaması değiştirilmez. Gözlemci Beyin'in olay kuyruğuna müdahale etmez. Kayıt kapalıyken mevcut davranışla aynı sonuç alınmalıdır.
+
+
+## Pasif aktivasyon izi ve deney snapshot'ları
+
+- ActivationTrace, Beyin(aktivasyon_izi=ActivationTrace()) ile isteğe bağlı bağlanır.
+- Olay kuyruğundan çıkan olayları, nöron ateşlenmelerini, ateşlenmede seçilmiş çıkış sinapslarını ve terminalin anlık elektriksel durumunu kaydeder.
+- nedensel_yol(noron_id), izleyicinin açık olduğu sırada gözlenen son ateşlenmeye doğru sinaptik aktivasyonları geriye izler. İzleyici başlamadan önceki geçmişi veya kaydedilmemiş olayları yeniden kuramaz.
+- İzleyici salt okunurdur; öğrenme, eşik, ağırlık, olay zamanlaması veya sinaps seçimini değiştirmez.
+- Örnek:
+  ```python
+  from BrainNew.ActivationTrace import ActivationTrace
+  from BrainNew.Beyin import Beyin
+
+  iz = ActivationTrace()
+  beyin = Beyin(aktivasyon_izi=iz)
+  # Ağı kur ve deneyi çalıştır.
+  beyin.calistir()
+  print(iz.ozet())
+  print(iz.nedensel_yol("hedef_noron"))
+  ```
+- Tam beyin snapshot kaydetme/yükleme ayrı tasarım planındadır; şu an mevcut değildir. Deney karşılaştırmalarında mevcut ağ kurucusunun seed'i, tüm deney parametreleri ve ölçüm çıktıları ayrıca kaydedilmelidir.

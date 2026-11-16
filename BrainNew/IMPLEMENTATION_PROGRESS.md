@@ -192,3 +192,17 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - `BrainNew/M2_Tanilama.py` eğitim örneklerini tek tek çalıştırıp reseptör, ara ve karar katmanlarının toplam ateşlenme/entegrasyon verilerini; sinaps terminal aktivasyonlarını ve modülatör değişimlerini raporlar.
 - `BrainNew/tests/test_neuron_episode_diagnostics.py` tanılama sayaçlarının hesaplanmasını ve episode resetini kapsar.
 - Henüz pytest çalıştırılmadı; kullanıcı yerel ortamında odaklı ve tam testleri çalıştırmalı.
+
+
+## 2026-11-16 — Deney tanılaması ve mimari plan güncellemesi
+
+- [x] Eski, boş BrainNew/ActivationTrace.py dosyası pasif olay/ateşlenme/sinaps tanılaması olarak dolduruldu. Nedensel yol sorgusu yalnızca izleyici açıkken gözlenen olayları kullanır.
+- [x] Aktivasyon izi, Beyin'e isteğe bağlı gözlemci olarak bağlandı; öğrenme veya sinaptik kararları değiştirmez.
+- [x] Eski test_brain.py içindeki tekil uçtan uca duyusal→sinaptik→hedef yayılım senaryosu test_signal_propagation.py içine taşındı; yinelenen kalan testler kaldırıldı.
+- [x] Boş/eskimiş deney placeholder'ları ve odaklı testlerle yinelenen eski test_brain.py kaldırıldı. Tarihsel BrainOld klasörü ve eski takip metin çıktısı korundu.
+- [ ] Gelişimden oluşan boş başlangıç ağı: kabul edilmiş tasarım, henüz uygulanmadı. Mevcut AgKurucu rastgele seyrek ağ baseline olarak korunacak.
+- [ ] Tam beyin save/load ve bağımsız deney kopyaları: kabul edilmiş tasarım, henüz uygulanmadı.
+- [ ] Snapshot deterministik devam testleri ve gelişim modu ablasyonları sonraki uygulama aşamasında.
+- İleriye dönük fikir havuzu: duyusal-motor kapalı döngü, fizyoloji/enerji ve otonom davranış ayrı tutuldu; aktif sprint değildir.
+
+Doğrulama: Bu değişiklikler uzak dal üzerinde hazırlandı; bu çalışma ortamında Python checkout/test çalıştırıcısı bulunmadığından testlerin çalıştırıldığı veya geçtiği iddia edilmiyor. Yerel doğrulama: python -m pytest BrainNew/tests -v.

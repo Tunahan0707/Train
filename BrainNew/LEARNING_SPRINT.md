@@ -746,3 +746,41 @@ Bütün koşullarda raporlanan yanlış pozitif sayısı sıfırdır. Tam eşle�
 
 **Karar:** Bağlama duyarlı hafıza prototipinin bu doğrulama ailesi donduruldu. Yeni gürültü kombinasyonları eklenmeyecek. Sonuçlar yalnızca küçük, önceden kurulmuş bağlam kapılı ağdaki geri çağırma dayanıklılığını gösterir; kendiliğinden bağlam yönlendirme veya genel hafıza kanıtı değildir.
 
+
+
+# 10. 2026-11-16 — Kabul edilmiş mimari ekler ve kapsam ayrımı
+
+Bu ek, önceki sprint metnindeki durum açıklamalarına göre daha yenidir ve güncel kararları tanımlar.
+
+## 10.1 Gelişim mekanizması — kabul edildi, henüz uygulanmadı
+
+- Mevcut seed'li rastgele seyrek AgKurucu silinmez; baseline/kontrol olarak korunur.
+- Yeni gelişim modu sabit 2B nöron konumlarıyla başlar, işlevsel bağlantı topolojisi başlangıçta boştur.
+- Yakın adayları uzamsal indeks bulur; yerel bağlantı uygunluğu ve kurma kararı kaynak nöron/dendrit mekanizmalarındadır.
+- Yerel çekici/itici rehberlik işaretleri, hedef dendrit uygunluğu ve sınırlı stokastiklik bağlantı oluşumuna katılır.
+- Yeni bağlantılar zayıf ve olgunlaşmamış başlar.
+- Seyrek spontan etkinlik, yerel rekabet, kullanım/birlikte etkinlik, kimyasal işaretler ve bağımsız mikroglia bakımı olgunlaşmayı/korunmayı etkiler.
+- Sadece kullanılmama otomatik fiziksel kopma gerekçesi değildir; işlevsel zayıflama ve fiziksel budama ayrı kalır.
+- Gelişim aşamaları katı küresel takvim değil, yerel olgunluk/etkinlik durumlarıyla örtüşür.
+- Ayrıntılı nörogenez, hücre göçü, akson büyüme konisi fiziği, iyon kanalları ve yeni glia türleri bu sürümün kapsamı değildir.
+- Gelişimden oluşan ağ, rastgele seyrek baseline ile aynı deneylerde karşılaştırılacaktır.
+
+Ayrıntı: DEVELOPMENT_AND_PERSISTENCE_PLAN.md.
+
+## 10.2 Beyin save/load — kabul edildi, henüz uygulanmadı
+
+Tam snapshot; yalnızca ağırlıkları değil, topoloji, öğrenilmiş ve geçici nöral durum, kimyasal kaynaklar, mikroglia durumu, olay kuyruğu, simülasyon zamanı, sayaçlar ve rastgele sayı üreteci durumlarını saklamalıdır. Sürüm numaralı JSON (gerektiğinde gzip) kullanılacak; pickle kullanılmayacaktır. Aynı snapshot'tan bağımsız kopyalar üretilebilmelidir.
+
+Kabul testleri: topoloji/durum eşleşmesi, bekleyen olaylarla deterministik devam, kimyasal ve mikroglia durumunun korunması, bağımsız kopyalar ve bozuk şema reddi.
+
+## 10.3 Aktivasyon izi — pasif tanılama
+
+ActivationTrace isteğe bağlı, salt okunur olay/ateşlenme/sinaps gözlemcisidir. Nedensel girdi bağlantılarını ve seçilen çıkışları incelemeye yarar. Öğrenme uygunluk izi değildir ve öğrenmeye müdahale etmez.
+
+## 10.4 İleriye dönük fikirler — aktif sprint dışında
+
+1. Duyusal-motor kapalı döngü: ayrı beden/çevre, motor komut ve gerçekleşen hareketten duyusal geri bildirim.
+2. Fizyoloji/enerji: metabolizma ve iç denge için ayrı katman.
+3. Otonom davranış: kaynak arama, çevreye uyum ve kendi iç dengesini koruma.
+
+Bu fikirler, BrainNew'in sinirsel öğrenme ve hafıza davranışı doğrulanmadan kodlanmayacaktır.

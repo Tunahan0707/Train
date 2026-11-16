@@ -80,3 +80,26 @@ python -m BrainNew.main
 ```
 
 Bir test başarısız olursa önce kod hatası, test varsayımı ve açık tasarım kararı birbirinden ayrılmalıdır. Başarısız testi yalnızca yeşile çevirmek için tasarım davranışı değiştirilmemelidir.
+
+
+## 2026-11-16 — Pasif aktivasyon izi ve kabul edilen gelecek planları
+
+### Pasif aktivasyon izi
+
+ActivationTrace.py artık isteğe bağlı gözlemci olarak olay kuyruğu olaylarını, nöron ateşlenmelerini, nedensel girdi sinapslarını ve gerçekten aktive edilen çıkış sinapslarını kaydeder. Beyin(aktivasyon_izi=iz) ile etkinleştirilir. iz.nedensel_yol(noron_id) gözlenmiş son ateşlenmeye giden yolu kronolojik olarak döndürür.
+
+Bu araç:
+- Öğrenme kararı vermez ve sinaptik parametreleri değiştirmez.
+- Baglanti.uygunluk_izi ile aynı şey değildir.
+- Yalnızca izleyici bağlandıktan sonra kaydedilmiş geçmişi inceleyebilir.
+- Uzun deneylerde kayıt belleği büyür; kısa/odaklı deneylerde veya kontrollü kayıt pencerelerinde kullanılmalıdır.
+
+### Henüz uygulanmayan kabul edilmiş tasarımlar
+
+- Gelişim mekanizması: boş bağlantı topolojisinden yerel rehberlik, zayıf bağlantı oluşumu, spontan etkinlik, rekabet, olgunlaşma ve mikroglia bakımı. Mevcut rastgele seyrek AgKurucu baseline olarak korunur.
+- Tam beyin snapshot save/load: olay kuyruğu, geçici izler, kimyasal alan, mikroglia, rastgele sayı üreteçleri ve bütün öğrenilmiş durumlar dahil.
+- Aynı snapshot'tan bağımsız deney dalları.
+
+Duyusal-motor beden döngüsü, fizyoloji/enerji ve otonom davranış fikir havuzunda kalır; mevcut prototip kapsamına alınmamıştır.
+
+Eski bilesik_oruntu_takip.txt çıktısı tarihsel inceleme için korundu; onu üreten boş deney betikleri kaldırıldı. Bu metin güncel, yeniden üretilebilir test sonucu olarak kullanılmamalıdır.
