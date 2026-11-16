@@ -14,6 +14,7 @@ class Dendrid:
         self.girdiler = []
         self.reseptor_duyarliliklari = {}
         self.son_islenen_sinapslar = set()
+        self.sinaps_degerlendirmeleri = {}
 
     def sinaps_bagla(self, sinaps, katki):
         self.sinaps_katkilari[sinaps] = float(katki)
@@ -52,7 +53,9 @@ class Dendrid:
         for sinaps in self.son_islenen_sinapslar:
             if sinaps in aktif_sinapslar:
                 self.sinaps_katkilari[sinaps] += adim
-            elif sinaps.degerlendirme_sayisi > 0:
+            elif self.sinaps_degerlendirmeleri.get(sinaps, 0) > 0:
                 self.sinaps_katkilari[sinaps] -= adim
-            sinaps.degerlendirme_sayisi += 1
+            self.sinaps_degerlendirmeleri[sinaps] = (
+                self.sinaps_degerlendirmeleri.get(sinaps, 0) + 1
+            )
         self.son_islenen_sinapslar.clear()
