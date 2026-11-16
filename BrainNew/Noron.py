@@ -1,4 +1,7 @@
 import math
+import random
+
+from BrainNew.Baglanti import Baglanti
 
 
 class Noron:
@@ -12,13 +15,15 @@ class Noron:
         sizinti=0.05, depolarizasyon=30.0, repolarizasyon=-40.0,
         hiperpolarizasyon=-80.0, homeostatik_hedef_oran=0.02,
         homeostatik_tau=100.0, homeostatik_oran=0.01,
-        homeostatik_esik_alt=-10.0, homeostatik_esik_ust=10.0
+        homeostatik_esik_alt=-10.0, homeostatik_esik_ust=10.0,
+        buyume_esigi=0.01, yeni_baglanti_agirligi=0.1
     ):
         sayisal_degerler = (
             dinlenme, esik, sizinti, depolarizasyon,
             repolarizasyon, hiperpolarizasyon, homeostatik_hedef_oran,
             homeostatik_tau, homeostatik_oran,
-            homeostatik_esik_alt, homeostatik_esik_ust
+            homeostatik_esik_alt, homeostatik_esik_ust,
+            buyume_esigi, yeni_baglanti_agirligi
         )
         if not all(math.isfinite(float(v)) for v in sayisal_degerler):
             raise ValueError("Nöron parametreleri sonlu sayılar olmalı.")
@@ -33,6 +38,12 @@ class Noron:
 
         self.kimlik = kimlik
         self.konum = tuple(float(v) for v in konum)
+        if buyume_esigi < 0 or not 0.0 <= yeni_baglanti_agirligi <= 2.0:
+            raise ValueError("Yapısal büyüme parametreleri geçersiz.")
+        self.buyume_esigi = float(buyume_esigi)
+        self.yeni_baglanti_agirligi = float(yeni_baglanti_agirligi)
+        self._yeni_baglanti_sayaci = 0
+        self._rastgele = random.Random(f"BrainNew:{kimlik}")
         self.dinlenme_degeri = float(dinlenme)
         self.esik_temel = float(esik)
         self.esik = self.esik_temel
@@ -204,6 +215,78 @@ class Noron:
         self.membran = self.depolarizasyon_degeri
         self.ateslenme_sayisi += 1
         return True
+
+
+    def yeni_baglanti_adayi_degerlendir(
+        self, aday_noronlar, kimyasal_alan, zaman, arama_yaricapi
+    ):
+        """Yerel büyüme sinyaliyle tek bir uygun hedef dendrit seçip bağlanır.
+
+        Beyin yalnızca uzamsal adayları sağlar. Büyüme uygunluğu, hedef seçimi,
+        bağlantı kurulması ve başlangıç katkıları bu nöronun yerel sürecidir.
+        """
+        if kimyasal_alan is None or not self.dendritler:
+            return None
+        zaman = float(zaman)
+        arama_yaricapi = float(arama_yaricapi)
+        if not math.isfinite(zaman) or zaman < 0:
+            raise ValueError("Büyüme zamanı sonlu ve negatif olmayan değer olmalı.")
+        if not math.isfinite(arama_yaricapi) or arama_yaricapi < 0:
+            raise ValueError("Büyüme arama yarıçapı sonlu ve negatif olmayan değer olmalı.")
+
+        kaynak_buyume = kimyasal_alan.yogunluk("buyume", self.konum, zaman)
+        if kaynak_buyume <= self.buyume_esigi:
+            return None
+
+        secenekler = []
+        for hedef in aday_noronlar:
+            if hedef is self:
+                continue
+            for dendrit in hedef.dendritler.values():
+                dx = dendrit.konum[0] - self.konum[0]
+                dy = dendrit.konum[1] - self.konum[1]
+                uzaklik2 = dx * dx + dy * dy
+                if uzaklik2 > arama_yaricapi * arama_yaricapi:
+                    continue
+                uygunluk = dendrit.buyume_uygunlugu(kimyasal_alan, zaman)
+                if uygunluk <= self.buyume_esigi:
+                    continue
+                zaten_var = any(
+                    not sinaps.kopuk
+                    and sinaps.hedef is hedef
+                    and sinaps.hedef_dendrit_id == dendrit.kimlik
+                    for sinaps in self.cikis_sinapslari
+                )
+                if not zaten_var:
+                    secenekler.append((
+                        -uygunluk, uzaklik2, str(hedef.kimlik),
+                        str(dendrit.kimlik), hedef, dendrit
+                    ))
+
+        if not secenekler:
+            return None
+        secenekler.sort(key=lambda oge: oge[:4])
+        _, uzaklik2, _, _, hedef, hedef_dendrit = secenekler[0]
+
+        self._yeni_baglanti_sayaci += 1
+        kimlik = (
+            f"{self.kimlik}::{hedef.kimlik}::{hedef_dendrit.kimlik}"
+            f"::{self._yeni_baglanti_sayaci}"
+        )
+        sinaps = Baglanti(
+            kimlik, self, hedef,
+            uzunluk=math.sqrt(uzaklik2),
+            hedef_dendrit_id=hedef_dendrit.kimlik,
+            terminal_konumu=self.konum,
+            sinaptik_agirlik=self.yeni_baglanti_agirligi,
+            baslangic_yapisal_butunluk=0.25
+        )
+        for dendrit in self.dendritler.values():
+            dendrit.sinaps_bagla(
+                sinaps, self._rastgele.uniform(-0.1, 0.1)
+            )
+        self.cikis_sinapsi_ekle(sinaps)
+        return sinaps
 
     def baglantilari_bakimdan_gecir(self, zaman, kimyasal_alan=None):
         """Sinapsların gecikmiş modülatör izlerini yerel olarak işler.
