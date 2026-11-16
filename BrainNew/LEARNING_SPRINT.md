@@ -17,7 +17,7 @@ Bu belge bir biyolojik beyin simülasyonunun tamamlandığını veya aşağıdak
 - **Aşama 2 doğrulaması:** kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi. Baseline yürütücüsüne ait yeni testler bu son commit'te eklendi; henüz kullanıcı ortamında çalıştırılmadı.
 - **Aşama 3 — baseline yürütücü:** genel örnek/görev ölçüm altyapısı kodlandı. Kullanıcı mevcut testlerin ve prototip smoke testinin başarılı olduğunu bildirdi; yeni baseline yürütücü testlerinin son commit sonrası tekrar çalıştırılması gerekiyor.
 - **Aşama 4 — kısa ömürlü etkinlik izleri:** ilk uygulama eklendi. Her bağlantıda ayrı presinaptik ve postsinaptik iz, bağımsız üstel sönüm ve hedef nöronun yerel ateşlenmesiyle postsinaptik iz güncellemesi var. İzler henüz kalıcı sinaptik ağırlığı değiştirmiyor; bu ayrım korunuyor. Yeni iz testleri son commit sonrası henüz çalıştırılmadı.
-- **Önemli:** Kalıcı gerçek sinaptik etkinlik katsayısı, pre/post izleri, uygunluk izi ve plastisite kuralları henüz kodda yoktur.
+- **Güncel:** Kalıcı gerçek sinaptik etkinlik katsayısı, pre/post izleri ve ilk yerel Hebbian güçlendirme kuralı kodda var. Uygunluk izi/modülatör katmanı ve STDP'nin ters sıra zayıflatması henüz yok.
 
 ---
 
@@ -399,3 +399,8 @@ Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında
 - Bu ilk kural tek yönlü korelasyon güçlendirmesidir; sıra tersine çevrildiğinde zayıflatma henüz yoktur. STDP ayrı aşamadır.
 - Yeni birim testleri: gecikmiş pre/post eşleşmesi, iz yokken değişmeme, üst sınır, geçersiz öğrenme oranı ve ilgisiz bağlantının etkilenmemesi.
 - Kullanıcı ortamında tam test paketi henüz çalıştırılmadı.
+
+
+### Durum düzeltmesi — Hebbian uygulaması
+
+Önceki sprint durum maddelerindeki “sinaptik ağırlık/plastisite henüz yok” ifadeleri güncelliğini yitirmişti. Gerçek sinaptik katsayı ve ilk yerel Hebbian güçlendirme artık uygulanmış durumda. Bu, yalnızca bağlantı-yerel korelasyon mekanizmasının ilk sürümüdür; görev öğrenmesi veya genelleme kanıtı değildir. Yeni testler kullanıcı ortamında henüz çalıştırılmadı.
