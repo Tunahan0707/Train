@@ -134,8 +134,9 @@ Amaç: Öğrenme sırasında etkinliğin patlayarak artmasını veya sönmesini 
 Amaç: Ağın yalnızca mevcut ağırlıkları değiştirmesi değil, gerektiğinde bağlantı yapısını da değiştirmesi.
 
 - Bağlantı bakımı kaynak nöron entegrasyonundan bağımsız zamanlanır.
-- Her bağlantı kendi bakım aralığını ve bir sonraki değerlendirme zamanını belirler.
-- Beyin yalnızca bakım olayını olay kuyruğuna koyar.
+- Bağımsız Mikroglia ajanları kendi 2B konumları ve algılama yarıçapları içindeki bağlantıları uzamsal indeks üzerinden tarar.
+- Bağlantı kendi kullanım izini, yapısal bütünlüğünü ve bakım parametrelerini taşır; yapısal değişim kararını mikroglia verir.
+- Beyin yalnızca mikroglia bakım olayını olay kuyruğuna koyar; ilk sürümde olaylar açıkça planlanır, otomatik periyodik tekrar henüz yoktur.
 - Kullanım izi zamanla azalır; kullanım izi tek başına kopma kararı değildir.
 - Uzun süre düşük kullanım/zayıf işlev ve yerel budama işaretleri birlikteyse bağlantı önce zayıflamaya, sonra kopmaya aday olur.
 - Stabilizasyon/büyüme işaretleri bakım/budama baskısını azaltabilir.
@@ -249,8 +250,8 @@ Kabul: Ağ etkinliği kararlı aralıkta tutulurken öğrenilmiş örüntü baş
 
 ### Adım 10 — Bağımsız yapısal bakım ve budama
 
-- Her bağlantının bağımsız bakım olayı bulunur.
-- Kaynak nöron hiç ateşlenmese bile simülasyon zamanı ilerlediğinde bakım yapılır.
+- Her bağımsız mikroglia ajanının bakım olayı bulunur.
+- Kaynak nöron hiç ateşlenmese bile planlanan mikroglia bakım olayı çalışır.
 - Kullanım izi aradaki süreyi hesaba katar.
 - Kullanılmama tek başına silme nedeni değildir.
 - Yerel koruma/budama sinyalleri sonucu etkiler.
