@@ -103,6 +103,13 @@ class DeneySurucusuTestleri(unittest.TestCase):
 
         self.assertEqual(dendrit.sinaps_katkilari, once)
 
+    def test_ag_kurucu_ayni_agi_ikinci_kez_verirse_reddedilir(self):
+        beyin = ag_kur()
+        surucu = DeneySurucusu(lambda: beyin)
+        surucu.ornegi_calistir(ornek("ilk", 100.0, {"N"}))
+        with self.assertRaises(ValueError):
+            surucu.ornegi_calistir(ornek("ikinci", 100.0, {"N"}))
+
     def test_bolum_parametresi_gecersizse_hata_verir(self):
         with self.assertRaises(ValueError):
             self.surucu.gorevi_degerlendir(self.gorev, "dogrulama")
