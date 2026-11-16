@@ -15,7 +15,7 @@ class Baglanti:
         yapisal_yaslanma_tau=1000.0, bakim_kazanci=0.01,
         budama_kazanci=0.02, budama_esigi=0.1,
         kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0,
-        hebbian_oran=0.01
+        hebbian_oran=0.01, stdp_depresyon_oran=0.01
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
@@ -23,7 +23,7 @@ class Baglanti:
             kimyasal_temizlenme, yapisal_yaslanma_tau,
             bakim_kazanci, budama_kazanci, budama_esigi,
             kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik,
-            hebbian_oran
+            hebbian_oran, stdp_depresyon_oran
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -59,6 +59,11 @@ class Baglanti:
         self.hebbian_oran = float(hebbian_oran)
         self.hebbian_guncelleme_sayisi = 0
         self.toplam_hebbian_degisim = 0.0
+        if stdp_depresyon_oran < 0:
+            raise ValueError("STDP depresyon oranı negatif olamaz.")
+        self.stdp_depresyon_oran = float(stdp_depresyon_oran)
+        self.stdp_depresyon_sayisi = 0
+        self.toplam_stdp_depresyon = 0.0
         self.uzunluk = float(uzunluk)
         self.iletim_hizi = float(iletim_hizi)
         self.esik = float(esik)
@@ -198,6 +203,32 @@ class Baglanti:
         self.toplam_hebbian_degisim += gercek_delta
         return gercek_delta
 
+    def stdp_presinaptik_olayi_isle(self, zaman):
+        """Pre olayı: önce eski post izine göre LTD, sonra pre izini yenile."""
+        if self.kopuk:
+            return 0.0
+        self.izleri_guncelle(zaman)
+        onceki = self.sinaptik_agirlik
+        if self.post_iz > 0.0 and self.stdp_depresyon_oran > 0.0:
+            aralik = self.sinaptik_agirlik_ust - self.sinaptik_agirlik_alt
+            alt_pay = (onceki - self.sinaptik_agirlik_alt) / aralik
+            delta = self.stdp_depresyon_oran * self.post_iz * alt_pay
+            self.sinaptik_agirligi_ayarla(onceki - delta)
+            gercek_delta = onceki - self.sinaptik_agirlik
+            if gercek_delta > 0.0:
+                self.stdp_depresyon_sayisi += 1
+                self.toplam_stdp_depresyon += gercek_delta
+        self.presinaptik_iz_arttir(zaman)
+        return onceki - self.sinaptik_agirlik
+
+    def stdp_postsinaptik_olayi_isle(self, zaman):
+        """Post olayı: pre izine göre LTP, ardından post izini yenile."""
+        if self.kopuk:
+            return 0.0
+        degisim = self.hebbian_ogren(zaman)
+        self.postsinaptik_iz_arttir(zaman)
+        return degisim
+
     def etki_uygula(self, etki, zaman):
         if self.kopuk:
             return
@@ -225,7 +256,7 @@ class Baglanti:
         self.son_aktivasyon = float(zaman)
         self.aktivasyon_sayisi += 1
         self.iz += 1.0
-        self.presinaptik_iz_arttir(zaman)
+        self.stdp_presinaptik_olayi_isle(zaman)
         return max(self.MINIMUM_GECIKME, self.uzunluk / self.iletim_hizi)
 
     def kimyasal_sal(self, kimyasal_alan, zaman, dendritik_sinyal=0.0):
