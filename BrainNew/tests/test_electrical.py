@@ -300,6 +300,26 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertEqual(uygun.aktivasyon_sayisi, 1)
         self.assertEqual(baskilanan.aktivasyon_sayisi, 0)
 
+    def test_sinaptik_agirlik_kalici_elektriksel_iletim_etkisini_olcekler(self):
+        sinaps = Baglanti("s", None, None, etki=4.0, sinaptik_agirlik=0.5)
+        self.assertEqual(sinaps.iletim_etkisi(), 2.0)
+        sinaps.sinaptik_agirligi_ayarla(1.5)
+        self.assertEqual(sinaps.iletim_etkisi(), 6.0)
+
+    def test_sinaptik_agirlik_sifirda_fonksiyonel_iletimi_kapatir(self):
+        sinaps = Baglanti("s", None, None, etki=-4.0, sinaptik_agirlik=0.0)
+        self.assertEqual(sinaps.iletim_etkisi(), 0.0)
+        sinaps.sinaptik_agirligi_ayarla(0.5)
+        self.assertEqual(sinaps.iletim_etkisi(), -2.0)
+
+    def test_sinaptik_agirlik_sinirlanir_ve_gecersiz_degerleri_reddeder(self):
+        sinaps = Baglanti("s", None, None)
+        self.assertEqual(sinaps.sinaptik_agirligi_ayarla(3.0), 2.0)
+        self.assertEqual(sinaps.sinaptik_agirligi_ayarla(-1.0), 0.0)
+        with self.assertRaises(ValueError):
+            Baglanti("nan", None, None, sinaptik_agirlik=float("nan"))
+        with self.assertRaises(ValueError):
+            sinaps.sinaptik_agirligi_ayarla(float("inf"))
     def test_presinaptik_iz_sinaps_aktivasyonunda_artar(self):
         sinaps = Baglanti("s", None, None)
         sinaps.aktive_et(1.0)
