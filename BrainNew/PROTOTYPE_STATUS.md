@@ -69,6 +69,7 @@ Testler güncellendi:
 - `test_orchestration.py`: olay önceliği, entegrasyon tekilleştirme, tam hedefe varış zamanı, refrakter tamponun dinlenmeye dönüşte işlenmesi, olay limiti ve deterministiklik.
 - `test_electrical.py`: nöronun yerel entegrasyon/ateşlenme sorumluluğu, faz döngüsü, elektriksel toplama, seçici sinaps aktivasyonu, öğrenme ve sonlu değer doğrulaması.
 - `test_chemical.py`: transmitter ayrımı, analitik yayılım, reseptör yanıtı ve geçersiz/sonlu olmayan kaynak-sorgu girdileri.
+- `test_microglia.py`: bağımsız mikroglia taraması, algılama yarıçapı, kimyasal budama/stabilizasyon ve fiziksel kopma koşulları.
 
 **Önemli:** Bu çalışma ortamında GitHub dosyaları düzenlenebildi; ancak Python test çalıştırıcısı uzak dalın checkout'una erişmediği için bu dalın testleri burada çalıştırılmış değildir. Testlerin geçtiği iddia edilmiyor. Yerel doğrulama için proje kökünde:
 
