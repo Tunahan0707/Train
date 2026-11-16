@@ -123,6 +123,19 @@ class BrainNewPrototypeTests(unittest.TestCase):
         self.assertGreater(alan.yogunluk("A", (0.0, 0.0), 1.0), 0.0)
         self.assertGreater(alan.yogunluk("B", (0.0, 0.0), 1.0), 0.0)
 
+    def test_receptor_profile_modulates_dendritic_local_signal(self):
+        alan = KimyasalAlan()
+        alan.sal("A", (0.0, 0.0), 10.0, 0.0)
+        modulated = Dendrid("modulated")
+        baseline = Dendrid("baseline")
+        modulated.transmitter_duyarliligi_ayarla("A", 1.0)
+        modulated.girdi_al(1.0)
+        baseline.girdi_al(1.0)
+
+        _, modulated_signal = modulated.sinyali_hazirla(1.0, alan)
+        _, baseline_signal = baseline.sinyali_hazirla(1.0, alan)
+        self.assertGreater(modulated_signal, baseline_signal)
+
     def test_chemical_types_are_kept_separate_and_decay_in_space_time(self):
         alan = KimyasalAlan()
         alan.sal("A", (0.0, 0.0), 10.0, 0.0, yayilim=1.0, temizlenme=0.1)
