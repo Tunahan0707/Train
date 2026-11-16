@@ -93,6 +93,16 @@ class Noron:
         self.ateslenme_sayisi += 1
         return True
 
+    def ateslenme_sonucunu_isle(self, zaman):
+        """Çıkış sinapsı seçimini ve yerel dendrit öğrenmesini nöron yürütür."""
+        aktif = [
+            sinaps for sinaps in self.cikis_sinapslari
+            if sinaps.aktive_olabilir_mi(zaman)
+        ]
+        for dendrit in self.dendritler.values():
+            dendrit.firsat_sonucu_ogren(aktif, zaman)
+        return aktif
+
     def faz_degistir(self):
         if self.durum == self.DEPOLARIZASYON:
             self.durum = self.REPOLARIZASYON
