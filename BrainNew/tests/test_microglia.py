@@ -89,6 +89,38 @@ class MikrogliaTestleri(unittest.TestCase):
 
         self.assertGreater(sinaps.yapisal_butunluk, math.exp(-0.1))
 
+    def test_otomatik_bakim_son_zaman_siniriyla_tekrarlar(self):
+        beyin = Beyin()
+        kaynak = Noron("kaynak")
+        sinaps = Baglanti(
+            "s", kaynak, None, terminal_konumu=(0.0, 0.0)
+        )
+        kaynak.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(kaynak)
+        mikroglia = Mikroglia(
+            "m", algilama_yaricapi=2.0, bakim_araligi=1.0
+        )
+        beyin.mikroglia_ekle(mikroglia)
+        beyin.mikroglia_bakim_baslat("m")
+
+        islenen = beyin.calistir(son_zaman=2.5)
+
+        self.assertEqual(islenen, 2)
+        self.assertEqual(mikroglia.son_tarama_zamani, 2.0)
+        self.assertEqual(sinaps.son_bakim_zamani, 2.0)
+        self.assertEqual(beyin._olaylar[0][0], 3.0)
+
+        beyin.calistir(son_zaman=3.0)
+        self.assertEqual(mikroglia.son_tarama_zamani, 3.0)
+
+    def test_otomatik_bakim_sinirsiz_calistirmayi_engeller(self):
+        beyin = Beyin()
+        beyin.mikroglia_ekle(Mikroglia("m", bakim_araligi=1.0))
+        beyin.mikroglia_bakim_baslat("m")
+
+        with self.assertRaises(ValueError):
+            beyin.calistir()
+
     def test_beyin_mikroglia_bakim_olayini_koordine_eder(self):
         beyin = Beyin()
         kaynak = Noron("kaynak")
