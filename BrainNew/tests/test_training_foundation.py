@@ -93,6 +93,52 @@ class TrainingFoundationTests(unittest.TestCase):
         self.assertEqual(noron.durum, noron.DINLENME)
         self.assertFalse(noron.bekleyen_girdi_var_mi())
 
+    def test_positive_feedback_branches_only_through_causal_input(self):
+        beyin = Beyin()
+        kaynak = Noron("kaynak")
+        hedef = Noron("hedef")
+        kaynak_giris = Dendrid("giris")
+        hedef_giris = Dendrid("giris")
+        kaynak.dendrit_ekle(kaynak_giris)
+        hedef.dendrit_ekle(hedef_giris)
+
+        etkin = Baglanti(
+            "etkin", kaynak, hedef, hedef_dendrit_id="giris",
+            uzunluk=1.0, etki=100.0, esik=0.2
+        )
+        etkisiz = Baglanti(
+            "etkisiz", kaynak, None, esik=0.5
+        )
+        kaynak_giris.sinaps_bagla(etkin, 1.0)
+        kaynak_giris.sinaps_bagla(etkisiz, 0.0)
+        kaynak.cikis_sinapsi_ekle(etkin)
+        kaynak.cikis_sinapsi_ekle(etkisiz)
+        beyin.noron_ekle(kaynak)
+        beyin.noron_ekle(hedef)
+
+        beyin.duyusal_girdi("kaynak", "giris", 100.0)
+        beyin.calistir()
+        self.assertEqual(kaynak.ateslenme_sayisi, 1)
+        self.assertEqual(hedef.ateslenme_sayisi, 1)
+        self.assertIn(etkin, hedef._son_nedensel_girdi_sinapslari)
+
+        beyin.geri_bildirim_baslat(
+            "hedef", pozitif=True, miktar=0.1,
+            iz_esigi=0.001, dallanma_sonum=0.5
+        )
+        beyin.calistir()
+
+        self.assertLess(etkin.esik, 0.2)
+        self.assertGreater(etkisiz.esik, 0.5)
+
+    def test_feedback_rejects_non_firing_origin(self):
+        beyin = Beyin()
+        noron = Noron("sessiz")
+        noron.dendrit_ekle(Dendrid("D"))
+        beyin.noron_ekle(noron)
+        with self.assertRaises(ValueError):
+            beyin.geri_bildirim_baslat("sessiz")
+
     def test_training_runner_reuses_same_brain_across_episodes(self):
         beyin = Beyin()
         noron = Noron("N")
