@@ -606,7 +606,8 @@ class Noron:
             hedef_dendrit_id=hedef_dendrit.kimlik,
             terminal_konumu=self.konum,
             sinaptik_agirlik=self.yeni_baglanti_agirligi,
-            baslangic_yapisal_butunluk=0.25
+            baslangic_yapisal_butunluk=0.25,
+            baslangic_yapisal_olgunluk=0.25
         )
         for dendrit in self.dendritler.values():
             dendrit.sinaps_bagla(
