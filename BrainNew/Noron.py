@@ -206,9 +206,13 @@ class Noron:
         return True
 
     def baglantilari_bakimdan_gecir(self, zaman, kimyasal_alan=None):
-        """Gelen yerel etkinlikte her çıkış bağlantısının kendi bakımını işler."""
+        """Sinapsların gecikmiş modülatör izlerini yerel olarak işler.
+
+        Fiziksel bakım ve budama bağımsız Mikroglia ajanlarına aittir.
+        """
         for sinaps in tuple(self.cikis_sinapslari):
-            sinaps.yerel_bakim(kimyasal_alan, zaman)
+            if not sinaps.kopuk:
+                sinaps.gecikmis_modulatoru_isle(kimyasal_alan, zaman)
             if sinaps.kopuk:
                 self.cikis_sinapslari.remove(sinaps)
                 if sinaps.hedef is not None and sinaps in sinaps.hedef.gelen_sinapslari:
