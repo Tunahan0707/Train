@@ -119,6 +119,35 @@ class KimyasalMekanizmaTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             alan.yogunluk("A", (0.0, float("inf")), 1.0)
 
+    def test_dendritik_sinyal_transmitter_salimini_tur_bazinda_moduler(self):
+        alan = KimyasalAlan()
+        s = Baglanti(
+            "s", None, None,
+            transmitter_profili={"A": 1.0, "B": 1.0},
+            transmitter_salimi_duyarliliklari={"A": 0.5, "B": -0.5}
+        )
+        s.kimyasal_sal(alan, 0.0, dendritik_sinyal=0.8)
+        self.assertEqual(alan.kaynak_sayisi(), 2)
+        kaynaklar = {k.tur: k.miktar for k in alan.kaynaklar}
+        self.assertAlmostEqual(kaynaklar["A"], 1.4)
+        self.assertAlmostEqual(kaynaklar["B"], 0.6)
+
+    def test_dendritik_sinyal_terminal_repertuvari_disinda_transmitter_uretemez(self):
+        with self.assertRaises(ValueError):
+            Baglanti(
+                "s", None, None, transmitter_profili={"A": 1.0},
+                transmitter_salimi_duyarliliklari={"B": 0.5}
+            )
+
+    def test_salim_modulasyonu_miktari_negatife_dusurmez_ve_sifir_salim_yapar(self):
+        alan = KimyasalAlan()
+        s = Baglanti(
+            "s", None, None, transmitter_profili={"A": 1.0},
+            transmitter_salimi_duyarliliklari={"A": -2.0}
+        )
+        s.kimyasal_sal(alan, 0.0, dendritik_sinyal=1.0)
+        self.assertEqual(alan.kaynak_sayisi(), 0)
+
     def test_terminal_profili_birden_fazla_transmitter_tutabilir(self):
         s = Baglanti(
             "s", None, None,
