@@ -235,11 +235,9 @@ class Baglanti:
         buyukluk = abs(onceki)
         kalan_pay = (ust_buyukluk - buyukluk) / ust_buyukluk
         delta = self.hebbian_oran * self.pre_iz * kalan_pay
-        isaret = (
-            math.copysign(1.0, onceki)
-            if onceki != 0.0
-            else math.copysign(1.0, self.etki if self.etki != 0.0 else 1.0)
-        )
+        # Ağırlık çarpanının nötr başlangıç işareti pozitiftir;
+        # uyarıcı/baskılayıcı baz işaret zaten self.etki içinde taşınır.
+        isaret = math.copysign(1.0, onceki) if onceki != 0.0 else 1.0
         yeni = self.sinaptik_agirligi_ayarla(
             isaret * (buyukluk + delta)
         )
