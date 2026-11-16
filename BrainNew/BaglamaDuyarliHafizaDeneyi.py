@@ -83,20 +83,20 @@ class BaglamaDuyarliHafizaDeneyi:
         return beyin, EgitimSurucusu(beyin), sinapslar
 
     @classmethod
-    def _girdiler(cls, baglam=None, tam_oruntu=None, ipucu=True):
+    def _girdiler(cls, baglam=None, tam_oruntu=None, ipucu=True, olcek=1.0):
         girdiler = []
         if ipucu:
             girdiler.extend((
-                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI, cls.IPUCU_GECIKMESI),
-                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI, cls.IPUCU_GECIKMESI),
+                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI * olcek, cls.IPUCU_GECIKMESI),
+                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI * olcek, cls.IPUCU_GECIKMESI),
             ))
         if baglam == "X":
             girdiler.append(
-                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI, cls.BAGLAM_GECIKMESI)
+                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI * olcek, cls.BAGLAM_GECIKMESI)
             )
         elif baglam == "Y":
             girdiler.append(
-                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI, cls.BAGLAM_GECIKMESI)
+                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI * olcek, cls.BAGLAM_GECIKMESI)
             )
 
         if tam_oruntu is not None:
@@ -110,7 +110,7 @@ class BaglamaDuyarliHafizaDeneyi:
         return girdiler
 
     @classmethod
-    def _ornek(cls, kimlik, baglam=None, tam_oruntu=None, ipucu=True):
+    def _ornek(cls, kimlik, baglam=None, tam_oruntu=None, ipucu=True, olcek=1.0):
         if tam_oruntu is not None:
             secilen_oruntu = tam_oruntu
         elif ipucu and baglam in ("X", "Y"):
@@ -127,7 +127,10 @@ class BaglamaDuyarliHafizaDeneyi:
             beklenen = {kapı_id, *hedefler}
         return DeneyOrnegi(
             kimlik,
-            cls._girdiler(baglam=baglam, tam_oruntu=tam_oruntu, ipucu=ipucu),
+            cls._girdiler(
+                baglam=baglam, tam_oruntu=tam_oruntu,
+                ipucu=ipucu, olcek=olcek
+            ),
             beklenen,
         )
 
@@ -186,6 +189,50 @@ class BaglamaDuyarliHafizaDeneyi:
             "baslangic_agirliklari": baslangic_agirliklari,
             "ogrenilmis_agirliklar": ogrenilmis_agirliklar,
         }
+
+
+    def gurultu_taramasi(self, olcekler=(0.90, 0.95, 1.0, 1.05, 1.10)):
+        """Eğitimden sonra ipucu/bağlam genliğine duyarlılığı ölçer.
+
+        Her ölçek ve bağlam için ağ baştan kurulur ve aynı iki örüntüyle
+        eğitilir. Böylece bir test koşusunun yerel plastisitesi diğer test
+        koşusunu etkilemez. Ölçek yalnızca A ipucu ve X/Y bağlam girdilerine
+        uygulanır; eğitimdeki hedef nöronların doğrudan öğretim girdileri
+        değiştirilmez.
+        """
+        import math
+
+        rapor = {}
+        for olcek in olcekler:
+            olcek = float(olcek)
+            if not math.isfinite(olcek) or olcek <= 0.0:
+                raise ValueError("Gürültü ölçeği sonlu ve pozitif olmalı.")
+            baglam_sonuclari = {}
+            for baglam in ("X", "Y"):
+                _, surucu, _ = self._ag_kur()
+                surucu.episode_calistir(
+                    self._ornek(
+                        f"gurultu-egitim-X-{olcek}",
+                        baglam="X", tam_oruntu="X"
+                    ),
+                    feedback=False,
+                )
+                surucu.episode_calistir(
+                    self._ornek(
+                        f"gurultu-egitim-Y-{olcek}",
+                        baglam="Y", tam_oruntu="Y"
+                    ),
+                    feedback=False,
+                )
+                baglam_sonuclari[baglam] = surucu.episode_calistir(
+                    self._ornek(
+                        f"gurultu-geri-cagirma-{baglam}-{olcek}",
+                        baglam=baglam, olcek=olcek
+                    ),
+                    feedback=False,
+                )
+            rapor[olcek] = baglam_sonuclari
+        return rapor
 
 
 if __name__ == "__main__":
