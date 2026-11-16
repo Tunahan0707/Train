@@ -313,3 +313,26 @@ def test_simulasyon_ciktilarinin_bicimi():
 
     assert len(sonuc) == 8
     assert all(bit in (0, 1) for bit in sonuc)
+
+
+
+def test_deneme_sonu_sifirlama_gecici_izleri_temizler_ve_ogrenmeyi_korur():
+    beyin = Beyin(1, 1, 0, seed=42)
+    kaynak = beyin.reseptor_noronlari[0]
+    hedef = beyin.motor_noronlari[0]
+    baglanti = kaynak.aksonlar[0].baglan(hedef.dendritler[0])
+
+    baglanti.etki_mv = 4.25
+    baglanti.uygunluk_izi = 1.5
+    beyin.etkin_baglantilar.add(baglanti)
+    beyin._iletim_planla(baglanti)
+    kaynak.membran_potansiyeli = -60.0
+
+    beyin.deneme_sonu_sifirla()
+
+    assert baglanti.uygunluk_izi == 0.0
+    assert baglanti not in beyin.etkin_baglantilar
+    assert baglanti.etki_mv == 4.25
+    assert baglanti.aktif
+    assert beyin._olay_kuyrugu == []
+    assert kaynak.membran_potansiyeli == kaynak.dinlenme_mv
