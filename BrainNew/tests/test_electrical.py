@@ -423,8 +423,20 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         sinaps = Baglanti("sinir", None, None, sinaptik_agirlik=0.001)
         sinaps.stdp_postsinaptik_olayi_isle(0.0)
         sinaps.stdp_presinaptik_olayi_isle(0.0)
-        self.assertGreaterEqual(sinaps.sinaptik_agirlik, 0.0)
+        self.assertGreaterEqual(sinaps.sinaptik_agirlik, -2.0)
         self.assertLessEqual(sinaps.sinaptik_agirlik, 2.0)
+
+    def test_stdp_negatif_agirligi_zayiflatirken_isaretini_korur(self):
+        sinaps = Baglanti("negatif", None, None, sinaptik_agirlik=-1.0)
+        sinaps.stdp_postsinaptik_olayi_isle(0.0)
+        onceki_buyukluk = abs(sinaps.sinaptik_agirlik)
+
+        azalis = sinaps.stdp_presinaptik_olayi_isle(1.0)
+
+        self.assertGreater(azalis, 0.0)
+        self.assertLess(abs(sinaps.sinaptik_agirlik), onceki_buyukluk)
+        self.assertLess(sinaps.sinaptik_agirlik, 0.0)
+        self.assertGreaterEqual(sinaps.sinaptik_agirlik, -2.0)
 
     def test_stdp_depresyon_orani_gecersiz_degerleri_reddeder(self):
         with self.assertRaises(ValueError):
