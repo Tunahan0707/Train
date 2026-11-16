@@ -75,7 +75,7 @@ def gozlemciyi_bagla(beyin):
                 _etiket.startswith("A") and ateslendi
             ):
                 noron_durumlari.append({
-                    "zaman": beyin.zaman,
+                    "zaman": beyin.zaman - baslangic_zamani,
                     "noron": _etiket,
                     "membran_mv": _noron.membran_potansiyeli,
                     "durum": _noron.durum,
@@ -129,7 +129,7 @@ def denemeyi_incele(beyin, girdi, beklenen):
     else:
         print("  Hicbir ara noron ateslenmedi.")
 
-    print("\\nMotora ulasan sinaptik katkilar:")
+    print("\nMotora ulasan sinaptik katkilar:")
     if motor_aktarimlari:
         zamana_gore = defaultdict(list)
         for olay in motor_aktarimlari:
@@ -151,7 +151,7 @@ def denemeyi_incele(beyin, girdi, beklenen):
     else:
         print("  Motora sinaptik aktarim ulasmadi.")
 
-    print("\\nMotor membran potansiyeli:")
+    print("\nMotor membran potansiyeli:")
     for olay in motor_durumlari:
         print(
             f"  t={olay['zaman']:02d} ms | "
@@ -160,7 +160,7 @@ def denemeyi_incele(beyin, girdi, beklenen):
             f"ateslendi={'EVET' if olay['ateslendi'] else 'HAYIR'}"
         )
 
-    print("\\nOzet:")
+    print("\nOzet:")
     print(f"  Ara noron ateslenme sayisi: {len(ara_ateslenmeleri)}")
     print(f"  Motora gelen aktarim sayisi: {len(motor_aktarimlari)}")
     print(
@@ -181,7 +181,7 @@ def main():
     # Onceki karma deneyle ayni seed, egitim oruntuleri ve durdurma kriteri.
     beyin, epoch, feedback, tamamlandi = karma_ogretme(TUM_ORUNTULER)
 
-    print("\\nEGITIM OZETI")
+    print("\nEGITIM OZETI")
     print(f"Epoch: {epoch} | Geri bildirim: {feedback}")
     print(f"Ogretim kriteri: {'TAMAM' if tamamlandi else 'TAMAMLANMADI'}")
 
