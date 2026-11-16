@@ -355,7 +355,8 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
     def test_sinaptik_agirlik_sinirlanir_ve_gecersiz_degerleri_reddeder(self):
         sinaps = Baglanti("s", None, None)
         self.assertEqual(sinaps.sinaptik_agirligi_ayarla(3.0), 2.0)
-        self.assertEqual(sinaps.sinaptik_agirligi_ayarla(-1.0), 0.0)
+        self.assertEqual(sinaps.sinaptik_agirligi_ayarla(-1.0), -1.0)
+        self.assertEqual(sinaps.sinaptik_agirligi_ayarla(-3.0), -2.0)
         with self.assertRaises(ValueError):
             Baglanti("nan", None, None, sinaptik_agirlik=float("nan"))
         with self.assertRaises(ValueError):
