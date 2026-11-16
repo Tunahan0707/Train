@@ -54,6 +54,15 @@ class Dendrid:
             raise ValueError("Kimyasal reseptör yanıtı sonlu olmalı.")
         return toplam
 
+
+    def buyume_uygunlugu(self, kimyasal_alan, zaman):
+        """Dendritin yerel büyüme sinyaline reseptör yanıtı."""
+        duyarlilik = self.reseptor_duyarliliklari.get("buyume", 0.0)
+        if kimyasal_alan is None or duyarlilik <= 0.0:
+            return 0.0
+        yogunluk = kimyasal_alan.yogunluk("buyume", self.konum, zaman)
+        return duyarlilik * (yogunluk / (1.0 + yogunluk))
+
     def girdi_al(self, etki, kaynak_sinaps=None):
         etki = float(etki)
         if not math.isfinite(etki):
