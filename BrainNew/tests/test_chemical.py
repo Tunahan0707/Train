@@ -91,6 +91,24 @@ class KimyasalMekanizmaTestleri(unittest.TestCase):
             nokta / merkez, math.exp(-(x * x) / (4.0 * D * t))
         )
 
+    def test_sonmus_kimyasal_kaynaklar_tolerans_butcesiyle_temizlenir(self):
+        alan = KimyasalAlan()
+        alan.sal("A", (0.0, 0.0), 1.0, 0.0, temizlenme=1.0)
+        alan.sal("A", (10.0, 0.0), 1.0, 100.0, temizlenme=1.0)
+
+        silinen = alan.kaynaklari_temizle(100.0, tolerans=1e-6)
+
+        self.assertEqual(silinen, 1)
+        self.assertEqual(alan.kaynak_sayisi(), 1)
+        self.assertEqual(alan.kaynaklar[0].zaman, 100.0)
+
+    def test_chemical_cleanup_rejects_invalid_time_or_tolerance(self):
+        alan = KimyasalAlan()
+        for zaman, tolerans in ((-1.0, 1e-6), (1.0, -1.0), (float("nan"), 1e-6)):
+            with self.subTest(zaman=zaman, tolerans=tolerans):
+                with self.assertRaises(ValueError):
+                    alan.kaynaklari_temizle(zaman, tolerans)
+
     def test_negatif_salım_miktari_reddedilir(self):
         alan = KimyasalAlan()
         with self.assertRaises(ValueError):
