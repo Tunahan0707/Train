@@ -60,5 +60,26 @@ class BaglamaDuyarliHafizaTestleri(unittest.TestCase):
         )
 
 
+    def test_baglam_geri_cagirma_bes_yuzde_genlik_gurultusune_dayanir(self):
+        rapor = BaglamaDuyarliHafizaDeneyi().gurultu_taramasi(
+            olcekler=(0.95, 1.05)
+        )
+
+        for olcek in (0.95, 1.05):
+            self.assertEqual(
+                rapor[olcek]["X"]["gerceklesen"], ("B", "C", "Gx")
+            )
+            self.assertEqual(
+                rapor[olcek]["Y"]["gerceklesen"], ("D", "E", "Gy")
+            )
+
+    def test_esik_alti_genlikte_baglam_kapilari_sessiz_kalir(self):
+        rapor = BaglamaDuyarliHafizaDeneyi().gurultu_taramasi(
+            olcekler=(0.90,)
+        )
+        self.assertEqual(rapor[0.90]["X"]["gerceklesen"], ())
+        self.assertEqual(rapor[0.90]["Y"]["gerceklesen"], ())
+
+
 if __name__ == "__main__":
     unittest.main()
