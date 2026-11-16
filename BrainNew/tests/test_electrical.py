@@ -306,6 +306,39 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertAlmostEqual(sinaps.pre_iz, 1.0)
         self.assertEqual(sinaps.post_iz, 0.0)
 
+    def test_postsinaptik_iz_yalnizca_gercek_girdi_kaynagi_baglantida_artar(self):
+        beyin = Beyin()
+        kaynak_aktif = Noron("kaynak_aktif")
+        kaynak_sessiz = Noron("kaynak_sessiz")
+        hedef = Noron("hedef")
+        aktif_giris = Dendrid("aktif_giris")
+        sessiz_giris = Dendrid("sessiz_giris")
+        aktif_sinaps = Baglanti(
+            "aktif_sinaps", kaynak_aktif, hedef,
+            hedef_dendrit_id="aktif_giris", etki=50.0
+        )
+        sessiz_sinaps = Baglanti(
+            "sessiz_sinaps", kaynak_sessiz, hedef,
+            hedef_dendrit_id="sessiz_giris", etki=50.0
+        )
+        kaynak_giris = Dendrid("kaynak_giris")
+        kaynak_aktif.dendrit_ekle(kaynak_giris)
+        kaynak_aktif.cikis_sinapsi_ekle(aktif_sinaps)
+        kaynak_sessiz.cikis_sinapsi_ekle(sessiz_sinaps)
+        hedef.dendrit_ekle(aktif_giris)
+        hedef.dendrit_ekle(sessiz_giris)
+        beyin.noron_ekle(kaynak_aktif)
+        beyin.noron_ekle(kaynak_sessiz)
+        beyin.noron_ekle(hedef)
+
+        beyin.duyusal_girdi("kaynak_aktif", "kaynak_giris", 100.0)
+        beyin.calistir()
+
+        self.assertEqual(hedef.ateslenme_sayisi, 1)
+        self.assertGreater(aktif_sinaps.post_iz, 0.0)
+        self.assertEqual(sessiz_sinaps.pre_iz, 0.0)
+        self.assertEqual(sessiz_sinaps.post_iz, 0.0)
+
     def test_postsinaptik_iz_hedef_noron_ateslenince_artar(self):
         beyin = Beyin()
         kaynak = Noron("kaynak")
