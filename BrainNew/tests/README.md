@@ -1,6 +1,6 @@
 # BrainNew — Ayrı test paketleri
 
-Bu testler prototipte uygulanmış davranışları denetler. Bağımsız mikroglia bakımı ve yerel budama için birim testleri vardır; yeni bağlantı oluşumu, feedback dallanması, sinaps-sinaps öğrenmesi ve yerel nöron-nöron etkileşimi henüz uygulanmamıştır.
+Bu testler prototipte uygulanmış davranışları denetler. Bağımsız mikroglia bakımı, yerel budama ve kontrollü yeni bağlantı oluşumu için birim testleri vardır; otomatik büyüme zamanlaması, feedback dallanması, sinaps-sinaps öğrenmesi ve yerel nöron-nöron etkileşimi henüz uygulanmamıştır.
 
 Proje kökünde ve sanal ortam açıkken:
 
@@ -9,6 +9,7 @@ python -m pytest BrainNew/tests/test_orchestration.py -v
 python -m pytest BrainNew/tests/test_electrical.py -v
 python -m pytest BrainNew/tests/test_chemical.py -v
 python -m pytest BrainNew/tests/test_microglia.py -v
+python -m pytest BrainNew/tests/test_structural_plasticity.py -v
 python -m pytest BrainNew/tests/test_experiment_recording.py -v
 python -m pytest BrainNew/tests/test_experiment_runner.py -v
 ```
@@ -34,6 +35,7 @@ python -m BrainNew.main
 - `test_spatial_index.py`: 2B hücre tabanlı yerel aday arama, yarıçap doğruluğu, deterministik sıralama, kayıt/silme ve konum güncellemesi.
 - `test_chemical.py`: Transmitter kaynakları, çoklu salım, tür ayrımı, 2B uzamsal yayılım, zamansal sönüm, analitik yoğunluk formülü, reseptör duyarlılığı ve geçersiz kimyasal kaynak/sorgu değerleri.
 - `test_microglia.py`: Bağımsız mikroglia ajanı, algılama yarıçapı, düşük kullanım ile budama sinyalinin birlikte gerekliliği, stabilizasyon, sonlu zaman aralığında periyodik bakım ve Beyin'in yalnızca olay koordinasyonu yapması.
+- `test_structural_plasticity.py`: Yerel büyüme sinyali, hedef dendritin pozitif reseptör uygunluğu, yarıçap sınırı, deterministik hedef seçimi, aynı üçlünün tekilleştirilmesi ve yeni bağlantının zayıf/olgunlaşmamış başlangıcı.
 
 ## Testlerin yorumlanması
 
