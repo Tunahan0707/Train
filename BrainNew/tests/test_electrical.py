@@ -356,6 +356,41 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         with self.assertRaises(ValueError):
             Baglanti("nan", None, None, hebbian_oran=float("nan"))
 
+    def test_stdp_pre_sonra_post_agirligi_artirir(self):
+        sinaps = Baglanti("pre_post", None, None)
+        sinaps.stdp_presinaptik_olayi_isle(0.0)
+        onceki = sinaps.sinaptik_agirlik
+        artis = sinaps.stdp_postsinaptik_olayi_isle(1.0)
+        self.assertGreater(artis, 0.0)
+        self.assertGreater(sinaps.sinaptik_agirlik, onceki)
+
+    def test_stdp_post_sonra_pre_agirligi_azaltir(self):
+        sinaps = Baglanti("post_pre", None, None)
+        sinaps.stdp_postsinaptik_olayi_isle(0.0)
+        onceki = sinaps.sinaptik_agirlik
+        azalis = sinaps.stdp_presinaptik_olayi_isle(1.0)
+        self.assertGreater(azalis, 0.0)
+        self.assertLess(sinaps.sinaptik_agirlik, onceki)
+
+    def test_stdp_iz_olmadan_ters_sira_depresyonu_uygulamaz(self):
+        sinaps = Baglanti("iz_yok", None, None)
+        onceki = sinaps.sinaptik_agirlik
+        self.assertEqual(sinaps.stdp_presinaptik_olayi_isle(1.0), 0.0)
+        self.assertEqual(sinaps.sinaptik_agirlik, onceki)
+
+    def test_stdp_agirlik_sinirlarini_korur(self):
+        sinaps = Baglanti("sinir", None, None, sinaptik_agirlik=0.001)
+        sinaps.stdp_postsinaptik_olayi_isle(0.0)
+        sinaps.stdp_presinaptik_olayi_isle(0.0)
+        self.assertGreaterEqual(sinaps.sinaptik_agirlik, 0.0)
+        self.assertLessEqual(sinaps.sinaptik_agirlik, 2.0)
+
+    def test_stdp_depresyon_orani_gecersiz_degerleri_reddeder(self):
+        with self.assertRaises(ValueError):
+            Baglanti("negatif", None, None, stdp_depresyon_oran=-0.1)
+        with self.assertRaises(ValueError):
+            Baglanti("nan", None, None, stdp_depresyon_oran=float("nan"))
+
     def test_presinaptik_iz_sinaps_aktivasyonunda_artar(self):
         sinaps = Baglanti("s", None, None)
         sinaps.aktive_et(1.0)
@@ -396,7 +431,8 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertGreater(aktif_sinaps.sinaptik_agirlik, 1.0)
         self.assertEqual(sessiz_sinaps.sinaptik_agirlik, 1.0)
         self.assertEqual(sessiz_sinaps.pre_iz, 0.0)
-        self.assertEqual(sessiz_sinaps.post_iz, 0.0)
+        # Post izi, daha sonra gelecek pre olayının LTD üretmesi için tutulur.
+        self.assertGreater(sessiz_sinaps.post_iz, 0.0)
 
     def test_postsinaptik_iz_hedef_noron_ateslenince_artar(self):
         beyin = Beyin()
