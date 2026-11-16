@@ -380,6 +380,9 @@ class Beyin:
         # Her çalışma diliminin sonunda bütün yerel çıkış bağlantıları
         # kendi uygunluk izleriyle kimyasal alanı entegre eder.
         for noron in self.noronlar.values():
+            # Sessiz nöronlar da zaman geçtikçe homeostatik durumlarını
+            # günceller; bu hesap nöronun yerel mekanizmasında kalır.
+            noron.homeostatik_durumu_guncelle(self.zaman)
             noron.baglantilari_bakimdan_gecir(
                 self.zaman, self.kimyasal_alan
             )
