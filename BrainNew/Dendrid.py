@@ -5,10 +5,12 @@ class Dendrid:
     """İşaretli girdiyi toplar ve yerel sinapslar için sinyal üretir."""
 
     def __init__(self, kimlik, konum=(0.0, 0.0), sinyal_olcegi=10.0):
-        if sinyal_olcegi <= 0:
-            raise ValueError("Sinyal ölçeği pozitif olmalı.")
+        if not math.isfinite(float(sinyal_olcegi)) or sinyal_olcegi <= 0:
+            raise ValueError("Sinyal ölçeği sonlu ve pozitif olmalı.")
+        if len(konum) != 2 or not all(math.isfinite(float(v)) for v in konum):
+            raise ValueError("Dendrit konumu sonlu iki boyutlu koordinat olmalı.")
         self.kimlik = kimlik
-        self.konum = tuple(konum)
+        self.konum = tuple(float(v) for v in konum)
         self.sinyal_olcegi = float(sinyal_olcegi)
         self.sinaps_katkilari = {}
         self.girdiler = []
@@ -17,10 +19,16 @@ class Dendrid:
         self.sinaps_degerlendirmeleri = {}
 
     def sinaps_bagla(self, sinaps, katki):
-        self.sinaps_katkilari[sinaps] = float(katki)
+        katki = float(katki)
+        if not math.isfinite(katki):
+            raise ValueError("Sinaps katkısı sonlu olmalı.")
+        self.sinaps_katkilari[sinaps] = katki
 
     def transmitter_duyarliligi_ayarla(self, tur, duyarlilik):
-        self.reseptor_duyarliliklari[tur] = float(duyarlilik)
+        duyarlilik = float(duyarlilik)
+        if not math.isfinite(duyarlilik):
+            raise ValueError("Reseptör duyarlılığı sonlu olmalı.")
+        self.reseptor_duyarliliklari[tur] = duyarlilik
 
     def kimyasal_yanit(self, kimyasal_alan, zaman):
         toplam = 0.0
@@ -30,7 +38,13 @@ class Dendrid:
         return toplam
 
     def girdi_al(self, etki):
-        self.girdiler.append(float(etki))
+        etki = float(etki)
+        if not math.isfinite(etki):
+            raise ValueError("Dendrit girdisi sonlu olmalı.")
+        self.girdiler.append(etki)
+
+    def girdi_var_mi(self):
+        return bool(self.girdiler)
 
     def sinyali_hazirla(self, zaman, kimyasal_alan=None):
         if not self.girdiler:
