@@ -24,7 +24,7 @@ def test_aktivite_izi_aktarimla_degil_ateslenmeyle_artar():
     baglanti.aktar(0)
     assert baglanti.uygunluk_izi == 0.0
 
-    noron_b.membran_potansiyeli = -56.0
+    noron_b.membran_potansiyeli = -58.0
     noron_b.guncelle()
     assert baglanti.uygunluk_izi == 0.0
 
