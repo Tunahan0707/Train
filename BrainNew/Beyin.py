@@ -39,6 +39,8 @@ class Beyin:
         olay_zamani = self.zaman + gecikme
         if not math.isfinite(olay_zamani):
             raise ValueError("Planlanan olay zamanı sonlu olmalı.")
+        if olay_zamani <= self.zaman:
+            raise ValueError("Gecikme, mevcut simülasyon zamanında temsil edilemeyecek kadar küçük.")
         olay_id = next(self._olay_sayaci)
         oncelik = self._OLAY_ONCELIGI.get(tur, 99)
         heapq.heappush(
@@ -52,10 +54,11 @@ class Beyin:
         anahtar = (noron_id, olay_zamani)
         if anahtar in self._entegrasyon_planlari:
             return None
-        self._entegrasyon_planlari.add(anahtar)
-        return self.olay_planla(
+        olay_id = self.olay_planla(
             self.ENTEGRASYON_GECIKMESI, "entegrasyon", noron_id
         )
+        self._entegrasyon_planlari.add(anahtar)
+        return olay_id
 
     def duyusal_girdi(self, noron_id, dendrit_id, etki, gecikme=1e-6):
         if noron_id not in self.noronlar:
