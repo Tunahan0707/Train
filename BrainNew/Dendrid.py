@@ -45,8 +45,6 @@ class Dendrid:
         u = math.tanh(
             elektriksel_toplam / self.sinyal_olcegi + kimyasal_modulasyon
         )
-        if u != 0.0:
-            self.son_islenen_sinapslar.update(self.sinaps_katkilari)
         return elektriksel_toplam, u
 
     def firsat_sonucu_ogren(self, aktif_sinapslar, zaman, adim=0.01):
