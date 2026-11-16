@@ -35,7 +35,7 @@ class Mikroglia:
             raise ValueError("Mikroglia tarama zamanı sonlu olmalı ve geriye gitmemeli.")
 
         yakin_baglantilar = baglanti_indeksi.yakinindakileri_bul(
-            self.konum, self.algilama_yaricap
+            self.konum, self.algilama_yaricapi
         )
         kopanlar = []
 
