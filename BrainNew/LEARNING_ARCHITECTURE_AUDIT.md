@@ -14,7 +14,8 @@ Güncel dalda `Baglanti.py`, `Beyin.py`, `Dendrid.py`, `Noron.py`, `KimyasalAlan
 |---|---|---|---|---|
 | `Baglanti.potansiyel` | Dendritik iç-yönlendirme sinyaliyle değişen, terminalin ateşleme anında hazır olup olmadığını belirleyen yerel durum | Baglanti | Kısa; `sonum_tau` ile sıfıra sönümlenir | Hayır |
 | `Baglanti.esik` | Terminalin aktive edilmeye uygunluk eşiği | Baglanti | Sabit parametre | Şu an hayır |
-| `Baglanti.etki` | Gerçek pre→post iletim olayında hedef dendrite verilen sabit işaretli etki miktarı | Baglanti | Bağlantı ömrü | Hayır; henüz öğrenilmiyor |
+| `Baglanti.etki` | Gerçek pre→post iletim olayının işaretli temel etki miktarı | Baglanti | Bağlantı ömrü | Hayır |
+| `Baglanti.sinaptik_agirlik` | Temel elektriksel etkiyi ölçekleyen kalıcı, sınırlı katsayı | Baglanti | Bağlantı ömrü | Evet; parametre var, otomatik öğrenme henüz yok |
 | `Baglanti.iz` | Aktivasyonla artan ve sönümlenen kullanım/bakım izi | Baglanti | Geçici, `sonum_tau` ile sönümlenir | Hayır |
 | `Baglanti.pre_iz` | Kaynak terminal aktive olduğunda artan, üstel sönümlü presinaptik etkinlik izi | Baglanti | Kısa | Hayır |
 | `Baglanti.post_iz` | Hedef nöron ateşlendiğinde artırılan postsinaptik iz | Baglanti | Kısa | Hayır |
@@ -31,7 +32,7 @@ Güncel dalda `Baglanti.py`, `Beyin.py`, `Dendrid.py`, `Noron.py`, `KimyasalAlan
 
 `Baglanti.kaynak`, `Baglanti.hedef` ve `hedef_dendrit_id` yönlü iletim kenarını tanımlar. Kaynak nöronun ateşlenmesi terminali aktive eder; olay gecikmeyle hedef nöronun belirtilen dendritine iletilir. `Baglanti.etki` bu hedef girdinin sabit büyüklüğüdür.
 
-Bu gerçek bağlantı için ayrı, kalıcı ve öğrenilebilir bir sinaptik etkinlik katsayısı henüz yoktur. `etki` şu anda sabittir. Bu nedenle mevcut kod gerçek pre→post sinaptik ağırlık öğreniyor diye raporlanamaz.
+Bu gerçek bağlantı için ayrı kalıcı elektriksel katsayı `sinaptik_agirlik` eklendi. İletilen elektriksel etki `etki * sinaptik_agirlik` olur. Katsayı [0,2] aralığındadır ve şu an yalnızca açıkça ayarlanan parametredir; henüz otomatik öğrenilmez. Kimyasal transmitter salımı bu katsayıyla ölçeklenmez. Bu nedenle mevcut kod gerçek pre→post sinaptik ağırlık öğreniyor diye raporlanamaz.
 
 ### 3.2 Nöron-içi dendrit→çıkış-terminali yönlendirmesi
 
@@ -67,7 +68,7 @@ Bu nedenle mevcut `post_iz` testleri yalnızca iz artışını doğrular; bağla
 | Öğrenilebilir durum | Tek güncelleme sahibi | Güncelleme tetikleyicisi | Sınır/ömür |
 |---|---|---|---|
 | Dendrit-terminal katkısı | İlgili Dendrid | Kendi yerel sinyalinin işlendiği nöron entegrasyonu ve ateşlenme sonucu | Dendritin `katki_alt`–`katki_ust` sınırları |
-| Gerçek sinaptik etkinlik katsayısı (henüz eklenmedi) | İlgili Baglanti | Doğrulanmış pre/post yerel olay eşleşmesi ve daha sonra tanımlanacak plastisite kuralı | Açıkça tanımlanacak alt/üst sınır |
+| Gerçek sinaptik etkinlik katsayısı | İlgili Baglanti | Şu an açık parametre ayarı; ileride doğrulanmış yerel öğrenme kuralı | [0,2] |
 | Sinaptik uygunluk izi (henüz eklenmedi) | İlgili Baglanti | Bağlantıya nedensel olarak atfedilmiş pre/post etkinlik | Geçici, sönümlü |
 | Nöron homeostatik durumu (henüz eklenmedi) | İlgili Noron | Uzun dönem yerel etkinlik ölçümü | Sınırlı ve yavaş |
 | Yapısal bütünlük | İlgili Baglanti | Yerel bakım değerlendirmesi | [0,1] |
@@ -83,7 +84,7 @@ Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri 
 - Kalıcı parametrelerin tek bir yerel güncelleme sahibi olması ilkesi tanımlı.
 
 **Kodda henüz sağlanmayan koşullar**
-- Gerçek sinaptik etkinlik katsayısı henüz yok.
+- Gerçek sinaptik etkinlik katsayısı eklendi; otomatik plastisite kuralı henüz yok.
 - Sinaptik olayın kaynak bağlantı kimliği hedef dendrit entegrasyonuna kadar taşınmıyor.
 - Postsinaptik iz bütün gelen bağlantılara artırılıyor; yalnızca gerçekten katkı veren bağlantılarla sınırlandırılmalı.
 - Pre/post izleri mevcut olsa da bunlar henüz güvenilir, bağlantı-seçici STDP altyapısı değildir.
