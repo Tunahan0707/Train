@@ -33,7 +33,7 @@ python -m BrainNew.main
 - `test_experiment_runner.py`: Baseline deney örneklerinin bağımsız çalışması, eğitim/test ayrımı, tekrarlanabilir ölçüm ve doğru/yanlış pozitif-negatif sayımları.
 - `test_spatial_index.py`: 2B hücre tabanlı yerel aday arama, yarıçap doğruluğu, deterministik sıralama, kayıt/silme ve konum güncellemesi.
 - `test_chemical.py`: Transmitter kaynakları, çoklu salım, tür ayrımı, 2B uzamsal yayılım, zamansal sönüm, analitik yoğunluk formülü, reseptör duyarlılığı ve geçersiz kimyasal kaynak/sorgu değerleri.
-- `test_microglia.py`: Bağımsız mikroglia ajanı, algılama yarıçapı, düşük kullanım ile budama sinyalinin birlikte gerekliliği, stabilizasyon ve Beyin'in yalnızca olay koordinasyonu yapması.
+- `test_microglia.py`: Bağımsız mikroglia ajanı, algılama yarıçapı, düşük kullanım ile budama sinyalinin birlikte gerekliliği, stabilizasyon, sonlu zaman aralığında periyodik bakım ve Beyin'in yalnızca olay koordinasyonu yapması.
 
 ## Testlerin yorumlanması
 
