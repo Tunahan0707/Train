@@ -131,8 +131,8 @@ class Noron:
         self.ateslenme_sayisi += 1
         return True
 
-    def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
-        """Yerel bakım, sinaps seçimi, aktivasyon ve transmitter salımı."""
+    def baglantilari_bakimdan_gecir(self, zaman, kimyasal_alan=None):
+        """Gelen yerel etkinlikte her çıkış bağlantısının kendi bakımını işler."""
         for sinaps in tuple(self.cikis_sinapslari):
             sinaps.yerel_bakim(kimyasal_alan, zaman)
             if sinaps.kopuk:
@@ -142,6 +142,8 @@ class Noron:
                     dendrit.sinaps_degerlendirmeleri.pop(sinaps, None)
                     dendrit.son_islenen_sinapslar.discard(sinaps)
 
+    def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
+        """Nöronun seçtiği sinapsları aktive eder ve transmitter salar."""
         aktif = []
         for sinaps in self.cikis_sinapslari:
             if not sinaps.aktive_olabilir_mi(zaman):
@@ -163,6 +165,7 @@ class Noron:
             return False, []
 
         toplam = self.girdileri_birlestir(zaman, kimyasal_alan)
+        self.baglantilari_bakimdan_gecir(zaman, kimyasal_alan)
         self.son_entegrasyon_zamani = float(zaman)
         if not self.membrani_guncelle(toplam, zaman):
             return False, []
