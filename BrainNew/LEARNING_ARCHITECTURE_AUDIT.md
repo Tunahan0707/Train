@@ -76,33 +76,33 @@ Bu kural, pre→post sıralamasında pozitif ağırlık değişimi üretir. Ayr�
 
 Beyin yalnızca simülasyon saatini, olay kuyruğunu ve bileşenler arası veri aktarımını yönetir. Öğrenme değişkenlerinin değerini seçmez veya hangi bağlantının değişeceğine karar vermez.
 
-## 6. Aşama 1 sonucu
+## 6. Uygulama durumu
 
-**Tamamlanan teorik ayrımlar**
-- Geçici terminal potansiyeli ile gerçek bağlantı iletim etkisi ayrı.
-- Dendrit-terminal iç-yönlendirme katkısı ile gerçek pre→post bağlantı öğrenmesi ayrı.
-- Kullanım izi, pre/post izleri ve ilerideki uygunluk izi ayrı işlevler.
-- Kalıcı parametrelerin tek bir yerel güncelleme sahibi olması ilkesi tanımlı.
+**Kodda bulunan katmanlar**
+- Geçici terminal potansiyeli ile gerçek bağlantı iletim katsayısı ayrı.
+- Dendrit-terminal iç-yönlendirme katkısı ile gerçek pre→post sinaptik ağırlık ayrı.
+- Kaynak bağlantı kimliği hedef dendrit entegrasyonuna kadar taşınıyor.
+- Bağlantı bazında pre/post izleri, yerel Hebbian LTP ve ters sıralı STDP-LTD uygulanıyor.
+- İşaretli, sınırlı ve sönümlü uygunluk izi; yerel ödül/ceza kimyasal alanıyla gecikmiş ağırlık güncellemesi ilk sürüm olarak eklendi.
+- Öğrenme durumları ilgili Baglanti nesnesinde tutuluyor; Beyin yalnızca olay akışını koordine ediyor.
 
-**Kodda henüz sağlanmayan koşullar**
-- Gerçek sinaptik etkinlik katsayısı eklendi; otomatik plastisite kuralı henüz yok.
-- Sinaptik olayın kaynak bağlantı kimliği hedef dendrit entegrasyonuna kadar taşınmıyor.
-- Postsinaptik iz bütün gelen bağlantılara artırılıyor; yalnızca gerçekten katkı veren bağlantılarla sınırlandırılmalı.
-- Pre/post izleri mevcut olsa da bunlar henüz güvenilir, bağlantı-seçici STDP altyapısı değildir.
+**Henüz doğrulanmamış noktalar**
+- Gecikmiş modülatörün gerçek simülasyon olay akışında hangi sıklıkta örnekleneceği ve kısa ödül darbelerinin kaçırılma riski.
+- Anlık STDP ile gecikmiş modülatör güncellemesinin birlikte çalışmasının ağ düzeyindeki etkisi.
+- Parametrelerin kararlılığı, görev öğrenmesi ve genelleme.
+- Uygunluk izinin biyolojik zaman ölçeği ve ödül/ceza alanlarının kalibrasyonu.
 
-Bu nedenle Aşama 1'in veri sözleşmesi netleşmiştir; fakat pre/post izlerinin olay-atıf kısmı uygulama düzeyinde tamamlanmış sayılmaz.
+Bir değişkenin değişmesi tek başına öğrenme kanıtı sayılmaz. Bu katmanlar önce birim testleriyle, sonra ayrılmış eğitim/test deneyleriyle değerlendirilmelidir.
 
 ## 7. Sonraki kontrollü adım
 
-Olay kimliğinin hedef dendrite taşınması ve bağlantı-seçici iz altyapısı uygulanmıştır. Hebbian/STDP ve gecikmiş uygunluk-modülatör yolu da ilk sürümleriyle eklenmiştir. Bundan sonraki adımlar:
-- bağlantı-seçici pre/post izleri,
-- gerçek sinaptik etkinlik katsayısı,
-- STDP/Hebbian güncellemesi,
-- gecikmiş modülatör/uygunluk izi
+Sıradaki adım, üç faktörlü öğrenme yolunu gerçek örüntü görevlerine bağlamak ve modülatörün olay akışında yeterli sıklıkta örneklendiğini doğrulamaktır. Ardından:
+- homeostatik dengeleme,
+- yapısal bağlantı oluşumu ve yeniden bağlantılanma,
+- örüntü geri çağırma ve genelleme deneyleri,
+- ablation karşılaştırmaları
 
-sırasıyla ele alınacaktır.
-
-Her aşamada testler, eğitim/test ayrımı ve olay sırası korunur. Bir değişkenin değişmesi tek başına öğrenme kanıtı sayılmaz.
+kontrollü olarak ele alınacaktır.
 
 
 ## 8. İlk yerel Hebbian ağırlık güncellemesi
