@@ -15,6 +15,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] Refrakter dönemde gelen girdi dendritte tamponlanır; faz döngüsü tamamlandığında bir kez entegre edilir.
 - [x] 2B kimyasal difüzyon çekirdeğinin salım anı tekilliği pozitif başlangıç yaşıyla düzenlendi.
 - [x] Kimyasal kaynak temizliği eklendi; uzaydaki merkez-yoğunluk üst sınırıyla silinen kaynakların toplam olası alan hatası tolerans altında tutulur.
+- [x] Gecikmiş ödül/ceza, zaman damgalı uygunluk değişimleriyle birlikte zaman boyunca entegre edilir; nöron yeniden ateşlenmese bile çalışma dilimi sonunda işlenir.
 - [x] Yeni davranışlar için regresyon testleri eklendi.
 - [x] Seed'li, 2B uzamsal ve seyrek başlangıç ağı kurucusu eklendi; topoloji ve başlangıç parametreleri seed ile tekrarlanabilir.
 
@@ -25,7 +26,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 - Signed synaptic efficacy: kalıcı sinaptik katsayının işaret değiştirebilmesi.
 - Feedback'in çoklu dal, döngü, gecikme, iz eşiği ve pozitif/negatif yönlerde kapsamlı davranış doğrulaması.
-- Gecikmiş ödül/ceza sinyalinin uygunluk iziyle olay tabanlı integrasyonu.
+
 - Bağlantı olgunlaşması, onarımı ve bağlantısız nöron toparlanma döngüsünün tamamlanması.
 - Davranışsal örüntü geri çağırma, genelleme ve matematik görevleri.
 - Ablasyon, çoklu seed kalibrasyonu ve ölçek ölçümleri.
