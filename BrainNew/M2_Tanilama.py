@@ -14,6 +14,9 @@ from BrainNew.M2_BinaryBuyuklukKarsilastirma import (
 def _katman_ozeti(deney, kimlikler, biriken):
     noronlar = [deney.beyin.noronlar[kimlik] for kimlik in kimlikler]
     kayit = biriken["noron"][tuple(kimlikler)]
+    sayisal_maksimum = lambda deger: (
+        round(deger, 6) if deger != float("-inf") else None
+    )
     return {
         "noron_sayisi": len(noronlar),
         "ateslenme": kayit["ateslenme"],
@@ -21,8 +24,8 @@ def _katman_ozeti(deney, kimlikler, biriken):
         "toplam_isaretli_membran_girdisi": round(kayit["isaretli_girdi"], 6),
         "toplam_mutlak_membran_girdisi": round(kayit["mutlak_girdi"], 6),
         "maksimum_tek_entegrasyon_girdisi": round(kayit["maks_girdi"], 6),
-        "gorulen_maksimum_membran": round(kayit["maks_membran"], 6),
-        "gorulen_maksimum_esik_marji": round(kayit["maks_esik_marji"], 6),
+        "gorulen_maksimum_membran": sayisal_maksimum(kayit["maks_membran"]),
+        "gorulen_maksimum_esik_marji": sayisal_maksimum(kayit["maks_esik_marji"]),
         "noron_basina_ateslenme": round(
             kayit["ateslenme"] / len(noronlar), 4
         ) if noronlar else 0.0,
@@ -134,8 +137,18 @@ def tanilama_calistir(seed=20261121):
     ):
         aktivasyon = biriken["sinaps"][ad]["aktivasyon"]
         katsayilar = [sinaps.iletim_etkisi() for sinaps in sinapslar]
+        potansiyel_marjlari = [
+            sinaps.potansiyel - sinaps.esik for sinaps in sinapslar
+        ]
         rapor["sinapslar"][ad] = {
             "terminal_sayisi": len(sinapslar),
+            "son_durum_esik_ustu_terminal": sum(x >= 0.0 for x in potansiyel_marjlari),
+            "son_durum_potansiyel_esik_marji_min": round(
+                min(potansiyel_marjlari, default=0.0), 6
+            ),
+            "son_durum_potansiyel_esik_marji_maks": round(
+                max(potansiyel_marjlari, default=0.0), 6
+            ),
             "toplam_aktivasyon": aktivasyon,
             "aktivasyon_basi_ortalama": round(
                 aktivasyon / len(sonuclar), 4
