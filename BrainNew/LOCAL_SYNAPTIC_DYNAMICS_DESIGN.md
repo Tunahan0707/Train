@@ -402,7 +402,7 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 29. Aynı transmitter farklı dendritlerde farklı yanıt oluşturabilir.
 30. Presinaptik salım modülasyonu ile postsinaptik/dendritik algılama etkisi birbirinden ayrı test edilir.
 31. Yerel yeniden düzenleme sinyali yalnızca hedef dendritin/bağlantı alanının katkılarını etkiler; küresel öğrenilmiş parametreleri sıfırlamaz.
-32. Mikroglia-benzeri denetim bağlantı nesnesinin yerel durum/rule set'i üzerinden çalışır; merkezi veya bağımsız küresel budama yöneticisi yoktur.
+32. Mikroglia-benzeri denetim bağımsız 2B ajanlar tarafından yürütülür; uzamsal indeks yalnızca yerel adayları bulur, merkezi Beyin budama kararı vermez.
 33. Bağlantının işlevsel zayıflaması ile fiziksel kopması ayrı olaylardır.
 34. Yalnızca kullanılmama süresi tek başına bağlantıyı silmez.
 35. Koruma/stabilizasyon sinyali bağlantının yaşlanmasını veya budama baskısını azaltabilir.
