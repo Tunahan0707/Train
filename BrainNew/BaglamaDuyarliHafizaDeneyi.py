@@ -276,6 +276,8 @@ class BaglamaDuyarliHafizaDeneyi:
     ):
         """Bağımsız seed koşularını birleştirir ve seed'ler arası aralığı raporlar."""
         seedler = tuple(seedler)
+        gurultu_oranlari = tuple(float(x) for x in gurultu_oranlari)
+        kanallar = tuple(kanallar)
         if not seedler or any(not isinstance(x, int) for x in seedler):
             raise ValueError("En az bir tam sayı seed gerekli.")
         if len(set(seedler)) != len(seedler):
