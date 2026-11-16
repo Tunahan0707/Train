@@ -36,7 +36,8 @@ Her kayıt simülasyon zamanı, monoton olay sıra numarası, olay türü, kayna
 - kalıcı sinaptik etkinlik katsayısı;
 - geçici terminal hazır olma potansiyeli;
 - dendrit-terminal katkısı;
-- pre/post izleri ve uygunluk izi;
+- presinaptik ve postsinaptik kısa ömürlü etkinlik izleri;
+- uygunluk izi (henüz uygulanmadı);
 - ağırlık sınırına dayanmış sinaps oranı;
 - etkinleşme ve bağlantı yaşam süresi dağılımı.
 
