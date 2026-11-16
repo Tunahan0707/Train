@@ -134,7 +134,7 @@ class Baglanti:
         self.kimyasal_yayilim = float(kimyasal_yayilim)
         self.kimyasal_temizlenme = float(kimyasal_temizlenme)
 
-        # Bağlantı-yerel mikroglia-benzeri yapısal durum.
+        # Bağlantının yapısal durumu; bakım kararını bağımsız Mikroglia verir.
         self.yapisal_butunluk = float(baslangic_yapisal_butunluk)
         self.yapisal_olgunluk = float(baslangic_yapisal_olgunluk)
         self.olgunlasma_kazanci = float(olgunlasma_kazanci)
