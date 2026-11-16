@@ -156,76 +156,58 @@ class Beyin:
         self.girdi_al(veri)
         return self.calistir(adim_sayisi)
 
-    def geri_bildirim(self, deger):
-        """Geri bildirim motor nöronlarından başlar; beyin yalnızca dalgayı koordine eder."""
+    def geri_bildirim(
+        self,
+        deger,
+        baslangic_noronlari=None,
+        esik_alti=False
+    ):
+        """
+        Geri bildirim dalgasını verilen başlangıç nöronlarından
+        geriye doğru koordine eder.
+
+        Başlangıç nöronları belirtilmezse ateşlenmiş motor nöronları
+        kullanılır. esik_alti yalnızca başlangıç nöronlarının yerel
+        katkı kayıtlarını değerlendirmesini sağlar.
+
+        Beklenen çıktıyı belirlemek veya hata hesaplamak bu sınıfın
+        görevi değildir; bunlar deney/eğitim katmanına aittir.
+        """
         if deger not in (-1.0, 0.0, 1.0):
             raise ValueError("Geri bildirim -1, 0 veya +1 olmalıdır.")
         if deger == 0:
             return
 
-        kuyruk = deque(
-            noron
-            for indeks, noron in enumerate(self.motor_noronlari)
-            if self.motor_organ.ciktilar[indeks] == 1
-        )
+        if baslangic_noronlari is None:
+            baslangic_noronlari = [
+                noron
+                for indeks, noron in enumerate(self.motor_noronlari)
+                if self.motor_organ.ciktilar[indeks] == 1
+            ]
+        else:
+            baslangic_noronlari = list(baslangic_noronlari)
+
+        motor_kumesi = set(self.motor_noronlari)
+        if any(noron not in motor_kumesi for noron in baslangic_noronlari):
+            raise ValueError("Geri bildirim başlangıçları motor nöronları olmalıdır.")
+
+        kuyruk = deque((noron, True) for noron in baslangic_noronlari)
         ziyaret_edilen = set()
 
         while kuyruk:
-            noron = kuyruk.popleft()
+            noron, kok = kuyruk.popleft()
             if noron in ziyaret_edilen:
                 continue
 
             ziyaret_edilen.add(noron)
-            onceki_noronlar = noron.geri_bildirim(deger)
+            onceki_noronlar = noron.geri_bildirim(
+                deger,
+                esik_alti_katkilar=(kok and esik_alti)
+            )
 
             for onceki_noron in onceki_noronlar:
                 if onceki_noron not in ziyaret_edilen:
-                    kuyruk.append(onceki_noron)
-
-    def ogren(self, hedef_cikti):
-        """
-        Beklenen motor çıktısıyla gerçek çıktıyı karşılaştırır
-        ve yalnızca hata bulunan motor nöronlarından geri bildirim
-        dalgası başlatır.
-
-        Pozitif hata sinyali, hedefi 1 olduğu hâlde ateşlenmemiş
-        motor nöronunda eşik altı sinaptik katkıları da değerlendirir.
-        """
-        hedef_cikti = list(hedef_cikti)
-
-        if len(hedef_cikti) != len(self.motor_noronlari):
-            raise ValueError("Hedef çıktı uzunluğu motor nöron sayısıyla eşleşmiyor.")
-
-        if any(bit not in (0, 1) for bit in hedef_cikti):
-            raise ValueError("Hedef çıktı yalnızca 0 ve 1 içerebilir.")
-
-        for indeks, (hedef, noron) in enumerate(
-            zip(hedef_cikti, self.motor_noronlari)
-        ):
-            gercek = self.motor_organ.ciktilar[indeks]
-            if hedef == gercek:
-                continue
-
-            # Hedef 1 / gerçek 0: güçlendir.
-            # Hedef 0 / gerçek 1: zayıflat.
-            deger = 1.0 if hedef == 1 else -1.0
-            kuyruk = deque([(noron, True)])
-            ziyaret_edilen = set()
-
-            while kuyruk:
-                mevcut, kok = kuyruk.popleft()
-                if mevcut in ziyaret_edilen:
-                    continue
-
-                ziyaret_edilen.add(mevcut)
-                onceki_noronlar = mevcut.geri_bildirim(
-                    deger,
-                    esik_alti_katkilar=(kok and deger > 0)
-                )
-
-                for onceki_noron in onceki_noronlar:
-                    if onceki_noron not in ziyaret_edilen:
-                        kuyruk.append((onceki_noron, False))
+                    kuyruk.append((onceki_noron, False))
 
     def uygunluk_izlerini_guncelle(self):
         for baglanti in tuple(self.etkin_baglantilar):
