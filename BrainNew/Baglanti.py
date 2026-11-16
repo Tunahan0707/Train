@@ -22,6 +22,8 @@ class Baglanti:
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
         if uzunluk < 0 or iletim_hizi <= 0 or sonum_tau <= 0:
             raise ValueError("Bağlantı parametreleri geçersiz.")
+        if not -1.0 <= esik <= 1.0:
+            raise ValueError("Sinaps eşiği [-1, 1] potansiyel aralığında olmalı.")
         if not -1.0 <= baslangic_potansiyeli <= 1.0:
             raise ValueError("Başlangıç potansiyeli [-1, 1] aralığında olmalı.")
         if kimyasal_yayilim <= 0 or kimyasal_temizlenme < 0:
