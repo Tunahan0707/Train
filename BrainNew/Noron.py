@@ -176,6 +176,7 @@ class Noron:
                 and not sinaps.kopuk
                 and sinaps in self.gelen_sinapslari
             ):
+                sinaps.hebbian_ogren(zaman)
                 sinaps.postsinaptik_iz_arttir(zaman)
         self._entegrasyon_girdi_sinapslari.clear()
 
