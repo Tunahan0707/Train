@@ -74,12 +74,7 @@ class Beyin:
                     self.zaman, self.kimyasal_alan
                 )
                 if noron.membrani_guncelle(toplam, self.zaman) and noron.aksiyon_potansiyeli_baslat():
-                    aktif = [
-                        sinaps for sinaps in noron.cikis_sinapslari
-                        if sinaps.aktive_olabilir_mi(self.zaman)
-                    ]
-                    for dendrit in noron.dendritler.values():
-                        dendrit.firsat_sonucu_ogren(aktif, self.zaman)
+                    aktif = noron.ateslenme_sonucunu_isle(self.zaman)
                     for sinaps in aktif:
                         self.sinyal_gonder(sinaps, self.zaman)
                     self.olay_planla(1.0, "faz", hedef_id)
