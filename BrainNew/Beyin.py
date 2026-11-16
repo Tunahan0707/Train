@@ -37,13 +37,7 @@ class Beyin:
         if sinaps.hedef is not None and sinaps.hedef_dendrit_id not in sinaps.hedef.dendritler:
             raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
         gecikme = sinaps.aktive_et(zaman)
-        if self.kimyasal_alan is not None:
-            for tur, miktar in sinaps.transmitter_profili.items():
-                self.kimyasal_alan.sal(
-                    tur, sinaps.terminal_konumu, miktar, zaman,
-                    yayilim=sinaps.kimyasal_yayilim,
-                    temizlenme=sinaps.kimyasal_temizlenme
-                )
+        sinaps.kimyasal_sal(self.kimyasal_alan, zaman)
         if sinaps.hedef is not None:
             self.olay_planla(
                 gecikme, "sinaptik_girdi", sinaps.hedef.kimlik,
