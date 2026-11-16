@@ -109,10 +109,10 @@ class Beyin:
             dendrit_id, etki = veri
         else:
             kaynak_sinaps, dendrit_id, etki = veri
-        noron.girdi_al(
-            dendrit_id, etki, zaman=self.zaman,
-            kaynak_sinaps=kaynak_sinaps
-        )
+        # Eski Noron alt sınıflarıyla uyumluluk için mevcut girdi imzasını koru.
+        noron.girdi_al(dendrit_id, etki, zaman=self.zaman)
+        if kaynak_sinaps is not None:
+            noron.girdi_kaynagini_isaretle(dendrit_id, kaynak_sinaps)
         self._entegrasyon_planla(noron.kimlik)
 
     def adim(self):
