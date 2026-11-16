@@ -7,8 +7,8 @@ Bu belge tasarım sözleşmesinin yerine geçmez. Kesin kararlar korunur; kalibr
 
 ## Prototip çekirdeği
 
-- `Beyin.py`: Simülasyon saati, deterministik olay kuyruğu ve bileşenler arası koordinasyon. Membranı güncellemez, eşik kontrolü yapmaz ve ateşlenme kararı vermez.
-- `Noron.py`: Dendrit girdilerini bütünleştirir, membranı günceller, ateşlenme eşiğini değerlendirir, aksiyon potansiyelini başlatır, uygun çıkış sinapslarını seçer ve kendi faz döngüsünü yönetir.
+- `Beyin.py`: Simülasyon saati, deterministik olay kuyruğu ve bileşenler arası koordinasyon. Membranı güncellemez, eşik kontrolü yapmaz, çıkış sinapsı seçmez ve normal ağ akışında sinapsı aktive etmez; yalnızca nöronun aktive ettiği sinapsların iletimini zamanlar.
+- `Noron.py`: Dendrit girdilerini bütünleştirir, membranı günceller, ateşlenme eşiğini değerlendirir, aksiyon potansiyelini başlatır, uygun çıkış sinapslarını seçip aktive eder, terminal kimyasal salımını başlatır ve kendi faz döngüsünü yönetir.
 - `Dendrid.py`: İşaretli girdileri tamponlar, transmitter reseptör yanıtını yerel sinyale modülatör olarak ekler ve dendrit-sinaps katkılarını taşır.
 - `Baglanti.py`: Yerel aktivasyon potansiyeli, eşik, lazy sönüm, etkinlik izi, hedefe iletim gecikmesi ve terminal transmitter repertuvarını taşır.
 - `KimyasalAlan.py`: Transmitter türlerini ayrı tutan 2B analitik difüzyon/sönüm alanı.
@@ -19,8 +19,8 @@ Bu belge tasarım sözleşmesinin yerine geçmez. Kesin kararlar korunur; kalibr
 2. Nöron girdiyi kendi dendrit tamponuna alır.
 3. Beyin yalnızca bir entegrasyon zamanı planlar; aynı nöron ve aynı zaman için yinelenen entegrasyon olaylarını tekilleştirir.
 4. Entegrasyon anında nöron kendi girdilerini birleştirir, dendritik sinaps katkılarını günceller, membranını değerlendirir ve gerekiyorsa ateşlenir.
-5. Nöron yalnızca yerel potansiyeli eşiği karşılayan çıkış sinapslarını seçer.
-6. Beyin seçilmiş sinapsların iletim ve kimyasal salım olaylarını zamanlar.
+5. Nöron yalnızca yerel potansiyeli eşiği karşılayan çıkış sinapslarını seçer ve aktive eder; terminalin kimyasal salımını da sinapsın yerel mekanizması yürütür.
+6. Beyin aktive edilmiş sinapsların hedefe iletim olaylarını zamanlar.
 7. Faz geçişlerini nöronun kendi faz mekanizması yürütür; Beyin yalnızca sonraki faz olayının zamanını kuyruğa koyar.
 
 Aynı zaman damgasındaki olaylarda girdi olayları entegrasyondan önce, faz geçişleri entegrasyondan önce işlenir. Eşit öncelik ve zamanda kararlı olay kimliği sırası korunur. Olay gecikmesi pozitif ve sonlu olmalı; planlanan olay zamanı da sonlu kalmalıdır.
