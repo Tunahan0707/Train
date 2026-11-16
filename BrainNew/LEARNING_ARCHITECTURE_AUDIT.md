@@ -102,3 +102,17 @@ Bir sonraki kod adımı kalıcı ağırlık veya STDP eklemek değildir. Önce s
 sırasıyla ele alınacaktır.
 
 Her aşamada testler, eğitim/test ayrımı ve olay sırası korunur. Bir değişkenin değişmesi tek başına öğrenme kanıtı sayılmaz.
+
+
+## 8. İlk yerel Hebbian ağırlık güncellemesi
+
+- Gerçek pre→post bağlantısının kalıcı elektriksel katsayısı `Baglanti.sinaptik_agirlik` üzerinde çalışır.
+- Kaynak bağlantıdan gelen presinaptik iz, hedef nöronun o bağlantıya atfedilmiş postsinaptik ateşlenmesi sırasında okunur.
+- Yerel güncelleme:
+
+`Δw = η_H · pre_iz · (w_max - w)/(w_max - w_min)`
+
+- Güncelleme yalnızca ilgili bağlantının pre izi pozitifse yapılır; ilgisiz gelen bağlantılar değişmez.
+- Güncelleme bağlantı nesnesinin kendi metodundadır. Nöron yalnızca kendi ateşlenme olayı sırasında ilgili yerel bağlantı metodunu çağırır; Beyin öğrenme hesabı yapmaz.
+- Bu ilk Hebbian katman yalnızca pozitif birliktelik güçlendirmesidir. Nedensel zaman sırası ve ters sıra zayıflatması henüz STDP aşamasına aittir.
+- Bu kuralın görev genellemesi sağladığı henüz gösterilmiş değildir; yalnızca yerel eşleşme öğrenmesinin altyapısıdır.
