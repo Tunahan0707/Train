@@ -39,6 +39,7 @@ class Noron:
         self.dendritler = {}
         self.cikis_sinapslari = []
         self.ateslenme_sayisi = 0
+        self._sinaps_dendritik_sinyalleri = {}
 
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
@@ -68,10 +69,8 @@ class Noron:
     def girdileri_birlestir(self, zaman, kimyasal_alan=None):
         toplam_membran_etkisi = 0.0
         sinaps_katkilari = {}
+        self._sinaps_dendritik_sinyalleri = {}
 
-        # Öğrenme değerlendirmesi yalnızca bu entegrasyon olayında gerçekten
-        # katkı yükleyen dendrit-sinaps çiftlerine ait olmalı. Önceki ve
-        # ateşlenmeyle sonuçlanmamış entegrasyonların izleri taşınmamalı.
         for dendrit in self.dendritler.values():
             dendrit.son_islenen_sinapslar.clear()
 
@@ -82,24 +81,24 @@ class Noron:
             toplam_membran_etkisi += elektriksel_toplam
             if not math.isfinite(toplam_membran_etkisi):
                 raise ValueError("Nöron membranına gelen toplam etki sonlu olmalı.")
-
             if yerel_sinyal == 0.0:
                 continue
+
             for sinaps, katki in dendrit.sinaps_katkilari.items():
                 etki = katki * yerel_sinyal
                 if etki == 0.0:
                     continue
-                sinaps_katkilari.setdefault(sinaps, []).append(
-                    (dendrit, etki)
-                )
+                sinaps_katkilari.setdefault(sinaps, []).append((dendrit, etki))
                 dendrit.son_islenen_sinapslar.add(sinaps)
 
-        # Normalizasyon sinaps başına, o olaya gerçekten katkı veren
-        # dendrit sayısına göre yapılır.
         for sinaps, katkilar in sinaps_katkilari.items():
             toplam = sum(deger for _, deger in katkilar)
             normalizasyon = math.sqrt(max(1, len(katkilar)))
-            sinaps.etki_uygula(toplam / normalizasyon, zaman)
+            sinaps_etkisi = toplam / normalizasyon
+            sinaps.etki_uygula(sinaps_etkisi, zaman)
+            self._sinaps_dendritik_sinyalleri[sinaps] = max(
+                -1.0, min(1.0, sinaps_etkisi)
+            )
 
         return toplam_membran_etkisi
 
@@ -133,13 +132,25 @@ class Noron:
         return True
 
     def ateslenme_sonucunu_isle(self, zaman, kimyasal_alan=None):
-        """Sinaps uygunluğunu, aktivasyonunu ve terminal salımını yerel yürütür."""
+        """Yerel bakım, sinaps seçimi, aktivasyon ve transmitter salımı."""
+        for sinaps in tuple(self.cikis_sinapslari):
+            sinaps.yerel_bakim(kimyasal_alan, zaman)
+            if sinaps.kopuk:
+                self.cikis_sinapslari.remove(sinaps)
+                for dendrit in self.dendritler.values():
+                    dendrit.sinaps_katkilari.pop(sinaps, None)
+                    dendrit.sinaps_degerlendirmeleri.pop(sinaps, None)
+                    dendrit.son_islenen_sinapslar.discard(sinaps)
+
         aktif = []
         for sinaps in self.cikis_sinapslari:
             if not sinaps.aktive_olabilir_mi(zaman):
                 continue
             gecikme = sinaps.aktive_et(zaman)
-            sinaps.kimyasal_sal(kimyasal_alan, zaman)
+            sinaps.kimyasal_sal(
+                kimyasal_alan, zaman,
+                self._sinaps_dendritik_sinyalleri.get(sinaps, 0.0)
+            )
             aktif.append((sinaps, gecikme))
 
         aktif_sinapslar = [sinaps for sinaps, _ in aktif]
@@ -148,7 +159,6 @@ class Noron:
         return aktif
 
     def entegrasyonu_isle(self, zaman, kimyasal_alan=None):
-        """Girdileri bütünleştirir ve ateşlenme kararını yerel olarak verir."""
         if self.durum != self.DINLENME:
             return False, []
 
@@ -162,7 +172,6 @@ class Noron:
         return True, self.ateslenme_sonucunu_isle(zaman, kimyasal_alan)
 
     def faz_gecisi_gecikmesi(self):
-        """Mevcut aksiyon potansiyeli fazının süresini döndürür."""
         if self.durum == self.DEPOLARIZASYON:
             return 1.0
         if self.durum == self.REPOLARIZASYON:
@@ -172,7 +181,6 @@ class Noron:
         raise RuntimeError("Dinlenme durumundaki nöronun faz süresi yoktur.")
 
     def faz_degistir(self):
-        """Fazı ilerletir; sonraki faz olayının gecikmesini döndürür."""
         if self.durum == self.DEPOLARIZASYON:
             self.durum = self.REPOLARIZASYON
             self.membran = self.repolarizasyon_degeri
