@@ -1,7 +1,7 @@
 import unittest
 
 from BrainNew.M1_BuyuklukKarsilastirma import BuyuklukKarsilastirmaDeneyi
-from BrainNew.M1_Tanilama import _agirlik_gruplari, _davranis_ozeti
+from BrainNew.M1_Tanilama import (\n    _agirlik_gruplari, _davranis_ozeti, _projeksiyon_imzasi,\n    _projeksiyon_ozeti, _episode_akisini_ozetle,\n)
 
 
 class BuyuklukKarsilastirmaTests(unittest.TestCase):
@@ -123,6 +123,32 @@ class BuyuklukKarsilastirmaTests(unittest.TestCase):
         self.assertEqual(ozet[deney.SAG]["baslangic"]["n"], 18)
         self.assertEqual(ozet["WTA"]["baglanti_sayisi"], 2)
         self.assertEqual(ozet["WTA"]["maksimum_mutlak_delta"], 0.0)
+
+
+    def test_projection_diagnostic_reports_signed_effect_and_dendrite_gate(self):
+        deney = BuyuklukKarsilastirmaDeneyi(seed=20261120)
+        imza = _projeksiyon_imzasi(deney)
+        self.assertEqual(len(imza), 36)
+        for kayit in imza.values():
+            self.assertAlmostEqual(
+                kayit["iletim_katsayisi"],
+                kayit["baz_etki"] * kayit["sinaptik_agirlik"] * kayit["yapisal_olgunluk"],
+            )
+            self.assertGreaterEqual(kayit["dendrit_katkisi"], 0.3)
+            self.assertLessEqual(kayit["dendrit_katkisi"], 0.8)
+        ozet = _projeksiyon_ozeti(imza)
+        self.assertEqual(ozet["SOL_GIRDI->SOL_BUYUK"]["n"], 9)
+        self.assertEqual(ozet["SAG_GIRDI->SAG_BUYUK"]["n"], 9)
+
+    def test_terminal_flow_uses_activation_count_delta_and_signed_coefficient(self):
+        deney = BuyuklukKarsilastirmaDeneyi(seed=8)
+        sinaps = next(s for s in deney.sinapslar if s.kimlik == "SL1->SOL_BUYUK")
+        onceki = {s.kimlik: s.aktivasyon_sayisi for s in deney.sinapslar}
+        katsayi = sinaps.iletim_etkisi()
+        sinaps.aktivasyon_sayisi += 3
+        kayit = _episode_akisini_ozetle(deney, onceki)["SOL_GIRDI->SOL_BUYUK"]
+        self.assertEqual(kayit["terminal_aktivasyonu"], 3)
+        self.assertAlmostEqual(kayit["imzali_iletim_toplami"], 3 * katsayi)
 
 
 if __name__ == "__main__":
