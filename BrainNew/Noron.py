@@ -130,6 +130,7 @@ class Noron:
         self.tanilama_maksimum_membran_girdisi = 0.0
         self.tanilama_maksimum_membran = self.dinlenme_degeri
         self.tanilama_maksimum_esik_marji = self.dinlenme_degeri - self.esik
+        self.tanilama_dendrit_girdileri = {}
 
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
@@ -189,6 +190,29 @@ class Noron:
             )
             self._entegrasyon_girdi_sinapslari.update(
                 dendrit.son_girdi_kaynak_sinapslari
+            )
+            tanilama = self.tanilama_dendrit_girdileri.setdefault(
+                dendrit.kimlik,
+                {
+                    "entegrasyon": 0,
+                    "isaretli_girdi": 0.0,
+                    "mutlak_girdi": 0.0,
+                    "maks_pozitif_girdi": 0.0,
+                    "maks_negatif_girdi": 0.0,
+                    "maks_mutlak_girdi": 0.0,
+                },
+            )
+            tanilama["entegrasyon"] += 1
+            tanilama["isaretli_girdi"] += elektriksel_toplam
+            tanilama["mutlak_girdi"] += abs(elektriksel_toplam)
+            tanilama["maks_pozitif_girdi"] = max(
+                tanilama["maks_pozitif_girdi"], elektriksel_toplam
+            )
+            tanilama["maks_negatif_girdi"] = min(
+                tanilama["maks_negatif_girdi"], elektriksel_toplam
+            )
+            tanilama["maks_mutlak_girdi"] = max(
+                tanilama["maks_mutlak_girdi"], abs(elektriksel_toplam)
             )
             toplam_membran_etkisi += elektriksel_toplam
             if not math.isfinite(toplam_membran_etkisi):
@@ -543,6 +567,7 @@ class Noron:
         self.tanilama_maksimum_membran_girdisi = 0.0
         self.tanilama_maksimum_membran = self.dinlenme_degeri
         self.tanilama_maksimum_esik_marji = self.dinlenme_degeri - self.esik
+        self.tanilama_dendrit_girdileri = {}
         self.yerel_aktivite_izi = 0.0
         self.son_yerel_aktivite_guncelleme = zaman
         self.son_ateslenme_zamani = None

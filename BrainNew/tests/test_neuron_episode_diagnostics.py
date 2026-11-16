@@ -22,6 +22,33 @@ class NoronEpisodeDiagnosticsTests(unittest.TestCase):
         self.assertAlmostEqual(neuron.tanilama_maksimum_membran, -50.0)
         self.assertAlmostEqual(neuron.tanilama_maksimum_esik_marji, 5.0)
 
+    def test_dendrite_input_diagnostics_are_separate_and_passive(self):
+        brain = Beyin()
+        neuron = Noron("N")
+        neuron.dendrit_ekle(Dendrid("D1"))
+        neuron.dendrit_ekle(Dendrid("D2"))
+        brain.noron_ekle(neuron)
+
+        brain.duyusal_girdi("N", "D1", 12.0)
+        brain.duyusal_girdi("N", "D2", -5.0)
+        brain.calistir()
+
+        self.assertEqual(neuron.tanilama_dendrit_girdileri["D1"]["entegrasyon"], 1)
+        self.assertAlmostEqual(neuron.tanilama_dendrit_girdileri["D1"]["isaretli_girdi"], 12.0)
+        self.assertAlmostEqual(neuron.tanilama_dendrit_girdileri["D2"]["isaretli_girdi"], -5.0)
+        self.assertAlmostEqual(neuron.tanilama_dendrit_girdileri["D2"]["maks_negatif_girdi"], -5.0)
+
+    def test_dendrite_input_diagnostics_reset_between_episodes(self):
+        neuron = Noron("N")
+        neuron.dendrit_ekle(Dendrid("D"))
+        neuron.tanilama_dendrit_girdileri["D"] = {
+            "entegrasyon": 3, "isaretli_girdi": 10.0, "mutlak_girdi": 10.0,
+            "maks_pozitif_girdi": 10.0, "maks_negatif_girdi": 0.0,
+            "maks_mutlak_girdi": 10.0,
+        }
+        neuron.episode_sifirla(1.0)
+        self.assertEqual(neuron.tanilama_dendrit_girdileri, {})
+
     def test_episode_reset_clears_only_episode_diagnostic_counters(self):
         neuron = Noron("N")
         neuron.dendrit_ekle(Dendrid("D"))
