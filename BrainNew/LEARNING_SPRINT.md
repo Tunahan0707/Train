@@ -704,3 +704,13 @@ Sprint tamamlandığında depoda şu bütünlük bulunmalı:
 ## 8.1. Bağlama duyarlı geri çağırma için sıradaki doğrulama
 
 Ortak ölçek taraması, ipucu ve bağlam girdilerini birlikte değiştirdiği için iki kanalın ayrı katkısını göstermiyordu. Sonraki deneyde bu iki genlik bağımsız değiştirilecek. Tek kanalda %10 azalma ile iki kanalda eşzamanlı %10 azalma karşılaştırılacak. Bu sonuç, eşik marjını kanallar bazında yorumlamaya yarar; rastgele gürültü toleransı veya kendiliğinden bağlam kapısı öğrenimi olarak sunulmayacaktır.
+
+
+### Sıradaki doğrulama — rastgele gürültü ve eksik kanal
+
+Bağımsız genlik taramasını takiben, iki ayrı hata türü ölçülecek:
+
+1. **Rastgele genlik gürültüsü:** Eğitim temiz yapılır. Yalnızca geri çağırmada ipucu ve bağlam girdilerinin her birine bağımsız, sıfır ortalamalı Gauss genlik pertürbasyonu uygulanır. Gürültü oranları ve tekrar sayısı parametrelidir; seed sabittir. Her tekrar temiz eğitilmiş yeni ağla başlar. Tam eşleşme oranı, yanlış pozitif sayısı ve olay sayısı raporlanır.
+2. **Kanal kaybı:** İpucu veya bağlam girdisi tamamen kaldırılır. Tek başına kalan kanalın örüntü çağırmaması ve yanlış pozitif üretmemesi beklenir.
+
+Bu deneyler gürültü dayanıklılığı ve eksik kanal toleransını ayrı ayrı ölçer. Başarı eşiği önceden varsayılmayacak; sonuçlar görüldükten sonra yorumlanacaktır.
