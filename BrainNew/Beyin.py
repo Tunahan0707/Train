@@ -32,6 +32,10 @@ class Beyin:
         )
 
     def sinyal_gonder(self, sinaps, zaman):
+        if zaman != self.zaman:
+            raise ValueError("Sinaps aktivasyonu mevcut simülasyon zamanında yapılmalı.")
+        if sinaps.hedef is not None and sinaps.hedef_dendrit_id not in sinaps.hedef.dendritler:
+            raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
         gecikme = sinaps.aktive_et(zaman)
         if self.kimyasal_alan is not None:
             for tur, miktar in sinaps.transmitter_profili.items():
@@ -41,8 +45,6 @@ class Beyin:
                     temizlenme=sinaps.kimyasal_temizlenme
                 )
         if sinaps.hedef is not None:
-            if sinaps.hedef_dendrit_id is None:
-                raise ValueError("Hedef sinaps için dendrit kimliği belirtilmeli.")
             self.olay_planla(
                 gecikme, "sinaptik_girdi", sinaps.hedef.kimlik,
                 (sinaps.kimlik, sinaps.hedef_dendrit_id, sinaps.etki)
