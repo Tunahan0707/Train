@@ -217,6 +217,61 @@ class Noron:
         return True
 
 
+    def geri_bildirim_uygula(self, aktif_sinapslar, pozitif=True, miktar=0.01):
+        """Feedback'i yalnızca bu nöronun çıkış sinapslarına yerel uygular.
+
+        Beyin feedback'in anlamını veya değişecek sinapsları belirlemez.
+        Aktiflik kümesi, nöronun kendi ateşlenme/terminal değerlendirmesinden
+        gelir. Pozitif ve negatif feedback kullanıcının eşik kuralını izler.
+        """
+        miktar = float(miktar)
+        if not math.isfinite(miktar) or miktar < 0:
+            raise ValueError("Feedback miktarı sonlu ve negatif olmayan değer olmalı.")
+        yon = 1 if pozitif else -1
+        aktifler = set(aktif_sinapslar)
+        degisimler = {}
+        for sinaps in self.cikis_sinapslari:
+            if sinaps.kopuk:
+                continue
+            etkin = sinaps in aktifler
+            # Pozitif: aktif eşik aşağı, pasif eşik yukarı.
+            # Negatif: bunun tersi.
+            yon_esik = -yon if etkin else yon
+            onceki = sinaps.esik
+            sinaps.esik = sinaps.esik_geri_bildirim_uygula(yon_esik, miktar)
+            degisimler[sinaps.kimlik] = sinaps.esik - onceki
+        return degisimler
+
+    def episode_sifirla(self, zaman):
+        """Geçici elektriksel/iz durumlarını sıfırlar; öğrenilmiş yapıyı korur."""
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < 0:
+            raise ValueError("Episode zamanı sonlu ve negatif olmayan değer olmalı.")
+        self.membran = self.dinlenme_degeri
+        self.son_membran_guncelleme = zaman
+        self.son_entegrasyon_zamani = None
+        self.son_girdi_zamani = None
+        self.durum = self.DINLENME
+        self._sinaps_dendritik_sinyalleri.clear()
+        self._entegrasyon_girdi_sinapslari.clear()
+        self.homeostatik_aktivite_izi = 0.0
+        self.son_homeostatik_guncelleme = zaman
+        for dendrit in self.dendritler.values():
+            dendrit.girdiler.clear()
+            dendrit.bekleyen_kaynak_sinapslari.clear()
+            dendrit.son_girdi_kaynak_sinapslari = ()
+            dendrit.son_islenen_sinapslar.clear()
+        for sinaps in set(self.cikis_sinapslari + self.gelen_sinapslari):
+            sinaps.potansiyel = 0.0
+            sinaps.son_guncelleme = zaman
+            sinaps.iz = 0.0
+            sinaps.pre_iz = 0.0
+            sinaps.post_iz = 0.0
+            sinaps.son_iz_guncelleme = zaman
+            sinaps.son_aktivasyon = None
+            sinaps.son_modulator_zamani = zaman
+            sinaps.son_modulator_degeri = 0.0
+
     def yeni_baglanti_adayi_degerlendir(
         self, aday_noronlar, kimyasal_alan, zaman, arama_yaricapi
     ):

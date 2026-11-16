@@ -190,11 +190,19 @@ class Beyin:
         return True
 
     def _girdi_olayini_isle(self, noron, veri):
+        # Refrakter nöron girdiyi geleceğe aynen taşımaz; o andaki uyarı
+        # refrakter kapı tarafından karşılanmaz ve olay sona erer.
+        if noron.durum != noron.DINLENME:
+            return
         kaynak_sinaps = None
         if len(veri) == 2:
             dendrit_id, etki = veri
         else:
             kaynak_sinaps, dendrit_id, etki = veri
+            # Gecikmeli olay, kaynak sinaps fiziksel olarak budandıktan sonra
+            # kuyruğa kalmış olabilir. Kopmuş bağlantıdan sinyal sızdırma.
+            if kaynak_sinaps.kopuk:
+                return
         # Eski Noron alt sınıflarıyla uyumluluk için mevcut girdi imzasını koru.
         noron.girdi_al(dendrit_id, etki, zaman=self.zaman)
         if kaynak_sinaps is not None:
@@ -254,6 +262,19 @@ class Beyin:
             raise ValueError(f"Bilinmeyen olay türü: {tur}")
 
         return True
+
+    def episode_baslat(self):
+        """Yeni deney örneği için geçici nöral durumları temizler.
+
+        Kalıcı öğrenilmiş parametreler, bağlantı topolojisi ve yapısal durum
+        korunur. Yeni episode yalnızca olay kuyruğu boşken başlatılabilir.
+        Simülasyon saati geriye alınmaz.
+        """
+        if self._olaylar:
+            raise RuntimeError("Episode, bekleyen olaylar tamamen işlendiğinde başlatılabilir.")
+        for noron in self.noronlar.values():
+            noron.episode_sifirla(self.zaman)
+        return self.zaman
 
     def calistir(self, olay_limiti=100000, son_zaman=None):
         """Olayları çalıştırır; son_zaman verilirse saati o sınıra ilerletir."""

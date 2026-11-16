@@ -188,6 +188,20 @@ class Baglanti:
     def iletim_etkisi(self):
         return self.etki * self.sinaptik_agirlik
 
+    def esik_geri_bildirim_uygula(self, yon, miktar):
+        """Yerel feedback'in sinaps aktivasyon eşiğine etkisini uygular.
+
+        yon=+1: etkin sinapsın eşiği düşer, etkin olmayanın yükselir.
+        yon=-1: bu yönler tersine döner. Kararı çağıran nöron verir.
+        """
+        yon = int(yon)
+        miktar = float(miktar)
+        if yon not in (-1, 1):
+            raise ValueError("Feedback yönü +1 veya -1 olmalı.")
+        if not math.isfinite(miktar) or miktar < 0:
+            raise ValueError("Feedback miktarı sonlu ve negatif olmayan değer olmalı.")
+        return max(-1.0, min(1.0, self.esik + yon * miktar))
+
     def sinaptik_agirligi_ayarla(self, yeni_deger):
         yeni_deger = float(yeni_deger)
         if not math.isfinite(yeni_deger):
