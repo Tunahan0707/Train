@@ -51,35 +51,43 @@ class KimyasalAlan:
         self.kaynaklar.append(kaynak)
         return kaynak
 
+    @staticmethod
+    def kaynak_yogunlugu(kaynak, konum, zaman):
+        """Tek bir kaynağın belirli konumdaki yoğunluk katkısı."""
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < 0:
+            raise ValueError("Kimyasal alan sorgu zamanı sonlu ve negatif olmayan değer olmalı.")
+        if len(konum) != 2 or not all(math.isfinite(float(v)) for v in konum):
+            raise ValueError("Sorgu konumu sonlu iki boyutlu koordinat olmalı.")
+        if zaman <= kaynak.zaman:
+            return 0.0
+
+        yas = zaman - kaynak.zaman
+        # Normal zamanlarda analitik difüzyon çözümünü aynen koru.
+        # Yalnızca sıfıra çok yakın yaşta çekirdeğin tekilliğini kes.
+        etkin_yas = max(yas, kaynak.baslangic_yasi)
+        x, y = (float(v) for v in konum)
+        dx = x - kaynak.konum[0]
+        dy = y - kaynak.konum[1]
+        uzaklik_kare = dx * dx + dy * dy
+
+        payda = 4.0 * math.pi * kaynak.yayilim * etkin_yas
+        uzaysal = math.exp(
+            -uzaklik_kare / (4.0 * kaynak.yayilim * etkin_yas)
+        )
+        zamansal = math.exp(-kaynak.temizlenme * yas)
+        return kaynak.miktar * uzaysal * zamansal / payda
+
     def yogunluk(self, tur, konum, zaman):
         zaman = float(zaman)
         if not math.isfinite(zaman) or zaman < 0:
             raise ValueError("Kimyasal alan sorgu zamanı sonlu ve negatif olmayan değer olmalı.")
         if len(konum) != 2 or not all(math.isfinite(float(v)) for v in konum):
             raise ValueError("Sorgu konumu sonlu iki boyutlu koordinat olmalı.")
-        x, y = (float(v) for v in konum)
-        toplam = 0.0
-
-        for kaynak in self.kaynaklar:
-            if kaynak.tur != tur or zaman <= kaynak.zaman:
-                continue
-
-            yas = zaman - kaynak.zaman
-            # Normal zamanlarda analitik difüzyon çözümünü aynen koru.
-            # Yalnızca sıfıra çok yakın yaşta çekirdeğin tekilliğini kes.
-            etkin_yas = max(yas, kaynak.baslangic_yasi)
-            dx = x - kaynak.konum[0]
-            dy = y - kaynak.konum[1]
-            uzaklik_kare = dx * dx + dy * dy
-
-            payda = 4.0 * math.pi * kaynak.yayilim * etkin_yas
-            uzaysal = math.exp(
-                -uzaklik_kare / (4.0 * kaynak.yayilim * etkin_yas)
-            )
-            zamansal = math.exp(-kaynak.temizlenme * yas)
-            toplam += kaynak.miktar * uzaysal * zamansal / payda
-
-        return toplam
+        return sum(
+            self.kaynak_yogunlugu(kaynak, konum, zaman)
+            for kaynak in self.kaynaklar if kaynak.tur == tur
+        )
 
     def kaynaklari_temizle(self, zaman, tolerans=1e-9):
         """Toplam alan hatasını toleransla sınırlayarak sönmüş kaynakları siler.
