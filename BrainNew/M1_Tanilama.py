@@ -220,6 +220,7 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
     baslangic_projeksiyon = _projeksiyon_imzasi(deney)
     tum_sonuclar = []
     toplam_akim = {}
+    toplam_duyusal_ateslenme = {"SOL_GIRDI": 0, "SAG_GIRDI": 0}
 
     print(f"Seed: {seed}")
     print(f"Eğitim örneği: {len(deney.egitim_ornekleri)}")
@@ -243,7 +244,10 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
                 })
                 for alan, deger in kayit.items():
                     toplam[alan] += deger
-            sonuclar[-1]["duyusal_ateslenme"] = _kanal_ateslenme_farki(deney, duyusal_onceki)
+            duyusal_ateslenme = _kanal_ateslenme_farki(deney, duyusal_onceki)
+            sonuclar[-1]["duyusal_ateslenme"] = duyusal_ateslenme
+            for kanal, adet in duyusal_ateslenme.items():
+                toplam_duyusal_ateslenme[kanal] += adet
         tum_sonuclar.extend(sonuclar)
         degisim = _degisim_ozeti(deney, onceki)
         ozet = deney.ozetle(sonuclar)
@@ -273,6 +277,7 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
     print("Eğitim ağırlık tanısı:", egitim_degisim)
     print("Başlangıç işaretli projeksiyonlar:", _projeksiyon_ozeti(baslangic_projeksiyon))
     print("Eğitim sonrası işaretli projeksiyonlar:", _projeksiyon_ozeti(son_projeksiyon))
+    print("Eğitim boyunca duyusal nöron ateşlenmeleri:", toplam_duyusal_ateslenme)
     print("Eğitim boyunca duyusal terminal akışı:", toplam_akim)
     print("Duyusal ağırlık grupları (başlangıç/son/delta):")
     for hedef, ozet in egitim_agirlik_gruplari.items():
@@ -303,6 +308,7 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
         "baslangic_projeksiyon_ozeti": _projeksiyon_ozeti(baslangic_projeksiyon),
         "son_projeksiyon_ozeti": _projeksiyon_ozeti(son_projeksiyon),
         "egitim_terminal_akisi": toplam_akim,
+        "egitim_duyusal_ateslenme": toplam_duyusal_ateslenme,
         "test_max_agirlik_degisim": test_degisim,
     }
 
