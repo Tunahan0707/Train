@@ -154,9 +154,22 @@ class KimyasalMekanizmaTestleri(unittest.TestCase):
             "s", kaynak, None,
             transmitter_profili={"A": 1.0, "B": 2.0}
         )
-        beyin.sinyal_gonder(s, zaman=0.0)
+        s.etki_uygula(1.0, 0.0)
+        self.assertTrue(beyin.sinyal_gonder(s, zaman=0.0))
         self.assertEqual(alan.kaynak_sayisi(), 2)
         self.assertEqual(s.aktivasyon_sayisi, 1)
+
+    def test_esik_altindaki_dogrudan_sinaps_gonderimi_salimi_baslatmaz(self):
+        alan = KimyasalAlan()
+        beyin = Beyin(alan)
+        kaynak = Noron("kaynak")
+        beyin.noron_ekle(kaynak)
+        sinaps = Baglanti(
+            "s", kaynak, None, esik=0.2, transmitter_profili={"A": 1.0}
+        )
+        self.assertFalse(beyin.sinyal_gonder(sinaps, zaman=0.0))
+        self.assertEqual(sinaps.aktivasyon_sayisi, 0)
+        self.assertEqual(alan.kaynak_sayisi(), 0)
 
     def test_pozitif_reseptor_duyarliligi_dendrit_yanitini_artirir(self):
         alan = KimyasalAlan()
