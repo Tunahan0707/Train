@@ -1,3 +1,4 @@
+import math
 import unittest
 
 from BrainNew.Baglanti import Baglanti
@@ -77,7 +78,7 @@ class BrainNewPrototypeTests(unittest.TestCase):
         self.assertLessEqual(sinaps.potansiyel, 1.0)
         self.assertGreaterEqual(sinaps.potansiyel, -1.0)
         sinaps.potansiyeli_guncelle(2.0)
-        self.assertAlmostEqual(sinaps.potansiyel, 1.0 * __import__("math").exp(-1.0))
+        self.assertAlmostEqual(sinaps.potansiyel, math.exp(-1.0))
 
     def test_refractory_neuron_cannot_start_another_action_potential(self):
         noron = Noron("n")
@@ -85,6 +86,20 @@ class BrainNewPrototypeTests(unittest.TestCase):
         noron.durum = noron.DEPOLARIZASYON
         self.assertFalse(noron.aksiyon_potansiyeli_baslat())
         self.assertEqual(noron.ateslenme_sayisi, 0)
+
+    def test_activated_terminal_can_release_multiple_transmitters(self):
+        alan = KimyasalAlan()
+        beyin = Beyin(alan)
+        kaynak = Noron("kaynak")
+        sinaps = Baglanti(
+            "s", kaynak, None, transmitter_profili={"A": 2.0, "B": 3.0}
+        )
+        beyin.noron_ekle(kaynak)
+        beyin.sinyal_gonder(sinaps, 0.0)
+
+        self.assertEqual(alan.kaynak_sayisi(), 2)
+        self.assertGreater(alan.yogunluk("A", (0.0, 0.0), 1.0), 0.0)
+        self.assertGreater(alan.yogunluk("B", (0.0, 0.0), 1.0), 0.0)
 
     def test_chemical_types_are_kept_separate_and_decay_in_space_time(self):
         alan = KimyasalAlan()
