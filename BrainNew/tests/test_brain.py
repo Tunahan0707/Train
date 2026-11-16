@@ -241,8 +241,15 @@ def test_reseptor_girdisi():
     beyin.girdi_al([1, 0, 1, 0])
 
     assert beyin.reseptor_organ.ciktilar == [1, 0, 1, 0]
-    assert beyin.reseptor_noronlari[0].membran_potansiyeli == -50.0
+    # Uyaran girdi_al aninda degil, ilk biyolojik adimda uygulanir.
+    assert beyin.reseptor_noronlari[0].membran_potansiyeli == -70.0
     assert beyin.reseptor_noronlari[1].membran_potansiyeli == -70.0
+
+    beyin.adim()
+
+    assert beyin.reseptor_noronlari[0].ateslenme_sayisi == 1
+    assert beyin.reseptor_noronlari[2].ateslenme_sayisi == 1
+    assert beyin.reseptor_noronlari[1].ateslenme_sayisi == 0
 
 
 def test_gecersiz_reseptor_girdisi():

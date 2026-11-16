@@ -1,4 +1,5 @@
 import heapq
+import math
 import random
 from collections import deque
 
@@ -8,6 +9,14 @@ from .MotorOrgan import MotorOrgan
 
 
 class Beyin:
+    # 100 ara noronda %25 fan-out ve %75 fan-in, ortalama %18.75 kesişim verir.
+    GIRDI_ARA_FANOUT_ORANI = 0.25
+    ARA_MOTOR_FANIN_ORANI = 0.75
+
+    # Uc eszamanli 5.6 mV sinaps: 3 * 5.6 * 0.95 = 15.96 mV.
+    MOTOR_ESZAMANLI_SINAPSAYISI = 3
+    ILK_SINAPTIK_ETKI_MV = 5.6
+
     def __init__(
         self,
         girdi_sayisi,
@@ -82,6 +91,90 @@ class Beyin:
                         gecikme_ms=self.rng.randint(1, 5)
                     )
 
+        self._sinyal_omurgasini_olustur()
+
+    def _sinyal_omurgasini_olustur(self):
+        """
+        Rastgele arka plan agina seyrek bir ileri-iletim omurgasi ekler.
+        Girdi-cikti eslesmesini kodlamaz; yalnizca sinyalin ara ve motor
+        noronlara ulasabilecegi baslangic yollarini kurar.
+        """
+        if not self.ara_noronlar:
+            return
+
+        # Reseptorlerin rastgele cikislarini kaldirip ileri projeksiyonu kur.
+        for reseptor in self.reseptor_noronlari:
+            for akson in reseptor.aksonlar:
+                for baglanti in tuple(akson.baglantilar):
+                    baglanti.sil()
+
+        # Ara noronlardan motorlara giden rastgele yollarin yerine,
+        # kontrollu ve eszamanli baslangic projeksiyonlari kur.
+        motor_kumesi = set(self.motor_noronlari)
+        for ara_noron in self.ara_noronlar:
+            for akson in ara_noron.aksonlar:
+                for baglanti in tuple(akson.baglantilar):
+                    if baglanti.hedef.noron in motor_kumesi:
+                        baglanti.sil()
+
+        ara_sayisi = len(self.ara_noronlar)
+        girdi_fanout = min(
+            ara_sayisi,
+            max(1, math.ceil(
+                ara_sayisi * self.GIRDI_ARA_FANOUT_ORANI
+            ))
+        )
+        motor_fanin = min(
+            ara_sayisi,
+            max(1, math.ceil(
+                ara_sayisi * self.ARA_MOTOR_FANIN_ORANI
+            ))
+        )
+
+        girdi_hedefleri = [
+            self.rng.sample(self.ara_noronlar, girdi_fanout)
+            for _ in self.reseptor_noronlari
+        ]
+        motor_kaynaklari = [
+            self.rng.sample(self.ara_noronlar, motor_fanin)
+            for _ in self.motor_noronlari
+        ]
+
+        etki = self.ILK_SINAPTIK_ETKI_MV
+
+        for reseptor, hedefler in zip(
+            self.reseptor_noronlari, girdi_hedefleri
+        ):
+            for hedef_noron in hedefler:
+                akson = self.rng.choice(reseptor.aksonlar)
+                dendrit = self.rng.choice(hedef_noron.dendritler)
+                akson.baglan(
+                    dendrit,
+                    etki_mv=etki,
+                    gecikme_ms=self.rng.randint(1, 5)
+                )
+
+        for motor, kaynaklar in zip(
+            self.motor_noronlari, motor_kaynaklari
+        ):
+            for kaynak_noron in kaynaklar:
+                gecikme = self.rng.randint(1, 5)
+                aksonlar = self.rng.sample(
+                    kaynak_noron.aksonlar,
+                    self.MOTOR_ESZAMANLI_SINAPSAYISI
+                )
+                dendritler = self.rng.sample(
+                    motor.dendritler,
+                    self.MOTOR_ESZAMANLI_SINAPSAYISI
+                )
+
+                for akson, dendrit in zip(aksonlar, dendritler):
+                    akson.baglan(
+                        dendrit,
+                        etki_mv=etki,
+                        gecikme_ms=gecikme
+                    )
+
     def _iletim_planla(self, baglanti):
         teslim_zamani = self.zaman + baglanti.gecikme_ms
         self._olay_sirasi += 1
@@ -102,7 +195,7 @@ class Beyin:
         self.etkin_baglantilar.clear()
         self._olay_kuyrugu.clear()
         self.motor_organ.reset()
-        self.reseptor_organ.ciktilar = [0] * len(self.reseptor_noronlari)
+        self.reseptor_organ.sifirla()
 
     def _olaylari_ilet(self):
         while (
@@ -118,6 +211,9 @@ class Beyin:
                 self.etkin_baglantilar.add(baglanti)
 
     def adim(self):
+        # Aktif duyusal uyaran her biyolojik zaman adiminda uygulanir.
+        self.reseptor_organ.uyarim_uygula()
+
         # Önce önceki zaman adımından kalan izleri azalt.
         # Bu adımda oluşan yeni izler bir sonraki adımda azalmaya başlar.
         self.uygunluk_izlerini_guncelle()
