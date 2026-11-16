@@ -83,6 +83,20 @@ class Mikroglia:
                 * kullanilmama * zaman_olcegi
             )
             sinaps.yapisal_butunluk = max(0.0, min(1.0, butunluk))
+
+            # Olgunluk, fiziksel bütünlükten ayrı bir işlevsel gelişim durumudur.
+            # Kullanım ve stabilizasyon olgunlaştırır; kimyasal budama azaltır.
+            olgunluk = sinaps.yapisal_olgunluk
+            olgunluk += (
+                sinaps.olgunlasma_kazanci
+                * (kullanim + sinyaller["stabilizasyon"])
+                * zaman_olcegi * (1.0 - olgunluk)
+            )
+            olgunluk -= (
+                sinaps.olgunluk_budama_kazanci * budama
+                * kullanilmama * zaman_olcegi * olgunluk
+            )
+            sinaps.yapisal_olgunluk = max(0.0, min(1.0, olgunluk))
             sinaps.son_bakim_zamani = zaman
 
             if (
