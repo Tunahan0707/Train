@@ -153,3 +153,11 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Eğitim/test ayrımı sırasız sayı çiftleri üzerinden yapılır. Örneğin (2,7) eğitimdeyse (7,2) de eğitimdedir; ters sıralı çift testte tutulamaz.
 - Test ölçümü karar doğruluğunun yanında iki karar nöronunun birlikte ateşlenmesini, hiçbirinin ateşlenmemesini ve kararsız çıktıyı raporlar.
 - **Sınır:** Bu yalnızca ilk öğrenme deney düzeneğidir. Ağın büyüklük karşılaştırmasını öğrendiği veya görülmemiş çiftlere genellediği henüz gösterilmiş değildir. İlk kullanıcı çalıştırması öncesinde başarı iddiası yoktur.
+
+
+### M1 — Davranış ve ağırlık tanılaması
+
+- `M1_Tanilama.py` genişletildi: eğitim/test karar dağılımı (SOL/SAG/kararsız), beklenen sınıfa göre ayrı doğruluk ve hedef karar nöronuna göre duyusal ağırlık dağılımları raporlanır.
+- Duyusal projeksiyon ağırlıkları, sabit WTA bağlantılarından ayrı raporlanır. Önceki tanılamada 38 bağlantı tek grup gibi gösteriliyordu; bunun 36 duyusal projeksiyon + 2 WTA bağlantısından oluştuğu ayrıştırıldı.
+- Tanılama testleri eklendi. Yerel pytest bu işlem sırasında çalıştırılmadı.
+- Amaç: tek karar tarafına yanlılık, sınıf bazlı öğrenme başarısızlığı ve ağırlık değişiminin hangi karar popülasyonunda toplandığını birbirinden ayırmak.
