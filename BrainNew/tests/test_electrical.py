@@ -36,6 +36,41 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         n.membrani_guncelle(0.0, 1.0)
         self.assertAlmostEqual(n.membran, -70.0 + 20.0 * 0.9)
 
+    def test_homeostaz_ateslenmeyi_aktivite_izine_kaydeder(self):
+        n = Noron("homeostaz")
+        d = Dendrid("girdi")
+        n.dendrit_ekle(d)
+        d.girdi_al(100.0)
+        ateslendi, _ = n.entegrasyonu_isle(0.0)
+        self.assertTrue(ateslendi)
+        self.assertEqual(n.homeostatik_aktivite_izi, 1.0)
+
+    def test_yuksek_aktivite_homeostatik_esigi_yukseltir(self):
+        n = Noron("homeostaz", homeostatik_tau=10.0, homeostatik_hedef_oran=0.0, homeostatik_oran=1.0)
+        n.homeostatik_durumu_guncelle(0.0, yeni_ateslenme=True)
+        ilk_esik = n.esik
+        n.homeostatik_durumu_guncelle(10.0)
+        self.assertGreater(n.esik, ilk_esik)
+
+    def test_dusuk_aktivite_homeostatik_esigi_dusurur(self):
+        n = Noron("homeostaz", homeostatik_tau=10.0, homeostatik_hedef_oran=0.1, homeostatik_oran=1.0)
+        ilk_esik = n.esik
+        n.homeostatik_durumu_guncelle(10.0)
+        self.assertLess(n.esik, ilk_esik)
+
+    def test_homeostatik_esik_kaymasi_sinirli_kalir(self):
+        n = Noron("homeostaz", homeostatik_tau=1.0, homeostatik_hedef_oran=100.0,
+                  homeostatik_oran=100.0, homeostatik_esik_alt=-2.0,
+                  homeostatik_esik_ust=3.0)
+        n.homeostatik_durumu_guncelle(10.0)
+        self.assertEqual(n.homeostatik_esik_kaymasi, -2.0)
+        self.assertEqual(n.esik, n.esik_temel - 2.0)
+
+    def test_homeostatik_guncelleme_zamani_geriye_goturulemez(self):
+        n = Noron("homeostaz")
+        n.homeostatik_durumu_guncelle(2.0)
+        with self.assertRaises(ValueError):
+            n.homeostatik_durumu_guncelle(1.0)
     def test_membran_guncellemesi_zamani_geriye_goturmez(self):
         n = Noron("n")
         n.membrani_guncelle(1.0, 2.0)
