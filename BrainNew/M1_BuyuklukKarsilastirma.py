@@ -30,8 +30,8 @@ class BuyuklukKarsilastirmaDeneyi:
         self,
         seed=20261120,
         test_orani=0.2,
-        odul_miktari=100.0,
-        ceza_miktari=100.0,
+        odul_miktari=1.0,
+        ceza_miktari=1.0,
         modulator_ogrenme_orani=0.01,
         geri_bildirim_araligi=0.25,
     ):
