@@ -2,7 +2,7 @@ import math
 
 
 class Baglanti:
-    """Seçici çıkış sinapsı, kimyasal terminal profili ve iletim bağlantısı."""
+    """Yerel sinaps, transmitter terminali ve mikroglia-benzeri bakım durumu."""
 
     MINIMUM_GECIKME = 1e-6
 
@@ -11,12 +11,17 @@ class Baglanti:
         esik=0.2, sonum_tau=5.0, baslangic_potansiyeli=0.0,
         hedef_dendrit_id=None, etki=1.0, terminal_konumu=None,
         transmitter_profili=None, kimyasal_yayilim=1.0,
-        kimyasal_temizlenme=0.1
+        kimyasal_temizlenme=0.1, transmitter_salimi_duyarliliklari=None,
+        yapisal_yaslanma_tau=1000.0, bakim_kazanci=0.01,
+        budama_kazanci=0.02, budama_esigi=0.1,
+        kullanim_izi_esigi=0.1, kopma_esigi=0.1
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
             baslangic_potansiyeli, etki, kimyasal_yayilim,
-            kimyasal_temizlenme
+            kimyasal_temizlenme, yapisal_yaslanma_tau,
+            bakim_kazanci, budama_kazanci, budama_esigi,
+            kullanim_izi_esigi, kopma_esigi
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -28,6 +33,12 @@ class Baglanti:
             raise ValueError("Başlangıç potansiyeli [-1, 1] aralığında olmalı.")
         if kimyasal_yayilim <= 0 or kimyasal_temizlenme < 0:
             raise ValueError("Kimyasal yayılım parametreleri geçersiz.")
+        if yapisal_yaslanma_tau <= 0 or bakim_kazanci < 0 or budama_kazanci < 0:
+            raise ValueError("Yapısal bakım parametreleri geçersiz.")
+        if not 0.0 <= budama_esigi or not 0.0 <= kullanim_izi_esigi:
+            raise ValueError("Budama ve kullanım eşikleri negatif olamaz.")
+        if not 0.0 <= kopma_esigi <= 1.0:
+            raise ValueError("Kopma eşiği [0, 1] aralığında olmalı.")
 
         self.kimlik = kimlik
         self.kaynak = kaynak
@@ -63,8 +74,35 @@ class Baglanti:
         self.transmitter_profili = {
             tur: float(miktar) for tur, miktar in self.transmitter_profili.items()
         }
+        self.transmitter_salimi_duyarliliklari = dict(
+            transmitter_salimi_duyarliliklari or {}
+        )
+        if any(
+            not math.isfinite(float(deger))
+            for deger in self.transmitter_salimi_duyarliliklari.values()
+        ):
+            raise ValueError("Transmitter salım duyarlılıkları sonlu olmalı.")
+        if not set(self.transmitter_salimi_duyarliliklari).issubset(
+            self.transmitter_profili
+        ):
+            raise ValueError("Salım duyarlılığı yalnızca terminal repertuvarındaki türlere verilebilir.")
+
         self.kimyasal_yayilim = float(kimyasal_yayilim)
         self.kimyasal_temizlenme = float(kimyasal_temizlenme)
+
+        # Bağlantı-yerel mikroglia-benzeri yapısal durum.
+        self.yapisal_butunluk = 1.0
+        self.son_bakim_zamani = 0.0
+        self.yapisal_yaslanma_tau = float(yapisal_yaslanma_tau)
+        self.bakim_kazanci = float(bakim_kazanci)
+        self.budama_kazanci = float(budama_kazanci)
+        self.budama_esigi = float(budama_esigi)
+        self.kullanim_izi_esigi = float(kullanim_izi_esigi)
+        self.kopma_esigi = float(kopma_esigi)
+        self.kopuk = False
+        self.son_yapisal_sinyaller = {
+            "buyume": 0.0, "stabilizasyon": 0.0, "budama": 0.0
+        }
 
     def potansiyeli_guncelle(self, zaman):
         zaman = float(zaman)
@@ -80,6 +118,8 @@ class Baglanti:
             self.son_guncelleme = zaman
 
     def etki_uygula(self, etki, zaman):
+        if self.kopuk:
+            return
         etki = float(etki)
         if not math.isfinite(etki):
             raise ValueError("Sinaptik etki sonlu olmalı.")
@@ -92,23 +132,76 @@ class Baglanti:
         self.potansiyel = max(-1.0, min(1.0, self.potansiyel))
 
     def aktive_olabilir_mi(self, zaman):
+        if self.kopuk:
+            return False
         self.potansiyeli_guncelle(zaman)
         return self.potansiyel >= self.esik
 
     def aktive_et(self, zaman):
+        if self.kopuk:
+            raise RuntimeError("Kopmuş bağlantı aktive edilemez.")
         self.potansiyeli_guncelle(zaman)
-        self.son_aktivasyon = zaman
+        self.son_aktivasyon = float(zaman)
         self.aktivasyon_sayisi += 1
         self.iz += 1.0
         return max(self.MINIMUM_GECIKME, self.uzunluk / self.iletim_hizi)
 
-    def kimyasal_sal(self, kimyasal_alan, zaman):
-        """Terminal, kendi repertuvarındaki transmitterleri bağımsız salar."""
-        if kimyasal_alan is None:
+    def kimyasal_sal(self, kimyasal_alan, zaman, dendritik_sinyal=0.0):
+        """Terminal repertuvarını, yerel dendritik sinyalle transmitter bazında modüle eder."""
+        if kimyasal_alan is None or self.kopuk:
             return
-        for tur, miktar in self.transmitter_profili.items():
+        dendritik_sinyal = float(dendritik_sinyal)
+        if not math.isfinite(dendritik_sinyal):
+            raise ValueError("Dendritik salım sinyali sonlu olmalı.")
+        for tur, temel_miktar in self.transmitter_profili.items():
+            duyarlilik = self.transmitter_salimi_duyarliliklari.get(tur, 0.0)
+            miktar = max(0.0, temel_miktar + duyarlilik * dendritik_sinyal)
+            if miktar == 0.0:
+                continue
             kimyasal_alan.sal(
                 tur, self.terminal_konumu, miktar, zaman,
                 yayilim=self.kimyasal_yayilim,
                 temizlenme=self.kimyasal_temizlenme
             )
+
+    def yerel_bakim(self, kimyasal_alan, zaman):
+        """Bağlantı-yerel bakım/budama; Beyin veya küresel yönetici karar vermez."""
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < self.son_bakim_zamani:
+            raise ValueError("Yapısal bakım zamanı sonlu olmalı ve geriye gitmemeli.")
+        if self.kopuk:
+            return False
+
+        self.potansiyeli_guncelle(zaman)
+        gecen = zaman - self.son_bakim_zamani
+        if gecen:
+            self.yapisal_butunluk *= math.exp(
+                -gecen / self.yapisal_yaslanma_tau
+            )
+
+        sinyaller = {"buyume": 0.0, "stabilizasyon": 0.0, "budama": 0.0}
+        if kimyasal_alan is not None:
+            for tur in sinyaller:
+                sinyaller[tur] = kimyasal_alan.yogunluk(
+                    tur, self.terminal_konumu, zaman
+                )
+        self.son_yapisal_sinyaller = sinyaller
+
+        # Büyüme/stabilizasyon sinyalleri mevcut bağlantıyı korur veya
+        # güçlendirir. Budama, yalnızca düşük kullanım iziyle birlikte etkilidir.
+        koruma = sinyaller["buyume"] + sinyaller["stabilizasyon"]
+        self.yapisal_butunluk += self.bakim_kazanci * koruma
+        if self.iz < self.kullanim_izi_esigi:
+            self.yapisal_butunluk -= (
+                self.budama_kazanci * sinyaller["budama"]
+            )
+        self.yapisal_butunluk = max(0.0, min(1.0, self.yapisal_butunluk))
+        self.son_bakim_zamani = zaman
+
+        if (
+            self.iz < self.kullanim_izi_esigi
+            and sinyaller["budama"] >= self.budama_esigi
+            and self.yapisal_butunluk <= self.kopma_esigi
+        ):
+            self.kopuk = True
+        return not self.kopuk
