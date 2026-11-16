@@ -74,3 +74,14 @@ class Baglanti:
         self.aktivasyon_sayisi += 1
         self.iz += 1.0
         return max(self.MINIMUM_GECIKME, self.uzunluk / self.iletim_hizi)
+
+    def kimyasal_sal(self, kimyasal_alan, zaman):
+        """Terminal, kendi repertuvarındaki transmitterleri bağımsız salar."""
+        if kimyasal_alan is None:
+            return
+        for tur, miktar in self.transmitter_profili.items():
+            kimyasal_alan.sal(
+                tur, self.terminal_konumu, miktar, zaman,
+                yayilim=self.kimyasal_yayilim,
+                temizlenme=self.kimyasal_temizlenme
+            )
