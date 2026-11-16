@@ -1,6 +1,6 @@
 # BrainNew — Öğrenme Mimarisi Denetimi ve Veri Sözleşmesi
 
-Durum: Aktif `fix/brainnew-architecture-audit` dalı üzerinden yeniden denetlendi. Teorik sahiplik sözleşmesi güncellendi; aşağıdaki iki olay-atıf sorunu çözülmeden kalıcı plastisite uygulanmayacak.
+Durum: Aktif `fix/brainnew-architecture-audit` dalındaki güncel uygulama; yerel Hebbian/STDP ve gecikmiş modülatör/uygunluk izi katmanlarını içerir.
 Dal: `fix/brainnew-architecture-audit`
 İlgili sprint: `LEARNING_SPRINT.md`
 
@@ -70,7 +70,7 @@ Bu kural, pre→post sıralamasında pozitif ağırlık değişimi üretir. Ayr�
 |---|---|---|---|
 | Dendrit-terminal katkısı | İlgili Dendrid | Kendi yerel sinyalinin işlendiği nöron entegrasyonu ve ateşlenme sonucu | Dendritin `katki_alt`–`katki_ust` sınırları |
 | Gerçek sinaptik etkinlik katsayısı | İlgili Baglanti | Şu an açık parametre ayarı; ileride doğrulanmış yerel öğrenme kuralı | [0,2] |
-| Sinaptik uygunluk izi (henüz eklenmedi) | İlgili Baglanti | Bağlantıya nedensel olarak atfedilmiş pre/post etkinlik | Geçici, sönümlü |
+| Sinaptik uygunluk izi | İlgili Baglanti | Yerel pre/post sırası | Geçici, sınırlı ve sönümlü |
 | Nöron homeostatik durumu (henüz eklenmedi) | İlgili Noron | Uzun dönem yerel etkinlik ölçümü | Sınırlı ve yavaş |
 | Yapısal bütünlük | İlgili Baglanti | Yerel bakım değerlendirmesi | [0,1] |
 
@@ -94,7 +94,7 @@ Bu nedenle Aşama 1'in veri sözleşmesi netleşmiştir; fakat pre/post izlerini
 
 ## 7. Sonraki kontrollü adım
 
-Bir sonraki kod adımı kalıcı ağırlık veya STDP eklemek değildir. Önce sinaptik olay kimliğinin hedef dendrite taşınması ve yalnızca ilgili bağlantıların yerel postsinaptik olayla eşleştirilmesi uygulanıp test edilecektir. Ardından:
+Olay kimliğinin hedef dendrite taşınması ve bağlantı-seçici iz altyapısı uygulanmıştır. Hebbian/STDP ve gecikmiş uygunluk-modülatör yolu da ilk sürümleriyle eklenmiştir. Bundan sonraki adımlar:
 - bağlantı-seçici pre/post izleri,
 - gerçek sinaptik etkinlik katsayısı,
 - STDP/Hebbian güncellemesi,
@@ -117,3 +117,15 @@ Her aşamada testler, eğitim/test ayrımı ve olay sırası korunur. Bir deği�
 - Güncelleme bağlantı nesnesinin kendi metodundadır. Nöron yalnızca kendi ateşlenme olayı sırasında ilgili yerel bağlantı metodunu çağırır; Beyin öğrenme hesabı yapmaz.
 - Hebbian güçlendirme STDP'nin LTP kolu olarak pre→post sıralamasında çalışır; ters post→pre sıralaması ayrı LTD kolunu tetikler.
 - Bu kuralın görev genellemesi sağladığı henüz gösterilmiş değildir; yalnızca yerel eşleşme öğrenmesinin altyapısıdır.
+
+
+## 10. Üç faktörlü gecikmiş modülasyon ve uygunluk izi
+
+- Her bağlantı kendi sınırlı, üstel sönümlü `uygunluk_izi` durumunu taşır.
+- Pre→post eşleşmesi pozitif; post→pre eşleşmesi negatif uygunluk üretir.
+- Uygunluk tek başına ağırlığı değiştirmez.
+- Bağlantı yerel bakım/etkinlik olayı sırasında terminal konumundaki kimyasal alan örneklenir: `odul - ceza`.
+- Gecikmiş modülatör, yakın geçmişteki uygunluk izini ağırlık değişimine çevirir. Güncelleme örnekler arası trapez integraliyle zaman aralığına bağlanır; salt bakım çağrısı sayısına bağlanmaz.
+- Bu prototipte `odul` ve `ceza` pozitif yoğunluklu ayrı kimyasal türlerdir. İşaret farktan gelir.
+- Bu katman mevcut anlık STDP plastisitesine ek bir gecikmiş geri bildirim yoludur; STDP'yi henüz modülatör kapılı tek mekanizma haline getirmez.
+- Parametreler ve alan yoğunlukları biyolojik kalibrasyon değildir; görev deneyleriyle ayarlanmalıdır.
