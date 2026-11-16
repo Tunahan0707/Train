@@ -15,7 +15,7 @@ Güncel dalda `Baglanti.py`, `Beyin.py`, `Dendrid.py`, `Noron.py`, `KimyasalAlan
 | `Baglanti.potansiyel` | Dendritik iç-yönlendirme sinyaliyle değişen, terminalin ateşleme anında hazır olup olmadığını belirleyen yerel durum | Baglanti | Kısa; `sonum_tau` ile sıfıra sönümlenir | Hayır |
 | `Baglanti.esik` | Terminalin aktive edilmeye uygunluk eşiği | Baglanti | Sabit parametre | Şu an hayır |
 | `Baglanti.etki` | Gerçek pre→post iletim olayının işaretli temel etki miktarı | Baglanti | Bağlantı ömrü | Hayır |
-| `Baglanti.sinaptik_agirlik` | Temel elektriksel etkiyi ölçekleyen kalıcı, sınırlı katsayı | Baglanti | Bağlantı ömrü | Evet; parametre var, otomatik öğrenme henüz yok |
+| `Baglanti.sinaptik_agirlik` | Temel elektriksel etkiyi ölçekleyen kalıcı, sınırlı katsayı | Baglanti | Bağlantı ömrü | Evet; yerel Hebbian güncellemesi var |
 | `Baglanti.iz` | Aktivasyonla artan ve sönümlenen kullanım/bakım izi | Baglanti | Geçici, `sonum_tau` ile sönümlenir | Hayır |
 | `Baglanti.pre_iz` | Kaynak terminal aktive olduğunda artan, üstel sönümlü presinaptik etkinlik izi | Baglanti | Kısa | Hayır |
 | `Baglanti.post_iz` | Hedef nöron ateşlendiğinde artırılan postsinaptik iz | Baglanti | Kısa | Hayır |
@@ -40,19 +40,20 @@ Bu gerçek bağlantı için ayrı kalıcı elektriksel katsayı `sinaptik_agirli
 
 Bu, mevcut simülatörde çalışan bir nöron-içi hesaplamalı yönlendirme öğrenmesidir. Gerçek pre→post sinaptik plastisite değildir ve ayrı ölçülmelidir.
 
-## 4. Mevcut pre/post izlerinin durumu ve kritik kusur
+## 4. Bağlantı-seçici pre/post izleri ve Hebbian güncellemesi
 
-İzlerin temel yaşam döngüsü uygulanmıştır:
-- `pre_iz`, `Baglanti.aktive_et(zaman)` sırasında artar.
-- `post_iz`, hedef nöronun `ateslenme_sonucunu_isle(zaman)` metodunda artar.
+İzlerin ve olay atfının güncel yaşam döngüsü:
+- `pre_iz`, kaynak bağlantı aktive olduğunda `Baglanti.aktive_et(zaman)` içinde artar.
+- Kaynak bağlantı kimliği, iletim olayı boyunca hedef dendrite taşınır.
+- Hedef nöronun entegrasyonu, o entegrasyona kaynak olmuş bağlantıları yerel olarak kaydeder.
+- Hedef ateşlenirse yalnızca bu bağlantıların Hebbian güncellemesi ve postsinaptik izi işlenir.
 - Her iki iz de kendi zaman sabitiyle üstel olarak sönümlenir.
-- İzler kalıcı ağırlık değildir; `Beyin` bunların değerini veya öğrenme sonucunu belirlemez.
+- Beyin bağlantı seçmez ve ağırlık güncellemesini hesaplamaz.
 
-Ancak güncel uygulamada **postsynaptik iz yanlış genişlikte atanıyor**: hedef nöron ateşlendiğinde `gelen_sinapslari` listesindeki bütün bağlantıların `post_iz` değeri artırılıyor. Hedef nöronun o ateşlenmesinde hangi dendritik girdilerin gerçekten işlendiği ve hangi kaynak bağlantı olaylarının bu yanıta katıldığı korunmuyor.
+İlk bağlantı-yerel Hebbian kuralı uygulanmıştır:
+`Δw = η_H · pre_iz · (w_max - w)/(w_max - w_min)`
 
-Daha da önemlisi, `Beyin._girdi_olayini_isle` sinaptik olay verisindeki bağlantı kimliğini şu anda atıyor; yalnızca dendrit kimliği ve etkiyi nörona iletiyor. Dolayısıyla hedefteki yanıtı onu doğuran gerçek kaynak bağlantıya nedensel olarak geri eşlemek mümkün değil.
-
-Bu nedenle mevcut `post_iz` testleri yalnızca iz artışını doğrular; bağlantı-seçici, nedensel STDP'yi doğrulamaz. **STDP veya Hebbian kalıcı ağırlık güncellemesi bu olay-atıf açığı giderilmeden eklenmeyecek.**
+Bu kural, nedensel pre/post eşleşmesinde pozitif ağırlık değişimi üretir ve üst sınıra yaklaştıkça küçülür. Henüz ters zaman sırasına bağlı zayıflatma, uygunluk izi/modülatör kapısı veya görev başarısı ölçümü yoktur. Dolayısıyla bu aşama STDP ya da genel öğrenme kapasitesinin kanıtı değildir.
 
 ### Gerekli düzeltme sözleşmesi
 
