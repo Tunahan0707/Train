@@ -46,7 +46,7 @@ Bu, kaybolan/takılı kalan girdi hatasını önleyen geçici bir uygulama polit
 - Öğrenme uygunluğu yalnızca mevcut entegrasyon olayında katkı veren çiftlerden oluşur; ateşlenmeyen eski entegrasyonlardan kalan çiftler sonraki ateşlenmede yanlışlıkla cezalandırılmaz.
 - Bir terminal aynı aktivasyonda repertuvarındaki birden fazla transmitter türünü salabilir.
 - Kimyasal alan kaynakları şimdilik saklanır ve sorguda taranır; büyük ağ ölçeği için optimize edilmiş değildir.
-- Girdi, konum, olay zamanı, sinaps ve kimyasal kaynak parametrelerinde sonlu değer kontrolleri bulunur.
+- Girdi, konum, olay zamanı, sinaps ve kimyasal kaynak parametrelerinde sonlu değer kontrolleri bulunur. Sinaps eşiği, potansiyelin [-1, 1] aralığıyla tutarlı tutulur; nöron yalnızca kendi kaynak olduğu çıkış sinapslarını kaydedebilir.
 
 ## Henüz uygulanmayan tasarım parçaları
 
