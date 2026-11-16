@@ -21,6 +21,10 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] Yeni davranışlar için regresyon testleri eklendi.
 - [x] İşaretli sinaptik ağırlık aralığına göre eski STDP alt-sınır testi düzeltildi; negatif ağırlıkta LTD'nin işareti koruması için regresyon testi eklendi.
 - [x] Dallanmış feedback için aktif/pasif eşik yönü, nedensel önceki nörona yayılım ve döngü koruması testleri eklendi.
+- [x] Nöron-yerel uzun dönem etkinlik izi ve yavaş ateşlenme eşiği homeostazı mevcut mekanizmaya bağlandı.
+- [x] Simülasyon zamanı ilerlediğinde sessiz nöronların da homeostaz güncellemesi yapması sağlandı; Beyin yalnızca zaman bilgisini yerel nörona iletiyor.
+- [x] Episode sınırında uzun dönem homeostatik etkinlik izi korunup geçen süre kadar sönümleniyor.
+- [x] Homeostaz için sessiz, aşırı etkin, hedefe yakın etkinlik, episode kalıcılığı, sinaptik parametreleri koruma ve ablasyon testleri eklendi.
 - [x] Seed'li, 2B uzamsal ve seyrek başlangıç ağı kurucusu eklendi; topoloji ve başlangıç parametreleri seed ile tekrarlanabilir.
 
 ## Henüz tamamlanmayan sprint başlıkları
