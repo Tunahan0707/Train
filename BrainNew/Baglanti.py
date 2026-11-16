@@ -15,7 +15,8 @@ class Baglanti:
         yapisal_yaslanma_tau=1000.0, bakim_kazanci=0.01,
         budama_kazanci=0.02, budama_esigi=0.1,
         kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0,
-        hebbian_oran=0.01, stdp_depresyon_oran=0.01
+        hebbian_oran=0.01, stdp_depresyon_oran=0.01,
+        uygunluk_tau=100.0, modulator_ogrenme_orani=0.01
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
@@ -23,7 +24,8 @@ class Baglanti:
             kimyasal_temizlenme, yapisal_yaslanma_tau,
             bakim_kazanci, budama_kazanci, budama_esigi,
             kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik,
-            hebbian_oran, stdp_depresyon_oran
+            hebbian_oran, stdp_depresyon_oran,
+            uygunluk_tau, modulator_ogrenme_orani
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -64,6 +66,16 @@ class Baglanti:
         self.stdp_depresyon_oran = float(stdp_depresyon_oran)
         self.stdp_depresyon_sayisi = 0
         self.toplam_stdp_depresyon = 0.0
+        if uygunluk_tau <= 0 or modulator_ogrenme_orani < 0:
+            raise ValueError("Uygunluk izi ve modülatör öğrenme parametreleri geçersiz.")
+        self.uygunluk_tau = float(uygunluk_tau)
+        self.modulator_ogrenme_orani = float(modulator_ogrenme_orani)
+        self.uygunluk_izi = 0.0
+        self.son_uygunluk_guncelleme = 0.0
+        self.son_modulator_zamani = 0.0
+        self.son_modulator_degeri = 0.0
+        self.modulator_guncelleme_sayisi = 0
+        self.toplam_modulator_agirlik_degisim = 0.0
         self.uzunluk = float(uzunluk)
         self.iletim_hizi = float(iletim_hizi)
         self.esik = float(esik)
@@ -208,6 +220,7 @@ class Baglanti:
         if self.kopuk:
             return 0.0
         self.izleri_guncelle(zaman)
+        self.uygunluk_izini_guncelle(zaman, -min(1.0, self.post_iz))
         onceki = self.sinaptik_agirlik
         if self.post_iz > 0.0 and self.stdp_depresyon_oran > 0.0:
             aralik = self.sinaptik_agirlik_ust - self.sinaptik_agirlik_alt
@@ -226,9 +239,54 @@ class Baglanti:
         if self.kopuk:
             return 0.0
         degisim = self.hebbian_ogren(zaman)
+        self.uygunluk_izini_guncelle(zaman, min(1.0, self.pre_iz))
         self.postsinaptik_iz_arttir(zaman)
         return degisim
 
+    def uygunluk_izini_guncelle(self, zaman, degisim=0.0):
+        """Yerel pre/post eşleşmesini gecikmiş geri bildirim için saklar."""
+        zaman = float(zaman)
+        degisim = float(degisim)
+        if not math.isfinite(zaman) or zaman < self.son_uygunluk_guncelleme:
+            raise ValueError("Uygunluk izi zamanı sonlu olmalı ve geriye gitmemeli.")
+        if not math.isfinite(degisim):
+            raise ValueError("Uygunluk izi değişimi sonlu olmalı.")
+        gecen = zaman - self.son_uygunluk_guncelleme
+        if gecen:
+            self.uygunluk_izi *= math.exp(-gecen / self.uygunluk_tau)
+            self.son_uygunluk_guncelleme = zaman
+        self.uygunluk_izi = max(-1.0, min(1.0, self.uygunluk_izi + degisim))
+        return self.uygunluk_izi
+
+    def gecikmis_modulatoru_isle(self, kimyasal_alan, zaman):
+        """Yerel ödül/ceza alanını örnekleyip uygunluk izini ağırlığa işler."""
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < self.son_modulator_zamani:
+            raise ValueError("Modülatör zamanı sonlu olmalı ve geriye gitmemeli.")
+        self.uygunluk_izini_guncelle(zaman)
+        if kimyasal_alan is None or self.kopuk:
+            self.son_modulator_zamani = zaman
+            self.son_modulator_degeri = 0.0
+            return 0.0
+
+        odul = kimyasal_alan.yogunluk("odul", self.terminal_konumu, zaman)
+        ceza = kimyasal_alan.yogunluk("ceza", self.terminal_konumu, zaman)
+        deger = odul - ceza
+        gecen = zaman - self.son_modulator_zamani
+        integral = 0.5 * (self.son_modulator_degeri + deger) * gecen
+        self.son_modulator_zamani = zaman
+        self.son_modulator_degeri = deger
+        if self.modulator_ogrenme_orani == 0.0 or self.uygunluk_izi == 0.0:
+            return 0.0
+
+        onceki = self.sinaptik_agirlik
+        delta = self.modulator_ogrenme_orani * self.uygunluk_izi * integral
+        self.sinaptik_agirligi_ayarla(onceki + delta)
+        gercek_delta = self.sinaptik_agirlik - onceki
+        if gercek_delta != 0.0:
+            self.modulator_guncelleme_sayisi += 1
+            self.toplam_modulator_agirlik_degisim += gercek_delta
+        return gercek_delta
     def etki_uygula(self, etki, zaman):
         if self.kopuk:
             return
@@ -286,6 +344,7 @@ class Baglanti:
             return False
 
         self.potansiyeli_guncelle(zaman)
+        self.gecikmis_modulatoru_isle(kimyasal_alan, zaman)
         gecen = zaman - self.son_bakim_zamani
         if gecen:
             self.yapisal_butunluk *= math.exp(
