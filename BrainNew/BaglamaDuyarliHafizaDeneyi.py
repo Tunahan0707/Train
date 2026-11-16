@@ -83,11 +83,13 @@ class BaglamaDuyarliHafizaDeneyi:
         return beyin, EgitimSurucusu(beyin), sinapslar
 
     @classmethod
-    def _girdiler(cls, baglam=None, tam_oruntu=None):
-        girdiler = [
-            ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI, cls.IPUCU_GECIKMESI),
-            ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI, cls.IPUCU_GECIKMESI),
-        ]
+    def _girdiler(cls, baglam=None, tam_oruntu=None, ipucu=True):
+        girdiler = []
+        if ipucu:
+            girdiler.extend((
+                ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI, cls.IPUCU_GECIKMESI),
+                ("Gy", "Gy:D", cls.ALT_ESIK_GIRDISI, cls.IPUCU_GECIKMESI),
+            ))
         if baglam == "X":
             girdiler.append(
                 ("Gx", "Gx:D", cls.ALT_ESIK_GIRDISI, cls.BAGLAM_GECIKMESI)
@@ -108,7 +110,7 @@ class BaglamaDuyarliHafizaDeneyi:
         return girdiler
 
     @classmethod
-    def _ornek(cls, kimlik, baglam=None, tam_oruntu=None):
+    def _ornek(cls, kimlik, baglam=None, tam_oruntu=None, ipucu=True):
         if tam_oruntu is None:
             beklenen = set()
         else:
@@ -118,7 +120,7 @@ class BaglamaDuyarliHafizaDeneyi:
             beklenen = {kapı_id, *hedefler}
         return DeneyOrnegi(
             kimlik,
-            cls._girdiler(baglam=baglam, tam_oruntu=tam_oruntu),
+            cls._girdiler(baglam=baglam, tam_oruntu=tam_oruntu, ipucu=ipucu),
             beklenen,
         )
 
@@ -131,11 +133,11 @@ class BaglamaDuyarliHafizaDeneyi:
                 feedback=False,
             ),
             "X": baseline_surucu.episode_calistir(
-                self._ornek("baseline-X-tek", baglam="X"),
+                self._ornek("baseline-X-tek", baglam="X", ipucu=False),
                 feedback=False,
             ),
             "Y": baseline_surucu.episode_calistir(
-                self._ornek("baseline-Y-tek", baglam="Y"),
+                self._ornek("baseline-Y-tek", baglam="Y", ipucu=False),
                 feedback=False,
             ),
         }
