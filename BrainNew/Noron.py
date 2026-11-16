@@ -55,7 +55,10 @@ class Noron:
             raise ValueError(f"Nöronda bulunmayan dendrit: {dendrit_id}")
         self.dendritler[dendrit_id].girdi_al(etki)
         if zaman is not None:
-            self.son_girdi_zamani = float(zaman)
+            zaman = float(zaman)
+            if not math.isfinite(zaman) or zaman < 0:
+                raise ValueError("Girdi zamanı sonlu ve negatif olmayan değer olmalı.")
+            self.son_girdi_zamani = zaman
 
     def bekleyen_girdi_var_mi(self):
         return any(dendrit.girdi_var_mi() for dendrit in self.dendritler.values())
@@ -63,6 +66,12 @@ class Noron:
     def girdileri_birlestir(self, zaman, kimyasal_alan=None):
         toplam_membran_etkisi = 0.0
         sinaps_katkilari = {}
+
+        # Öğrenme değerlendirmesi yalnızca bu entegrasyon olayında gerçekten
+        # katkı yükleyen dendrit-sinaps çiftlerine ait olmalı. Önceki ve
+        # ateşlenmeyle sonuçlanmamış entegrasyonların izleri taşınmamalı.
+        for dendrit in self.dendritler.values():
+            dendrit.son_islenen_sinapslar.clear()
 
         for dendrit in self.dendritler.values():
             elektriksel_toplam, yerel_sinyal = dendrit.sinyali_hazirla(
