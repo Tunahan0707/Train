@@ -32,7 +32,6 @@ class Dendrid:
         self.girdiler.append(float(etki))
 
     def sinyali_isle(self, zaman, kimyasal_alan=None):
-        self.son_islenen_sinapslar.clear()
         if not self.girdiler:
             return 0.0
 
