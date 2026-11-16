@@ -129,7 +129,9 @@ class Beyin:
             if ateslendi:
                 for sinaps, gecikme in aktif_sinapslar:
                     self._iletim_olayini_planla(sinaps, gecikme)
-                self.olay_planla(1.0, "faz", hedef_id)
+                self.olay_planla(
+                    noron.faz_gecisi_gecikmesi(), "faz", hedef_id
+                )
 
         elif tur == "faz":
             noron = self.noronlar[hedef_id]
