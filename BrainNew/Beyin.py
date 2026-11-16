@@ -79,7 +79,7 @@ class Beyin:
             raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
         self.olay_planla(
             gecikme, "sinaptik_girdi", hedef_id,
-            (sinaps.kimlik, sinaps.hedef_dendrit_id, sinaps.etki)
+            (sinaps, sinaps.hedef_dendrit_id, sinaps.etki)
         )
 
     def sinyal_gonder(self, sinaps, zaman):
@@ -104,11 +104,15 @@ class Beyin:
         return True
 
     def _girdi_olayini_isle(self, noron, veri):
+        kaynak_sinaps = None
         if len(veri) == 2:
             dendrit_id, etki = veri
         else:
-            _, dendrit_id, etki = veri
-        noron.girdi_al(dendrit_id, etki, zaman=self.zaman)
+            kaynak_sinaps, dendrit_id, etki = veri
+        noron.girdi_al(
+            dendrit_id, etki, zaman=self.zaman,
+            kaynak_sinaps=kaynak_sinaps
+        )
         self._entegrasyon_planla(noron.kimlik)
 
     def adim(self):
