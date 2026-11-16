@@ -108,6 +108,7 @@ class Beyin:
 
     def _kopuk_baglantiyi_temizle(self, sinaps):
         if sinaps.kaynak is not None and sinaps in sinaps.kaynak.cikis_sinapslari:
+            sinaps.kaynak.sinaps_iliskilerini_temizle(sinaps)
             sinaps.kaynak.cikis_sinapslari.remove(sinaps)
             for dendrit in sinaps.kaynak.dendritler.values():
                 dendrit.sinaps_katkilari.pop(sinaps, None)
