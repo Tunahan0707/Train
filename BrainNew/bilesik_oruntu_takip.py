@@ -105,7 +105,7 @@ def geri_bildirim_yolunu_hesapla(baslangic, beyin):
     ziyaret = set()
     katmanlar = {}
     uygun_baglanti_sayisi = 0
-    uygun_baglantilar = []
+    yol_baglantilari = []
 
     while kuyruk:
         noron, derinlik = kuyruk.popleft()
@@ -116,14 +116,14 @@ def geri_bildirim_yolunu_hesapla(baslangic, beyin):
 
         yerel = uygun_baglantilar(noron)
         uygun_baglanti_sayisi += len(yerel)
-        uygun_baglantilar.extend(yerel)
+        yol_baglantilari.extend(yerel)
 
         for baglanti in yerel:
             kaynak_noron = baglanti.kaynak.noron
             if kaynak_noron not in ziyaret:
                 kuyruk.append((kaynak_noron, derinlik + 1))
 
-    return ziyaret, katmanlar, uygun_baglanti_sayisi, uygun_baglantilar
+    return ziyaret, katmanlar, uygun_baglanti_sayisi, yol_baglantilari
 
 
 def deneme_ozeti(girdi, beklenen, cikti, trace, beyin):
