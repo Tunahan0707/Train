@@ -126,7 +126,7 @@ Buna göre:
 - Nöron ateşlenir fakat sinaps eşik altında kalırsa o sinaps yalnızca aktive olmaz; bunun için ek bir “başarısız ateşlenme” nesnesi veya ayrı ceza mekanizması gerekmez.
 - Nöron ateşlenir ve sinaps eşik üstündeyse sinaps aktive olur ve bağlantı üzerinden sinyal/kimyasal salım sürecini başlatır.
 - Aynı aksiyon potansiyelinde uygun bütün çıkış sinapsları aynı mantıksal anda aktive edilir. Rastgele sıralama kullanılmaz.
-- Sinaps yerel potansiyeli zamanla nötr değere doğru sönümlenir; aksi hâlde bir kez eşiği geçen sinaps kalıcı biçimde eşik üstünde kalabilir. Başlangıç sönüm modeli `p_j(t+Δt)=p_j(t)·e^{-Δt/τ_p}` olarak seçilir. `τ_p) zaman sabitidir ve kalibrasyon parametresidir.
+- Sinaps yerel potansiyeli zamanla nötr değere doğru sönümlenir; aksi hâlde bir kez eşiği geçen sinaps kalıcı biçimde eşik üstünde kalabilir. Başlangıç sönüm modeli `p_j(t+Δt)=p_j(t)·e^{-Δt/τ_p}` olarak seçilir. `τ_p` zaman sabitidir ve kalibrasyon parametresidir.
 
 ## 3. Sinaps-sinaps ve nöron-nöron yerel etkileşimleri
 
@@ -349,8 +349,8 @@ Aşağıdakiler prototipte kalibre edilecek parametrelerdir; biyolojik sabit ola
 - Eski branch'den başlangıç membran değerleri: -70 mV dinlenme, -55 mV eşik, +30 mV depolarizasyon, -40 mV repolarizasyon, -80 mV hiperpolarizasyon, 2 adım hiperpolarizasyon, 0.05 sızıntı.
 - Yerel sinaps potansiyeli başlangıcı: bütün sinapslarda aynı nötr değer (önerilen 0).
 - Yerel sinaps aktivasyon eşiği: başlangıçta bütün sinapslarda aynı; sayısal değer deneyle belirlenecek. Eski 0.2–0.4 önerisi doğrulanmış karar değildir.
-- Yerel sinaps potansiyelinin sönüm zaman sabiti `τ_p): deneysel.
-- Transmitter reseptör yanıtının yarı-doyum parametresi `K_k): deneysel.
+- Yerel sinaps potansiyelinin sönüm zaman sabiti `τ_p`: deneysel.
+- Transmitter reseptör yanıtının yarı-doyum parametresi `K_k`: deneysel.
 - Dendrit yerel sinyal ölçeği `S_d`: deneysel.
 - Dendrit-sinaps katkılarının başlangıç dağılımı: küçük, işaretli ve sınırlandırılmış; pozitif/negatif/sıfıra yakın örnekler.
 - Dendrit-sinaps katkı güncelleme miktarları: deneysel.
