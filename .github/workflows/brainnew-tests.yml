@@ -3,7 +3,7 @@ name: BrainNew tests
 on:
   push:
     branches:
-      - merge/brainnew-learning-sprint
+      - fix/brainnew-architecture-audit
   pull_request:
     paths:
       - "BrainNew/**"
