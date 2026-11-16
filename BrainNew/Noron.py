@@ -371,8 +371,11 @@ class Noron:
             if iz < self.noron_iliski_aktivite_esigi:
                 continue
             # Önce ateşlenen nöron, sonraki nörona doğru ilişkiyi kendi
-            # yerel belleğinde güçlendirir. Ters yön bağımsız kalır.
+            # yerel belleğinde güçlendirir. Aynı zaman damgasındaki eşzamanlı
+            # ateşlenmede ise yapay bir sıra dayatmamak için iki yön de öğrenir.
             onceki.noron_iliski_guncelle(self, zaman, birlikte=True)
+            if gecen == 0.0:
+                self.noron_iliski_guncelle(onceki, zaman, birlikte=True)
 
     def sinaps_iliski_oku(self, kaynak, hedef, zaman):
         """Yönlü ilişkiyi tembel zamansal sönümle okuyup döndürür."""
