@@ -187,6 +187,14 @@ class BuyuklukKarsilastirmaDeneyi:
             raise ValueError("İlk deney yalnızca eşit olmayan sayıları karşılaştırır.")
         return BuyuklukKarsilastirmaDeneyi.SOL if sol_sayi > sag_sayi else BuyuklukKarsilastirmaDeneyi.SAG
 
+    @staticmethod
+    def _karar_ver(sol_ates, sag_ates):
+        if sol_ates > sag_ates:
+            return BuyuklukKarsilastirmaDeneyi.SOL
+        if sag_ates > sol_ates:
+            return BuyuklukKarsilastirmaDeneyi.SAG
+        return None
+
     def _geri_bildirim_sal(self, dogru, zaman, beklenen, gerceklesen):
         """Görev ortamı, ilgili karar bölgesine yerel kimyasal sinyal bırakır.
 
@@ -228,12 +236,7 @@ class BuyuklukKarsilastirmaDeneyi:
         sayilar = self.motor.ateslenme_sayilari_oku(self.beyin, onceki)
         sol_ates = sayilar[self.SOL]
         sag_ates = sayilar[self.SAG]
-        if sol_ates > sag_ates:
-            gerceklesen = self.SOL
-        elif sag_ates > sol_ates:
-            gerceklesen = self.SAG
-        else:
-            gerceklesen = None
+        gerceklesen = self._karar_ver(sol_ates, sag_ates)
 
         dogru = gerceklesen == beklenen
         sonuc = {

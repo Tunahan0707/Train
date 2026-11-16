@@ -72,16 +72,12 @@ class BuyuklukKarsilastirmaTests(unittest.TestCase):
                 sinaps.terminal_konumu, sinaps.hedef.konum
             )
 
-    def test_episode_returns_explicit_no_decision_when_output_counts_tie(self):
+    def test_equal_output_activity_is_an_explicit_no_decision(self):
         deney = BuyuklukKarsilastirmaDeneyi(seed=5)
-        sonuc = deney.episode_calistir(3, 7, feedback=False)
-
-        self.assertIn(sonuc["gerceklesen"], (None, deney.SOL, deney.SAG))
-        self.assertEqual(sonuc["beklenen"], deney.SAG)
-        self.assertEqual(
-            sonuc["sol_ateslenme"] > sonuc["sag_ateslenme"],
-            sonuc["gerceklesen"] == deney.SOL,
-        )
+        self.assertIsNone(deney._karar_ver(0, 0))
+        self.assertIsNone(deney._karar_ver(3, 3))
+        self.assertEqual(deney._karar_ver(4, 2), deney.SOL)
+        self.assertEqual(deney._karar_ver(1, 2), deney.SAG)
 
 
 if __name__ == "__main__":
