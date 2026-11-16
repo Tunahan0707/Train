@@ -387,3 +387,15 @@ Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında
 - Ağırlık sıfır olduğunda bağlantı fiziksel olarak kopmaz; elektriksel etkisi sıfırlanır.
 - Kimyasal transmitter salımı bu katsayıdan bağımsız bırakıldı.
 - Bu commit ağırlığı otomatik öğrenmez. Bir sonraki aşama yerel Hebbian güncelleme kuralını tanımlayıp sınamaktır.
+
+
+### Yerel Hebbian öğrenme — ilk uygulama
+
+- Gerçek bağlantı ağırlığı artık hedefteki nedensel postsinaptik ateşlenmede, kendi presinaptik izine göre yerel olarak artabilir.
+- Güncelleme: `Δw = η_H · pre_iz · (w_max - w)/(w_max - w_min)`.
+- Ağırlık [0,2] sınırında kalır; üst sınıra yaklaştıkça artış küçülür.
+- Presinaptik izi olmayan bağlantı değişmez.
+- Hedef ateşlenmesinde yalnızca o entegrasyona kaynak olmuş bağlantılar Hebbian güncelleme alır.
+- Bu ilk kural tek yönlü korelasyon güçlendirmesidir; sıra tersine çevrildiğinde zayıflatma henüz yoktur. STDP ayrı aşamadır.
+- Yeni birim testleri: gecikmiş pre/post eşleşmesi, iz yokken değişmeme, üst sınır, geçersiz öğrenme oranı ve ilgisiz bağlantının etkilenmemesi.
+- Kullanıcı ortamında tam test paketi henüz çalıştırılmadı.
