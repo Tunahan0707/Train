@@ -190,7 +190,7 @@ class OrkestrasyonTestleri(unittest.TestCase):
 
         beyin.calistir()
         self.assertEqual(n.ateslenme_sayisi, 1)
-        self.assertEqual(n.durum, n.DEPOLARIZASYON)
+        self.assertEqual(n.durum, n.DINLENME)
         self.assertFalse(n.bekleyen_girdi_var_mi())
 
     def test_kimyasal_alan_beyne_opsiyonel_verilebilir(self):
