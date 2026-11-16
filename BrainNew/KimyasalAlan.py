@@ -6,7 +6,7 @@ class KimyasalKaynak:
 
     def __init__(
         self, tur, konum, miktar, zaman, yayilim, temizlenme,
-        baslangic_yasi=0.25
+        baslangic_yasi=1e-9
     ):
         sayisal = (miktar, zaman, yayilim, temizlenme, baslangic_yasi)
         if not all(math.isfinite(float(v)) for v in sayisal):
@@ -42,7 +42,7 @@ class KimyasalAlan:
 
     def sal(
         self, tur, konum, miktar, zaman, yayilim=1.0,
-        temizlenme=0.1, baslangic_yasi=0.25
+        temizlenme=0.1, baslangic_yasi=1e-9
     ):
         kaynak = KimyasalKaynak(
             tur, konum, miktar, zaman, yayilim, temizlenme,
@@ -65,7 +65,9 @@ class KimyasalAlan:
                 continue
 
             yas = zaman - kaynak.zaman
-            etkin_yas = yas + kaynak.baslangic_yasi
+            # Normal zamanlarda analitik difüzyon çözümünü aynen koru.
+            # Yalnızca sıfıra çok yakın yaşta çekirdeğin tekilliğini kes.
+            etkin_yas = max(yas, kaynak.baslangic_yasi)
             dx = x - kaynak.konum[0]
             dy = y - kaynak.konum[1]
             uzaklik_kare = dx * dx + dy * dy

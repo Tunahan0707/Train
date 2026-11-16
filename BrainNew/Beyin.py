@@ -190,10 +190,9 @@ class Beyin:
         return True
 
     def _girdi_olayini_isle(self, noron, veri):
-        # Refrakter nöron girdiyi geleceğe aynen taşımaz; o andaki uyarı
-        # refrakter kapı tarafından karşılanmaz ve olay sona erer.
-        if noron.durum != noron.DINLENME:
-            return
+        # Girdi yerel dendrit durumuna kaydedilir. Nöron refrakter durumdaysa
+        # entegrasyon kapalı kalır; faz döngüsü tamamlandığında bekleyen
+        # girdiler yeniden değerlendirilir.
         kaynak_sinaps = None
         if len(veri) == 2:
             dendrit_id, etki = veri
