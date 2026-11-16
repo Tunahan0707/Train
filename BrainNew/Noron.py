@@ -150,6 +150,12 @@ class Noron:
         if deger == 0:
             return []
 
+        # Ateşlenme anında işaretlenen izler korunur. Nöron o
+        # andan sonra yeni, eşik altı katkılar aldıysa bunlar da
+        # yalnızca bu nörona geri bildirim ulaştığında yerel olarak
+        # uygunluk izine çevrilir.
+        self._katkida_bulunan_baglantilari_isaretle()
+
         etkin_baglantilar = [
             baglanti
             for dendrit in self.dendritler
@@ -159,21 +165,6 @@ class Noron:
                 and baglanti.uygunluk_izi > self.GERI_BILDIRIM_IZ_ESIGI
             )
         ]
-
-        # Ateşlenmiş nöronlar katkılarını ateşlenme anında zaten
-        # uygunluk izine çevirmiştir. Yalnızca henüz böyle bir izi
-        # olmayan nöron, kendi kalan katkılarından iz oluşturabilir.
-        if not etkin_baglantilar:
-            self._katkida_bulunan_baglantilari_isaretle()
-            etkin_baglantilar = [
-                baglanti
-                for dendrit in self.dendritler
-                for baglanti in tuple(dendrit.gelen_baglantilar)
-                if (
-                    baglanti.aktif
-                    and baglanti.uygunluk_izi > self.GERI_BILDIRIM_IZ_ESIGI
-                )
-            ]
 
         if not etkin_baglantilar:
             return []
