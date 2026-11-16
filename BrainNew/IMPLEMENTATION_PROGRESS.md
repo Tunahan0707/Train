@@ -161,3 +161,12 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Duyusal projeksiyon ağırlıkları, sabit WTA bağlantılarından ayrı raporlanır. Önceki tanılamada 38 bağlantı tek grup gibi gösteriliyordu; bunun 36 duyusal projeksiyon + 2 WTA bağlantısından oluştuğu ayrıştırıldı.
 - Tanılama testleri eklendi. Yerel pytest bu işlem sırasında çalıştırılmadı.
 - Amaç: tek karar tarafına yanlılık, sınıf bazlı öğrenme başarısızlığı ve ağırlık değişiminin hangi karar popülasyonunda toplandığını birbirinden ayırmak.
+
+
+### M1 tanılama genişletmesi — işaretli projeksiyon ve gerçek terminal akışı
+
+- Baglanti.iletim_etkisi() doğrulandı: iletilen sinaptik katsayı tam olarak etki × sinaptik_agirlik × yapisal_olgunluk.
+- Önceki raporda yalnızca sinaptik_agirlik pozitif görünüyordu. Bu, uyarıcı/baskılayıcı ayrımını göstermiyordu; çünkü başlangıç işareti etki içinde tutuluyor. Yeni tanılama artık imzalı gerçek iletim katsayısını ve kaynak dendritin sinapsa verdiği katkıyı ayrı raporluyor.
+- Eğitim boyunca her örnekte terminal aktivasyon sayısı farkı ölçülüyor; bu sayı imzalı iletim katsayısıyla çarpılarak kanal→karar hedefi bazında yaklaşık sinaptik olay akışı hesaplanıyor. Ayrıca sol/sağ duyusal nöronların ateşlenmeleri terminal aktivasyonlarından ayrı tutuluyor.
+- Bu akış toplamı hedef nöron membran potansiyeli değildir; hedefe zamanlanan imzalı sinaptik olayların tanısal yaklaşık toplamıdır. Öğrenme mekanizmasına müdahale etmez.
+- Yeni testler imzalı katsayı formülünü, dendrit katkısını ve aktivasyon farkı hesabını kontrol eder.
