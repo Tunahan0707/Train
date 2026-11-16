@@ -37,6 +37,8 @@ class Beyin:
             raise ValueError("Olay gecikmesi sonlu ve sıfırdan büyük olmalı.")
 
         olay_zamani = self.zaman + gecikme
+        if not math.isfinite(olay_zamani):
+            raise ValueError("Planlanan olay zamanı sonlu olmalı.")
         olay_id = next(self._olay_sayaci)
         oncelik = self._OLAY_ONCELIGI.get(tur, 99)
         heapq.heappush(
