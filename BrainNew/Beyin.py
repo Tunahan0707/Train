@@ -92,9 +92,12 @@ class Beyin:
                 raise ValueError("Hedef nöron bu Beyin'e kayıtlı değil.")
             if sinaps.hedef_dendrit_id not in sinaps.hedef.dendritler:
                 raise ValueError("Hedef dendrit, hedef nöronda bulunamadı.")
+        if not sinaps.aktive_olabilir_mi(zaman):
+            return False
         gecikme = sinaps.aktive_et(zaman)
         sinaps.kimyasal_sal(self.kimyasal_alan, zaman)
         self._iletim_olayini_planla(sinaps, gecikme)
+        return True
 
     def _girdi_olayini_isle(self, noron, veri):
         if len(veri) == 2:
