@@ -490,7 +490,7 @@ class Noron:
             sinaps.izleri_guncelle(zaman)
             yerel_iz = max(0.0, min(1.0, sinaps.pre_iz))
             dal_miktari = miktar * yerel_iz * dallanma_sonum
-            if dal_miktari < iz_esigi:
+            if dal_miktari <= 0.0 or dal_miktari < iz_esigi:
                 continue
 
             dal_ziyareti = set(ziyaret)
