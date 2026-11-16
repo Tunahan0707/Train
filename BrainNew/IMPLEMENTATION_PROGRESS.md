@@ -8,6 +8,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] `Beyin.episode_baslat()` geçici nöral durumları temizler; öğrenilmiş sinaptik ağırlıkları, dendrit-terminal katkılarını ve bağlantı topolojisini korur.
 - [x] `ReseptorOrgan` ve `MotorOrgan` için en küçük kullanılabilir girdi/çıktı arayüzleri eklendi.
 - [x] Nöronun yerel feedback metodu, pozitif feedback'te etkin sinaps eşiğini düşürüp etkin olmayanı yükseltir; negatif feedback bunu tersine çevirir.
+- [x] İlk dallanan geriye feedback prototipi eklendi: son ateşlenmenin nedensel girdileri üzerinden ters yönde, yerel presinaptik iz ve dal sönümüyle ilerler; Beyin yalnızca olayları zamanlar.
 - [x] Kopmuş bağlantıdan daha önce kuyruğa alınmış sinaptik olayın hedefe ulaşması engellendi.
 - [x] Refrakter dönemde gelen girdi dendritte tamponlanır; faz döngüsü tamamlandığında bir kez entegre edilir.
 - [x] 2B kimyasal difüzyon çekirdeğinin salım anı tekilliği pozitif başlangıç yaşıyla düzenlendi.
@@ -16,10 +17,11 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 ## Henüz tamamlanmayan sprint başlıkları
 
-- Seed'li seyrek ağ kurucu ve tam ağ yapılandırma sistemi.
+- Seed'li seyrek ağ kurucunun kapsamlı yapılandırma, erişilebilirlik ve istatistik raporları.
 - Sinaps-sinaps yönlü etkileşimlerin birlikte etkinleşmeden öğrenilmesi.
 - Nöron-nöron yerel birlikte etkinlik etkileşimi.
 - Signed synaptic efficacy: kalıcı sinaptik katsayının işaret değiştirebilmesi.
+- Feedback'in çoklu dal, döngü, gecikme, iz eşiği ve pozitif/negatif yönlerde kapsamlı davranış doğrulaması.
 - Kimyasal kaynakların güvenli yaşam döngüsü/temizliği ve olay tabanlı modülatör integrasyonu.
 - Bağlantı olgunlaşması, onarımı ve bağlantısız nöron toparlanma döngüsünün tamamlanması.
 - Davranışsal örüntü geri çağırma, genelleme ve matematik görevleri.
