@@ -19,7 +19,13 @@ class Noron:
         buyume_esigi=0.01, yeni_baglanti_agirligi=0.1,
         sinaps_iliski_ogrenme_orani=0.01,
         sinaps_iliski_sonum_tau=100.0,
-        sinaps_iliski_etki_olcegi=0.1
+        sinaps_iliski_etki_olcegi=0.1,
+        noron_iliski_ogrenme_orani=0.01,
+        noron_iliski_sonum_tau=100.0,
+        noron_iliski_zaman_penceresi=5.0,
+        noron_iliski_arama_yaricapi=10.0,
+        noron_iliski_aktivite_esigi=0.05,
+        noron_iliski_buyume_etkisi=0.25
     ):
         sayisal_degerler = (
             dinlenme, esik, sizinti, depolarizasyon,
@@ -28,7 +34,10 @@ class Noron:
             homeostatik_esik_alt, homeostatik_esik_ust,
             buyume_esigi, yeni_baglanti_agirligi,
             sinaps_iliski_ogrenme_orani, sinaps_iliski_sonum_tau,
-            sinaps_iliski_etki_olcegi
+            sinaps_iliski_etki_olcegi, noron_iliski_ogrenme_orani,
+            noron_iliski_sonum_tau, noron_iliski_zaman_penceresi,
+            noron_iliski_arama_yaricapi, noron_iliski_aktivite_esigi,
+            noron_iliski_buyume_etkisi
         )
         if not all(math.isfinite(float(v)) for v in sayisal_degerler):
             raise ValueError("Nöron parametreleri sonlu sayılar olmalı.")
@@ -91,6 +100,28 @@ class Noron:
         self.sinaps_iliski_sonum_tau = float(sinaps_iliski_sonum_tau)
         self.sinaps_iliski_etki_olcegi = float(sinaps_iliski_etki_olcegi)
         self.sinaps_iliski_agirliklari = {}
+
+        # Yakın nöronların zamansal birlikte etkinliğine ait seyrek ilişkiler.
+        if not 0.0 <= noron_iliski_ogrenme_orani <= 1.0:
+            raise ValueError("Nöron ilişki öğrenme oranı [0, 1] aralığında olmalı.")
+        if (
+            noron_iliski_sonum_tau <= 0
+            or noron_iliski_zaman_penceresi <= 0
+            or noron_iliski_arama_yaricapi < 0
+            or not 0.0 <= noron_iliski_aktivite_esigi <= 1.0
+            or not 0.0 <= noron_iliski_buyume_etkisi <= 1.0
+        ):
+            raise ValueError("Nöron ilişki parametreleri geçersiz.")
+        self.noron_iliski_ogrenme_orani = float(noron_iliski_ogrenme_orani)
+        self.noron_iliski_sonum_tau = float(noron_iliski_sonum_tau)
+        self.noron_iliski_zaman_penceresi = float(noron_iliski_zaman_penceresi)
+        self.noron_iliski_arama_yaricapi = float(noron_iliski_arama_yaricapi)
+        self.noron_iliski_aktivite_esigi = float(noron_iliski_aktivite_esigi)
+        self.noron_iliski_buyume_etkisi = float(noron_iliski_buyume_etkisi)
+        self.noron_iliski_agirliklari = {}
+        self.yerel_aktivite_izi = 0.0
+        self.son_yerel_aktivite_guncelleme = 0.0
+        self.son_ateslenme_zamani = None
 
     def dendrit_ekle(self, dendrit):
         mevcut = self.dendritler.get(dendrit.kimlik)
@@ -261,6 +292,88 @@ class Noron:
             degisimler[sinaps.kimlik] = sinaps.esik - onceki
         return degisimler
 
+    def yerel_aktivite_izini_guncelle(self, zaman, yeni_ateslenme=False):
+        """Nöronun yakın geçmişteki ateşlenme etkinliğini tembel olarak sönümler."""
+        zaman = float(zaman)
+        if (
+            not math.isfinite(zaman)
+            or zaman < self.son_yerel_aktivite_guncelleme
+        ):
+            raise ValueError("Yerel aktivite zamanı sonlu olmalı ve geriye gitmemeli.")
+        gecen = zaman - self.son_yerel_aktivite_guncelleme
+        if gecen:
+            self.yerel_aktivite_izi *= math.exp(
+                -gecen / self.noron_iliski_sonum_tau
+            )
+            self.son_yerel_aktivite_guncelleme = zaman
+        if yeni_ateslenme:
+            self.yerel_aktivite_izi = min(1.0, self.yerel_aktivite_izi + 1.0)
+            self.son_ateslenme_zamani = zaman
+        return self.yerel_aktivite_izi
+
+    def noron_iliski_oku(self, hedef, zaman):
+        """Bu nörondan hedef nörona giden yönlü ilişkiyi okur."""
+        if hedef is self:
+            return 0.0
+        kayit = self.noron_iliski_agirliklari.get(hedef)
+        if kayit is None:
+            return 0.0
+        agirlik, son_zaman = kayit
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < son_zaman:
+            raise ValueError("Nöron ilişki zamanı sonlu olmalı ve geriye gitmemeli.")
+        if zaman > son_zaman:
+            agirlik *= math.exp(
+                -(zaman - son_zaman) / self.noron_iliski_sonum_tau
+            )
+        if abs(agirlik) < 1e-8:
+            self.noron_iliski_agirliklari.pop(hedef, None)
+            return 0.0
+        self.noron_iliski_agirliklari[hedef] = (agirlik, zaman)
+        return agirlik
+
+    def noron_iliski_guncelle(self, hedef, zaman, birlikte=True):
+        """Yakın iki nöron arasındaki tek yönlü ilişkiyi yerel olarak günceller."""
+        if hedef is self:
+            return 0.0
+        dx = hedef.konum[0] - self.konum[0]
+        dy = hedef.konum[1] - self.konum[1]
+        if dx * dx + dy * dy > self.noron_iliski_arama_yaricapi ** 2:
+            return 0.0
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < 0:
+            raise ValueError("Nöron ilişki zamanı sonlu ve negatif olmayan olmalı.")
+        onceki = self.noron_iliski_oku(hedef, zaman)
+        oran = self.noron_iliski_ogrenme_orani
+        if birlikte:
+            yeni = onceki + oran * (1.0 - onceki)
+        else:
+            yeni = onceki - oran * (1.0 + onceki)
+        yeni = max(-1.0, min(1.0, yeni))
+        if abs(yeni) < 1e-8:
+            self.noron_iliski_agirliklari.pop(hedef, None)
+        else:
+            self.noron_iliski_agirliklari[hedef] = (yeni, zaman)
+        return yeni
+
+    def yakin_noron_ateslenmelerini_isle(self, aday_noronlar, zaman):
+        """Son ateşlenmeye yakın zamanda etkinleşen komşularla yönlü ilişki öğrenir."""
+        zaman = float(zaman)
+        if not math.isfinite(zaman) or zaman < 0:
+            raise ValueError("Nöron ilişki zamanı sonlu ve negatif olmayan olmalı.")
+        for onceki in sorted(aday_noronlar, key=lambda oge: str(oge.kimlik)):
+            if onceki.son_ateslenme_zamani is None:
+                continue
+            gecen = zaman - onceki.son_ateslenme_zamani
+            if gecen < 0 or gecen > self.noron_iliski_zaman_penceresi:
+                continue
+            iz = onceki.yerel_aktivite_izini_guncelle(zaman)
+            if iz < self.noron_iliski_aktivite_esigi:
+                continue
+            # Önce ateşlenen nöron, sonraki nörona doğru ilişkiyi kendi
+            # yerel belleğinde güçlendirir. Ters yön bağımsız kalır.
+            onceki.noron_iliski_guncelle(self, zaman, birlikte=True)
+
     def sinaps_iliski_oku(self, kaynak, hedef, zaman):
         """Yönlü ilişkiyi tembel zamansal sönümle okuyup döndürür."""
         if kaynak is hedef:
@@ -404,6 +517,9 @@ class Noron:
         self._son_aktif_cikis_sinapslari.clear()
         self.homeostatik_aktivite_izi = 0.0
         self.son_homeostatik_guncelleme = zaman
+        self.yerel_aktivite_izi = 0.0
+        self.son_yerel_aktivite_guncelleme = zaman
+        self.son_ateslenme_zamani = None
         for dendrit in self.dendritler.values():
             dendrit.girdiler.clear()
             dendrit.bekleyen_kaynak_sinapslari.clear()
@@ -452,6 +568,8 @@ class Noron:
                 if uzaklik2 > arama_yaricapi * arama_yaricapi:
                     continue
                 uygunluk = dendrit.buyume_uygunlugu(kimyasal_alan, zaman)
+                iliski = self.noron_iliski_oku(hedef, zaman)
+                uygunluk *= 1.0 + self.noron_iliski_buyume_etkisi * iliski
                 if uygunluk <= self.buyume_esigi:
                     continue
                 zaten_var = any(
@@ -570,6 +688,7 @@ class Noron:
             return False, []
 
         self.homeostatik_durumu_guncelle(zaman, yeni_ateslenme=True)
+        self.yerel_aktivite_izini_guncelle(zaman, yeni_ateslenme=True)
         return True, self.ateslenme_sonucunu_isle(zaman, kimyasal_alan)
 
     def faz_gecisi_gecikmesi(self):
