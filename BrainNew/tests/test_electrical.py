@@ -90,6 +90,31 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertEqual(n.ateslenme_sayisi, 1)
         self.assertIsNotNone(n.son_entegrasyon_zamani)
 
+    def test_normal_akista_sinaps_aktivasyonu_ve_kimyasal_salim_noronda_yurutulur(self):
+        from BrainNew.KimyasalAlan import KimyasalAlan
+
+        alan = KimyasalAlan()
+        beyin = Beyin(alan)
+        n = Noron("n")
+        d = Dendrid("d")
+        sinaps = Baglanti(
+            "s", n, None, esik=0.2, transmitter_profili={"A": 1.0}
+        )
+        d.sinaps_bagla(sinaps, 1.0)
+        n.dendrit_ekle(d)
+        n.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(n)
+
+        def beyin_aktivasyon_yapmamali(*args, **kwargs):
+            raise AssertionError("Normal akışta Beyin sinapsı aktive etmemeli.")
+
+        beyin.sinyal_gonder = beyin_aktivasyon_yapmamali
+        beyin.duyusal_girdi("n", "d", 100.0)
+        beyin.calistir()
+
+        self.assertEqual(sinaps.aktivasyon_sayisi, 1)
+        self.assertEqual(alan.kaynak_sayisi(), 1)
+
     def test_dendrit_pozitif_ve_negatif_girdileri_isaretli_toplar(self):
         d = Dendrid("d")
         d.girdi_al(3.0)
