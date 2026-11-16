@@ -159,6 +159,18 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         n.girdileri_birlestir(0.0)
         self.assertLess(s.potansiyel, 0.0)
 
+    def test_sinaps_esigi_potansiyel_araligi_disinda_olamaz(self):
+        with self.assertRaises(ValueError):
+            Baglanti("dusuk", None, None, esik=-1.01)
+        with self.assertRaises(ValueError):
+            Baglanti("yuksek", None, None, esik=1.01)
+
+    def test_noron_baska_noronun_cikis_sinapsini_sahiplenemez(self):
+        n1, n2 = Noron("n1"), Noron("n2")
+        sinaps = Baglanti("s", n1, None)
+        with self.assertRaises(ValueError):
+            n2.cikis_sinapsi_ekle(sinaps)
+
     def test_sinaps_potansiyeli_esik_altindaysa_aktive_olamaz(self):
         s = Baglanti("s", None, None, esik=0.2)
         s.etki_uygula(0.1, 0.0)
