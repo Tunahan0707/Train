@@ -1,6 +1,6 @@
 # BrainNew — Birleşik Öğrenme Sprinti (v2)
 
-**Durum:** Kapsamlı sprint planı; uygulama henüz başlatılmadı.  
+**Durum:** Uygulama sürüyor. Eğitim temeli ve dallanan geriye feedback'in ilk prototipi eklendi; kabul testleri henüz yerel ortamda çalıştırılmadı.  
 **Hedef dal:** `fix/brainnew-architecture-audit`  
 **Planın amacı:** BrainNew'i yerel biyolojik-esinli mekanizmalarla deneyimden kalıcı ilişki öğrenebilen, öğrendiğini geri çağırabilen ve sonunda matematiksel görevlerde genelleme gösterebilmesi sınanabilen bir simülasyona dönüştürmek.
 
@@ -51,7 +51,7 @@ Bu sprintte şunlar yapılmayacaktır:
 
 # 1. Aktif branch'in gerçek durumu
 
-Aşağıdaki envanter, `fix/brainnew-architecture-audit` dalındaki `e82f101540cfc1bda1d5338e39e9473088df3c3c` commit'i üzerinden hazırlanmıştır. Bu bir kod incelemesidir; testlerin o commit üzerinde çalıştığı anlamına gelmez.
+Aşağıdaki envanter tarihsel başlangıç incelemesidir; aktif dalın güncel durumu için `IMPLEMENTATION_PROGRESS.md` ve kod esas alınmalıdır. Testler çalıştırılmadan davranış kabul edilmiş sayılmaz.
 
 ## 1.1. Kodda bulunan temel parçalar
 
@@ -84,15 +84,11 @@ Bunlar mekanizma altyapılarıdır. Aynı ağın görev deneyimiyle öğrenip ö
 
 ## 1.3. Henüz bulunmayan ana yetenekler
 
-- Aynı ağın öğrenme örnekleri arasında korunmasını sağlayan kalıcı eğitim döngüsü.
-- Öğrenilmiş ağırlıkları koruyup geçici durumları kontrollü sıfırlayan episode yaşam döngüsü.
-- Tekrarlanabilir seyrek ağ/topoloji kurucusu.
-- Duyusal reseptör ve motor çıktı arayüzü.
+- Kalıcı eğitim döngüsünün görev geri bildirimiyle tam entegrasyonu ve episode iz politikası.
 - Görev ortamı ve ödül/ceza sinyalinin ağdan bağımsız üretimi.
 - Yönlü sinaps-sinaps ilişkileri ve bunların birlikte etkinleşme öğrenmesi.
 - Yerel nöron-nöron birlikte etkinleşme etkileşimi.
-- Dallanmış, geriye yayılan feedback.
-- Kullanıcı tarafından belirlenen feedback eşik kuralı.
+- Dallanmış geriye feedback'in çoklu seed, gecikme, döngü ve ablation testleri.
 - Yeni bağlantıların otomatik yerel zamanlaması ve olgunlaşma dinamiği.
 - Mevcut zayıf bağlantının kademeli onarımı ve tamamen bağlantısız nöronun toparlanma durumu.
 - Kısmi ipucundan örüntü tamamlama ve geri çağırma deneyleri.
@@ -171,7 +167,7 @@ Yapılacaklar:
 - Gecikmeli iletim olayları kaynak bağlantı kimliğini koruyacak.
 - Bağlantı kopunca önceden kuyruğa konmuş iletim olayları geçersiz sayılacak; kopuk bağlantıdan hedefe yeni etki uygulanmayacak.
 - Aynı entegrasyon için olay tekilleştirme korunacak.
-- Refrakter dönemde gelen girdilerin tamponda bozulmadan bekletilmesi nihai kabul sayılmayacak. Basit modelde refrakterlik yeni aksiyon potansiyelini engeller; gelen girdilerin etkisi kendi yerel zaman ölçeğinde sönümlenir ve refrakter dönem bitince geçmişteki tam genliğiyle yeniden oynatılmaz. Ayrı mutlak/göreli refrakter ayrımı ancak davranış testleri gerektirirse eklenir.
+- Mevcut model kararı: refrakter dönemde gelen girdi dendritte tamponlanır; faz döngüsü tamamlandığında bir kez entegrasyona alınır. Bu davranış, hem olay sırası hem de tekrar oynatma/çift işleme regresyon testleriyle korunur. Daha sonra biyolojik sönüm modeli gerekirse ayrı deneyle değerlendirilir; mevcut kararı sessizce değiştirme.
 - Olay limiti, sonlu zaman ufku ve otomatik mikroglia bakım döngüsü birlikte doğrulanacak.
 
 **Kabul ölçütü:** Aynı seed ve olay dizisi aynı sırayı üretir; kopmuş bağlantıdan eski sinyal sızmaz; refrakterlik sinyali yapay biçimde geleceğe taşımaz; kaynak nöronun faz döngüsü hedef nöronun bağımsız ateşlenmesini engellemez.
@@ -295,6 +291,8 @@ Yapılacaklar:
 **Kabul ölçütü:** Aynı ödül sinyali uygunluk izi olan ve olmayan bağlantılarda farklı sonuç üretir; kısa sinyal darbeleri tanımlı zaman çözünürlüğünde kaybolmaz; Beyin hangi bağlantının öğrenmesi gerektiğini bilmez.
 
 ## Aşama 10 — Kullanıcının feedback kuralı ve dallanan geriye yayılım
+
+**Uygulama durumu:** İlk olay tabanlı prototip eklendi. Nöron son ateşlenmesinin gerçek nedensel girdilerini ve aktif çıkış sinapslarını saklıyor; feedback dalı bu girdiler üzerinden ters yönde ilerliyor. Her dal presinaptik iz, sönüm katsayısı ve kendi ziyaret kümesiyle bağımsız ilerliyor. Beyin yalnızca olayları zamanlıyor. Çoklu seed, gecikme, döngü ve görev başarısı testleri henüz tamamlanmadı.
 
 **Amaç:** Geri bildirimin yalnızca doğru yerel nedensel yolları etkilemesi.
 
