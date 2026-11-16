@@ -65,15 +65,30 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         n = Noron("n")
         n.membran = n.esik
         n.aksiyon_potansiyeli_baslat()
-        n.faz_degistir()
+        self.assertEqual(n.faz_degistir(), 1.0)
         self.assertEqual(n.durum, n.REPOLARIZASYON)
         self.assertEqual(n.membran, n.repolarizasyon_degeri)
-        n.faz_degistir()
+        self.assertEqual(n.faz_degistir(), 2.0)
         self.assertEqual(n.durum, n.HIPERPOLARIZASYON)
         self.assertEqual(n.membran, n.hiperpolarizasyon_degeri)
-        n.faz_degistir()
+        self.assertIsNone(n.faz_degistir())
         self.assertEqual(n.durum, n.DINLENME)
         self.assertEqual(n.membran, n.dinlenme_degeri)
+
+    def test_dinlenmedeki_norona_faz_gecisi_uygulanamaz(self):
+        with self.assertRaises(RuntimeError):
+            Noron("n").faz_degistir()
+
+    def test_beyin_noronun_ateslenme_kararini_delege_eder(self):
+        beyin = Beyin()
+        n = Noron("n")
+        d = Dendrid("d")
+        n.dendrit_ekle(d)
+        beyin.noron_ekle(n)
+        beyin.duyusal_girdi("n", "d", 100.0)
+        beyin.calistir()
+        self.assertEqual(n.ateslenme_sayisi, 1)
+        self.assertIsNotNone(n.son_entegrasyon_zamani)
 
     def test_dendrit_pozitif_ve_negatif_girdileri_isaretli_toplar(self):
         d = Dendrid("d")
@@ -90,8 +105,7 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         self.assertEqual(d.girdiler, [])
 
     def test_dendrit_girdi_yokken_sifir_sinyal_doner(self):
-        d = Dendrid("d")
-        self.assertEqual(d.sinyali_hazirla(0.0), (0.0, 0.0))
+        self.assertEqual(Dendrid("d").sinyali_hazirla(0.0), (0.0, 0.0))
 
     def test_dendrit_sinyali_buyuk_girdide_doyuma_yaklasir(self):
         d = Dendrid("d", sinyal_olcegi=1.0)
@@ -215,6 +229,14 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
         d.son_islenen_sinapslar.add(s)
         d.firsat_sonucu_ogren([], zaman=0.0)
         self.assertEqual(d.sinaps_katkilari[s], 0.5)
+
+    def test_sonsuz_girdi_ve_konum_degerleri_reddedilir(self):
+        with self.assertRaises(ValueError):
+            Dendrid("d", konum=(0.0, float("nan")))
+        with self.assertRaises(ValueError):
+            Dendrid("d").girdi_al(float("inf"))
+        with self.assertRaises(ValueError):
+            Noron("n", esik=float("nan"))
 
 
 if __name__ == "__main__":
