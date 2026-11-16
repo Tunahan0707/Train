@@ -94,6 +94,12 @@ class Beyin:
         """Geçici fizyolojik durumu sıfırlar; öğrenilmiş bağlantıları korur."""
         for noron in self.noronlar:
             noron.fizyolojik_durumu_sifirla()
+
+        # Uygunluk izleri yalnızca mevcut denemeye ait geçici
+        # nedensel bilgidir; denemeler arasında taşınmamalıdır.
+        for baglanti in tuple(self.etkin_baglantilar):
+            baglanti.uygunluk_izi = 0.0
+        self.etkin_baglantilar.clear()
         self._olay_kuyrugu.clear()
 
     def _olaylari_ilet(self):
