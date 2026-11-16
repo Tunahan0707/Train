@@ -16,7 +16,7 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
     1-9 sayıları dört bit olarak kodlanır. BrainOld'daki gibi sol ve sağ
     operandın her biri dört dendritli bir reseptör nöronuna sunulur. Böylece
     sekiz bit kanalı iki nöronun dendritlerinde temsil edilir. Reseptör
-    nöronları doğrudan karar nöronlarına bağlanmaz; 20 ara nörona projekte olur.
+    nöronları doğrudan karar nöronlarına bağlanmaz; 20 ara nörona rastgele işaretli projeksiyon yapar.
     Ara nöronlar iki karar nöronuna projekte olur.
 
     Duyusal->ara bağlantılar yerel Hebbian/STDP plastisitesine açıktır.
@@ -349,17 +349,78 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
             self.beyin = egitilmis_beyin
         return tuple(sonuclar)
 
+    def sinaptik_agirliklari_oku(self):
+        """Eğitim öncesi/sonrası karşılaştırma için kalıcı ağırlık anlık görüntüsü."""
+        return {
+            sinaps.kimlik: sinaps.sinaptik_agirlik
+            for sinaps in self.sinapslar
+        }
+
+    @staticmethod
+    def agirlik_degisim_ozetle(deney, baslangic):
+        """Reseptör->ara ve ara->karar plastisitesini ayrı raporlar."""
+        gruplar = {
+            "reseptor->ara": deney.duyusal_ara_sinapslari,
+            "ara->karar": deney.ara_karar_sinapslari,
+        }
+        sonuc = {}
+        for grup, sinapslar in gruplar.items():
+            farklar = [
+                sinaps.sinaptik_agirlik - baslangic[sinaps.kimlik]
+                for sinaps in sinapslar
+            ]
+            mutlak = [abs(fark) for fark in farklar]
+            sonuc[grup] = {
+                "baglanti_sayisi": len(sinapslar),
+                "degisen_baglanti": sum(fark > 1e-12 for fark in mutlak),
+                "ortalama_mutlak_degisim": (
+                    sum(mutlak) / len(mutlak) if mutlak else 0.0
+                ),
+                "maksimum_mutlak_degisim": max(mutlak, default=0.0),
+                "ortalama_isaretli_degisim": (
+                    sum(farklar) / len(farklar) if farklar else 0.0
+                ),
+            }
+        return sonuc
+
     @staticmethod
     def ozetle(sonuclar):
         sonuclar = tuple(sonuclar)
         if not sonuclar:
             raise ValueError("Özetlenecek en az bir sonuç gerekli.")
         dogru = sum(sonuc["dogru"] for sonuc in sonuclar)
+        karar_dagilimi = {
+            BinaryBuyuklukKarsilastirmaDeneyi.SOL: sum(
+                sonuc["gerceklesen"] == BinaryBuyuklukKarsilastirmaDeneyi.SOL
+                for sonuc in sonuclar
+            ),
+            BinaryBuyuklukKarsilastirmaDeneyi.SAG: sum(
+                sonuc["gerceklesen"] == BinaryBuyuklukKarsilastirmaDeneyi.SAG
+                for sonuc in sonuclar
+            ),
+            None: sum(sonuc["gerceklesen"] is None for sonuc in sonuclar),
+        }
+        sinif_bazli = {}
+        for sinif in BinaryBuyuklukKarsilastirmaDeneyi.KARAR_NORONLARI:
+            ornekler = [
+                sonuc for sonuc in sonuclar
+                if sonuc["beklenen"] == sinif
+            ]
+            sinif_dogru = sum(sonuc["dogru"] for sonuc in ornekler)
+            sinif_bazli[sinif] = {
+                "ornek_sayisi": len(ornekler),
+                "dogru": sinif_dogru,
+                "dogruluk": (
+                    sinif_dogru / len(ornekler) if ornekler else None
+                ),
+            }
         return {
             "ornek_sayisi": len(sonuclar),
             "dogru": dogru,
             "yanlis": len(sonuclar) - dogru,
             "dogruluk": dogru / len(sonuclar),
+            "karar_dagilimi": karar_dagilimi,
+            "sinif_bazli": sinif_bazli,
             "iki_cikis_ateslendi": sum(
                 sonuc["sol_ateslenme"] > 0 and sonuc["sag_ateslenme"] > 0
                 for sonuc in sonuclar
@@ -368,7 +429,5 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
                 sonuc["sol_ateslenme"] == 0 and sonuc["sag_ateslenme"] == 0
                 for sonuc in sonuclar
             ),
-            "karar_olusmadi": sum(
-                sonuc["gerceklesen"] is None for sonuc in sonuclar
-            ),
+            "karar_olusmadi": karar_dagilimi[None],
         }
