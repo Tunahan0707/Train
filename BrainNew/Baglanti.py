@@ -397,6 +397,19 @@ class Baglanti:
                 kirilma = kaynak.zaman + kaynak.baslangic_yasi
                 if sol_baslangic < kirilma < zaman:
                     sinirlar.add(kirilma)
+                # Nokta kaynakta ilk yaş çevresindeki 1/t davranışını
+                # çözebilmek için kaynak yaşını geometrik aralıklara böl.
+                yas = max(
+                    sol_baslangic - kaynak.zaman,
+                    kaynak.baslangic_yasi
+                )
+                while True:
+                    sonraki_yas = yas * 2.0
+                    sonraki_zaman = kaynak.zaman + sonraki_yas
+                    if sonraki_zaman <= sol_baslangic or sonraki_zaman >= zaman:
+                        break
+                    sinirlar.add(sonraki_zaman)
+                    yas = sonraki_yas
                 sirali_sinirlar = sorted(sinirlar)
                 yon = 1.0 if kaynak.tur == "odul" else -1.0
                 for sol, sag in zip(sirali_sinirlar, sirali_sinirlar[1:]):
