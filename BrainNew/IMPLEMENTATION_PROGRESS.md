@@ -120,6 +120,16 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Tek seed'e özgü rastlantıyı değerlendirmek için `coklu_seed_gurultu_ozeti` eklendi. Varsayılan üç bağımsız seed'in sonuçlarını birleştirir; toplam başarı oranının yanında seed başına oranların en düşüğünü ve en yükseğini verir.
 - Bu özet son doğrulama içindir. Sonuçlar alındıktan sonra bağlama duyarlı hafıza prototipi dondurulup matematik öğrenme görevlerine geçilecek; mevcut deney genel hafıza veya kendiliğinden bağlam kapısı oluşumunu kanıtlamaz.
 
+
+## Aşama 16 — Bağlama duyarlı hafıza son doğrulaması
+
+- Üç seed ve seed başına 100 tekrar ile kanal bazlı gürültü taraması tamamlandı; her koşul X/Y için 300 deneme içeriyor.
+- İpucu gürültüsünde tam eşleşme: %5 düzeyinde X %100 / Y %99,3; %10'da X %92,7 / Y %92; %20'de X %74,3 / Y %72,7.
+- Bağlam gürültüsünde tam eşleşme: %5 düzeyinde X %99 / Y %99,3; %10'da X %90 / Y %89,7; %20'de X %71,3 / Y %72,7.
+- İki kanala birlikte gürültüde tam eşleşme: %5 düzeyinde X %95,3 / Y %96; %10'da X %82 / Y %77; %20'de X %66 / Y %66,7.
+- Bütün koşullarda yanlış pozitif sayısı 0.
+- **Karar:** Bağlama duyarlı hafıza doğrulama ailesi donduruldu; yeni gürültü kombinasyonları eklenmeyecek. Bu sonuç küçük ve önceden kurulmuş bağlam kapılı ağla sınırlıdır.
+
 ## Aşama 17 — Sayısal temsil altyapısı
 
 - [x] SayisalTemsil.py eklendi: 1–9 aralığı için log-Gauss ayarlı, örtüşen popülasyon kodlaması.
