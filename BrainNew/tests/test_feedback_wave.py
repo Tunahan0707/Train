@@ -106,3 +106,79 @@ def test_geri_bildirim_dalgasi_ayni_noronu_iki_kez_islemez(
     assert cagri_sirasi.count(noron_a) == 1
     assert cagri_sirasi.count(noron_b) == 1
     assert len(cagri_sirasi) == 3
+
+
+def baglantilari_temizle(beyin):
+    for noron in beyin.noronlar:
+        for akson in noron.aksonlar:
+            for baglanti in tuple(akson.baglantilar):
+                baglanti.sil()
+
+
+def test_gercek_geri_bildirim_yalnizca_izli_nedensel_yola_ulasir():
+    beyin = Beyin(2, 1, 1, seed=17)
+    baglantilari_temizle(beyin)
+
+    reseptor = beyin.reseptor_noronlari[0]
+    ilgisiz_reseptor = beyin.reseptor_noronlari[1]
+    ara = beyin.ara_noronlar[0]
+    motor = beyin.motor_noronlari[0]
+
+    ilk = reseptor.aksonlar[0].baglan(
+        ara.dendritler[0], etki_mv=20.0, gecikme_ms=1
+    )
+    ikinci = ara.aksonlar[0].baglan(
+        motor.dendritler[0], etki_mv=20.0, gecikme_ms=1
+    )
+    ilgisiz = ilgisiz_reseptor.aksonlar[0].baglan(
+        motor.dendritler[1], etki_mv=3.0, gecikme_ms=1
+    )
+
+    assert beyin.isle([1, 0], adim_sayisi=3) == [1]
+    assert ilk.uygunluk_izi > 0
+    assert ikinci.uygunluk_izi > 0
+    assert ilgisiz.uygunluk_izi == 0
+
+    ilk_etki = ilk.etki_mv
+    ikinci_etki = ikinci.etki_mv
+
+    beyin.geri_bildirim(1.0)
+
+    assert ilk.etki_mv > ilk_etki
+    assert ikinci.etki_mv > ikinci_etki
+    assert ilgisiz.etki_mv == 3.0
+
+
+def test_noron_guncelleme_sirasi_simulasyon_sonucunu_degistirmez():
+    beyin_a = Beyin(1, 1, 0, seed=23)
+    beyin_b = Beyin(1, 1, 0, seed=23)
+
+    for beyin in (beyin_a, beyin_b):
+        baglantilari_temizle(beyin)
+        beyin.reseptor_noronlari[0].aksonlar[0].baglan(
+            beyin.motor_noronlari[0].dendritler[0],
+            etki_mv=20.0,
+            gecikme_ms=1
+        )
+        beyin.girdi_al([1])
+
+    beyin_b.noronlar.reverse()
+
+    for _ in range(4):
+        beyin_a.adim()
+        beyin_b.adim()
+
+    assert beyin_a.motor_organ.ciktilar == beyin_b.motor_organ.ciktilar
+
+    def durum_imzasi(beyin):
+        return [
+            (
+                noron.membran_potansiyeli,
+                noron.durum,
+                noron.ateslenme_sayisi
+            )
+            for noron in beyin.reseptor_noronlari
+            + beyin.motor_noronlari
+        ]
+
+    assert durum_imzasi(beyin_a) == durum_imzasi(beyin_b)
