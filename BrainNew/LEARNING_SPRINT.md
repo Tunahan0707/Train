@@ -438,6 +438,8 @@ Yapılacaklar:
 - Geri çağırma için ayrı bir hazır algoritma eklenmeyecek; yerel bağlantı ve potansiyel dinamiklerinden çıkması beklenecek.
 - Tamamlayamıyorsa hangi mekanizma eksik, ölçümlerden çıkarılacak; doğrudan örüntü tamamlama kodu yazılmayacak.
 
+**İkinci deney — ortak elemanlı iki örüntü:** `CakisikHafizaDeneyi` eklendi. Aynı ağda A→B,C ve D→B,E örüntüleri ayrı episode'larda öğretiliyor; B iki örüntünün ortak elemanı. Ayrı eğitilmemiş ağlarda A ve D baseline'ları ölçülüyor. Ardından yalnızca A ve yalnızca D ipuçları ayrı episode'larda sunularak her örüntünün kendine özgü elemanlarını geri çağırması ve diğer örüntünün özel elemanlarını yanlışlıkla etkinleştirmemesi sınanıyor. Dört bağlantının ağırlıkları ayrı ayrı raporlanıyor. Üç regresyon testi eklendi; henüz çalıştırılmadı. Bu yönlü, önceden kurulmuş bağlantılar üzerinde bir karışma testidir; henüz örtük/iki yönlü çağrışım veya aynı ipucuna bağlı çelişkili örüntü seçimini sınamaz.
+
 **Kabul ölçütü:** Ağ yalnızca eğitim girdisini aynen tekrar etmekle kalmaz; kısmi ipucunda doğru örüntüye eğitim baseline'ından anlamlı ölçüde daha sık ulaşır.
 
 ## Aşama 17 — Matematik öğrenme arayüzü ve görev basamakları

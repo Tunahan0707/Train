@@ -12,7 +12,7 @@ python -m pytest BrainNew/tests/test_microglia.py -v
 python -m pytest BrainNew/tests/test_structural_plasticity.py -v
 python -m pytest BrainNew/tests/test_experiment_recording.py -v
 python -m pytest BrainNew/tests/test_experiment_runner.py -v
-python -m pytest BrainNew/tests/test_memory_recall.py -v
+python -m pytest BrainNew/tests/test_memory_recall.py -v\npython -m pytest BrainNew/tests/test_overlapping_memory.py -v
 ```
 
 Hepsini tek seferde çalıştırmak için:
@@ -40,7 +40,7 @@ python -m BrainNew.main
 - `test_feedback_wave.py`: Pozitif feedback'te aktif/pasif terminal eşik yönleri, nedensel girdiler üzerinden geriye dallanma ve ziyaret edilmiş nöronlarla döngü engelleme.
 - `test_plasticity.py`: Sessiz/aşırı etkin nöronlarda eşik homeostazı, hedef etkinlik civarında kararlılık, episode'lar arası uzun dönem izin korunması, sinaptik öğrenilmiş parametrelerin korunması ve homeostaz ablasyonu.
 - `test_training_foundation.py`: Kalıcı episode öğrenmesi, yerel feedback, sinaps/nöron ilişkileri ve eğitim yürütücüsü temel davranışları.
-- `test_memory_recall.py`: Ayrı baseline ağı, zayıf ilişkilerin yerel Hebbian öğrenmeyle güçlenmesi, sonraki episode'da kısmi ipucuyla geri çağırma ve deney tekrarlanabilirliği.
+- `test_memory_recall.py`: Ayrı baseline ağı, zayıf ilişkilerin yerel Hebbian öğrenmeyle güçlenmesi, sonraki episode'da kısmi ipucuyla geri çağırma ve deney tekrarlanabilirliği.\n- `test_overlapping_memory.py`: Ortak B elemanlı A→B,C ve D→B,E örüntülerinin aynı ağda öğrenilmesi, ipucuna özgü geri çağırma, yanlış pozitifler ve tekrarlanabilirlik.
 
 ## Testlerin yorumlanması
 

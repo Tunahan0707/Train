@@ -58,3 +58,13 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Başlangıç/öğrenilmiş ağırlıklar ve baseline/eğitim/geri çağırma çıktıları raporlanır.
 - İki test eklendi: kısmi ipucuyla geri çağırma ve tekrarlanabilirlik.
 - **Durum:** Kod ve testler eklendi; testler henüz çalıştırılmadı. Bu tek örüntülü kontrollü prototip genel hafıza, gürültü toleransı veya çoklu örüntü ayrımı kanıtı değildir.
+
+
+## Aşama 16 — Ortak elemanlı örüntüler ve karışma deneyi
+
+- `CakisikHafizaDeneyi` eklendi: A→B,C ve D→B,E ilişkileri aynı ağda ayrı episode'larda öğretiliyor; B ortak eleman.
+- A ve D için ayrı eğitilmemiş baseline ağları ölçülüyor.
+- Öğrenme sonrası yalnızca A veya yalnızca D ipucu sunuluyor; doğru ortak/özel elemanların geri çağrılması ve karşı örüntünün özel elemanlarının yanlış pozitif olarak etkinleşmemesi ölçülüyor.
+- Dört sinaptik bağlantının başlangıç ve öğrenilmiş ağırlıkları ayrı raporlanıyor.
+- Üç test eklendi: iki örüntünün ayrıştırılması, dört bağlantının da öğrenilmesi ve tekrarlanabilirlik.
+- **Durum:** Kod ve testler eklendi; yerel çalıştırma bekleniyor. Bu deney yönlü ve önceden kurulmuş bağlantılarla sınırlı; aynı ipucuna bağlı çelişkili örüntü seçimi veya genel hafıza kapasitesi kanıtı değildir.
