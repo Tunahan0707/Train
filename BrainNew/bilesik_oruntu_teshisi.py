@@ -30,6 +30,7 @@ def noron_etiketi(beyin, noron):
 
 def gozlemciyi_bagla(beyin):
     """Model davranisini degistirmeden dendrit tuketimini ve noron durumunu kaydeder."""
+    baslangic_zamani = beyin.zaman
     aktarimlar = []
     noron_durumlari = []
     orijinal_metotlar = []
@@ -48,7 +49,7 @@ def gozlemciyi_bagla(beyin):
                 toplam, katkilar = _orijinal()
                 for baglanti, etki_mv in katkilar:
                     aktarimlar.append({
-                        "zaman": beyin.zaman,
+                        "zaman": beyin.zaman - baslangic_zamani,
                         "kaynak": noron_etiketi(beyin, baglanti.kaynak.noron),
                         "hedef": _etiket,
                         "dendrit": _dendrit_no,
@@ -111,7 +112,7 @@ def denemeyi_incele(beyin, girdi, beklenen):
         olay for olay in durumlar if olay["noron"].startswith("M")
     ]
 
-    print("\\n" + "=" * 88)
+    print("\n" + "=" * 88)
     print(
         f"GIRDI {girdi} | BEKLENEN {beklenen} | CIKTI {cikti} | "
         f"{'DOGRU' if cikti == beklenen else 'YANLIS'}"
