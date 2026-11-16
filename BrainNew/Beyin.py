@@ -71,7 +71,7 @@ class Beyin:
                 toplam = noron.girdileri_birlestir(
                     self.zaman, self.kimyasal_alan
                 )
-                if noron.membrani_guncelle(toplam) and noron.aksiyon_potansiyeli_baslat():
+                if noron.membrani_guncelle(toplam, self.zaman) and noron.aksiyon_potansiyeli_baslat():
                     aktif = [
                         sinaps for sinaps in noron.cikis_sinapslari
                         if sinaps.aktive_olabilir_mi(self.zaman)
