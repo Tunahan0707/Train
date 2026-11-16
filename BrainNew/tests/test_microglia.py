@@ -21,7 +21,7 @@ class MikrogliaTestleri(unittest.TestCase):
         uzak = Baglanti("uzak", None, None, terminal_konumu=(20.0, 0.0))
         indeks.ekle(yakin)
         indeks.ekle(uzak)
-        mikroglia = Mikroglia("m", algilama_yaricap=3.0)
+        mikroglia = Mikroglia("m", algilama_yaricapi=3.0)
 
         mikroglia.bakim_yap(indeks, None, 1.0)
 
@@ -36,7 +36,7 @@ class MikrogliaTestleri(unittest.TestCase):
             budama_esigi=0.1, kopma_esigi=0.9
         )
         indeks.ekle(sinaps)
-        mikroglia = Mikroglia("m", algilama_yaricap=2.0)
+        mikroglia = Mikroglia("m", algilama_yaricapi=2.0)
         mikroglia.bakim_yap(indeks, None, 10.0)
         self.assertFalse(sinaps.kopuk)
 
@@ -50,7 +50,7 @@ class MikrogliaTestleri(unittest.TestCase):
         )
         indeks.ekle(sinaps)
         alan.sal("budama", sinaps.terminal_konumu, 10.0, 0.0)
-        mikroglia = Mikroglia("m", algilama_yaricap=2.0, bakim_araligi=1.0)
+        mikroglia = Mikroglia("m", algilama_yaricapi=2.0, bakim_araligi=1.0)
 
         kopanlar = mikroglia.bakim_yap(indeks, alan, 1.0)
 
@@ -66,7 +66,7 @@ class MikrogliaTestleri(unittest.TestCase):
         )
         indeks.ekle(sinaps)
         alan.sal("stabilizasyon", sinaps.terminal_konumu, 2.0, 0.0)
-        mikroglia = Mikroglia("m", algilama_yaricap=2.0, bakim_araligi=1.0)
+        mikroglia = Mikroglia("m", algilama_yaricapi=2.0, bakim_araligi=1.0)
 
         mikroglia.bakim_yap(indeks, alan, 1.0)
 
@@ -81,7 +81,7 @@ class MikrogliaTestleri(unittest.TestCase):
         )
         kaynak.cikis_sinapsi_ekle(sinaps)
         beyin.noron_ekle(kaynak)
-        mikroglia = Mikroglia("m", algilama_yaricap=2.0, bakim_araligi=1.0)
+        mikroglia = Mikroglia("m", algilama_yaricapi=2.0, bakim_araligi=1.0)
         beyin.mikroglia_ekle(mikroglia)
         beyin.kimyasal_alan.sal("budama", sinaps.terminal_konumu, 10.0, 0.0)
         beyin.mikroglia_bakim_planla("m", 1.0)
