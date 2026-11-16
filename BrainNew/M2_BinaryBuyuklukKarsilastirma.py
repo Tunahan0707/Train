@@ -155,10 +155,8 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
 
         # BrainOld'daki 20 ara nöron fikrini koruyoruz; her biri sol ve sağ
         # reseptörden birer dendritik giriş alır.
-        ara_konumlari = {}
         for i, kimlik in enumerate(self.ara_noronlari):
             konum = (5.0, float(i))
-            ara_konumlari[kimlik] = konum
             noron = Noron(kimlik, konum=konum)
             for j in range(self.ARA_GIRDI_SAYISI):
                 noron.dendrit_ekle(Dendrid(f"{kimlik}:D{j}"))
@@ -204,7 +202,7 @@ class BinaryBuyuklukKarsilastirmaDeneyi:
                 kaynak.cikis_sinapsi_ekle(sinaps)
 
         # Ara nöronların iki karar popülasyonuna çıkışları rastgele işaretlidir.
-        # Her çıkış sinapsı dört dendritin tümünden yerel katkı alır.
+        # Her çıkış sinapsı iki dendritin tümünden yerel katkı alır.
         for ara_id in self.ara_noronlari:
             ara = noronlar[ara_id]
             for karar_id in self.KARAR_NORONLARI:
