@@ -118,7 +118,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 - Kanal bazlı taramada ipucu, bağlam ve birleşik gürültü ayrı ayrı ölçüldü. 100 tekrar/koşul sonuçlarında yanlış pozitif görülmedi; gürültü arttıkça tam eşleşme düştü.
 - Tek seed'e özgü rastlantıyı değerlendirmek için `coklu_seed_gurultu_ozeti` eklendi. Varsayılan üç bağımsız seed'in sonuçlarını birleştirir; toplam başarı oranının yanında seed başına oranların en düşüğünü ve en yükseğini verir.
-- Bu özet son doğrulama içindir. Sonuçlar alındıktan sonra bağlama duyarlı hafıza prototipi dondurulup matematik öğrenme görevlerine geçilecek; mevcut deney genel hafıza veya kendiliğinden bağlam kapısı oluşumunu kanıtlamaz.
+- Bu özet son doğrulama içindi. Çoklu-seed sonuçları alındı ve aşağıdaki tabloda kaydedildi; bağlama duyarlı hafıza prototipi donduruldu. Mevcut deney genel hafıza veya kendiliğinden bağlam kapısı oluşumunu kanıtlamaz.
 
 
 ## Aşama 16 — Bağlama duyarlı hafıza son doğrulaması
