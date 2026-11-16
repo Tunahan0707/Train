@@ -42,7 +42,8 @@ Bu, kaybolan/takılı kalan girdi hatasını önleyen geçici bir uygulama polit
 - Nöron ateşlendiğinde yalnızca yerel eşiği geçen çıkış sinapsları aktive edilir.
 - Aynı ateşlenme olayında uygun sinapslar seri rastgele seçimle değil, tek yerel seçim turuyla belirlenir.
 - Bir sinapsa birden fazla dendritten gelen etkiler önce toplamsal hesaplanır; ardından o sinapsa gerçekten katkı veren dendrit sayısının kareköküyle normalize edilir.
-- Dendrit-sinaps öğrenmesi yalnızca gerçekten katkı yükleyen çiftlerde yürür. İlk değerlendirme fırsatında negatif ceza uygulanmaz.
+- Dendrit-sinaps öğrenmesi yalnızca gerçekten katkı yükleyen çiftlerde yürür. İlk değerlendirme fırsatında negatif ceza uygulanmaz. Her katkı parametresi kendi alt/üst sınırları içinde tutulur; güncelleme yönündeki sınıra yaklaştıkça toplamsal adım küçülür. İlk prototip varsayılanı [-1, 1] olup biyolojik sabit değil, kalibrasyon parametresidir.
+- Öğrenme uygunluğu yalnızca mevcut entegrasyon olayında katkı veren çiftlerden oluşur; ateşlenmeyen eski entegrasyonlardan kalan çiftler sonraki ateşlenmede yanlışlıkla cezalandırılmaz.
 - Bir terminal aynı aktivasyonda repertuvarındaki birden fazla transmitter türünü salabilir.
 - Kimyasal alan kaynakları şimdilik saklanır ve sorguda taranır; büyük ağ ölçeği için optimize edilmiş değildir.
 - Girdi, konum, olay zamanı, sinaps ve kimyasal kaynak parametrelerinde sonlu değer kontrolleri bulunur.
