@@ -25,10 +25,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 
 - Seed'li seyrek ağ kurucunun kapsamlı yapılandırma, erişilebilirlik ve istatistik raporları.
 
-
-
 - Feedback'in çoklu dal, döngü, gecikme, iz eşiği ve pozitif/negatif yönlerde kapsamlı davranış doğrulaması.
-
 - Bağlantısız nöron toparlanması, otomatik büyüme zamanlaması ve onarım kalibrasyonu.
 - Davranışsal örüntü geri çağırma, genelleme ve matematik görevleri.
 - Ablasyon, çoklu seed kalibrasyonu ve ölçek ölçümleri.
