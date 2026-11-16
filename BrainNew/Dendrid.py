@@ -61,4 +61,5 @@ class Dendrid:
                 self.sinaps_katkilari[sinaps] += adim
             elif sinaps.degerlendirme_sayisi > 0:
                 self.sinaps_katkilari[sinaps] -= adim
+            sinaps.degerlendirme_sayisi += 1
         self.son_islenen_sinapslar.clear()
