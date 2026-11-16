@@ -44,7 +44,9 @@ class EgitimSurucusu:
         if feedback and self.feedback_uretici is not None:
             # Callback yalnızca görev ortamı/kimyasal alan etkileşimini yapar;
             # sinaptik parametrelere doğrudan erişim verilmez.
-            self.feedback_uretici(self.beyin, sonuc)
+            self.feedback_uretici(
+                self.beyin.kimyasal_alan, sonuc, self.beyin.zaman
+            )
         return sonuc
 
     def egit(self, ornekler, feedback=True, olay_limiti=100000):

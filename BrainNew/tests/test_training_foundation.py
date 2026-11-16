@@ -56,6 +56,36 @@ class TrainingFoundationTests(unittest.TestCase):
         self.assertEqual(sinaps.sinaptik_agirlik, 1.4)
         self.assertEqual(dendrit.sinaps_katkilari[sinaps], 0.7)
 
+    def test_pruned_synapse_cannot_deliver_already_queued_input(self):
+        beyin = Beyin()
+        kaynak = Noron("source")
+        hedef = Noron("target")
+        hedef.dendrit_ekle(Dendrid("D"))
+        sinaps = Baglanti(
+            "s", kaynak, hedef, uzunluk=1.0,
+            hedef_dendrit_id="D", etki=100.0
+        )
+        kaynak.dendrit_ekle(Dendrid("out"))
+        kaynak.cikis_sinapsi_ekle(sinaps)
+        beyin.noron_ekle(kaynak)
+        beyin.noron_ekle(hedef)
+        beyin._iletim_olayini_planla(sinaps, 1.0)
+        sinaps.kopuk = True
+        beyin.calistir()
+        self.assertEqual(hedef.ateslenme_sayisi, 0)
+
+    def test_refractory_input_is_not_replayed_after_recovery(self):
+        beyin = Beyin()
+        noron = Noron("N")
+        dendrit = Dendrid("D")
+        noron.dendrit_ekle(dendrit)
+        beyin.noron_ekle(noron)
+        noron.durum = noron.DEPOLARIZASYON
+        beyin.duyusal_girdi("N", "D", 100.0, gecikme=1.0)
+        beyin.calistir()
+        self.assertFalse(noron.bekleyen_girdi_var_mi())
+        self.assertEqual(noron.ateslenme_sayisi, 0)
+
     def test_training_runner_reuses_same_brain_across_episodes(self):
         beyin = Beyin()
         noron = Noron("N")
