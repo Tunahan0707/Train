@@ -78,6 +78,8 @@ class Baglanti:
         self.son_uygunluk_guncelleme = 0.0
         self.son_modulator_zamani = 0.0
         self.son_modulator_degeri = 0.0
+        self.son_modulator_uygunluk_izi = 0.0
+        self._uygunluk_olaylari = []
         self.modulator_guncelleme_sayisi = 0
         self.toplam_modulator_agirlik_degisim = 0.0
         self.uzunluk = float(uzunluk)
@@ -275,37 +277,124 @@ class Baglanti:
             self.uygunluk_izi *= math.exp(-gecen / self.uygunluk_tau)
             self.son_uygunluk_guncelleme = zaman
         self.uygunluk_izi = max(-1.0, min(1.0, self.uygunluk_izi + degisim))
+        if degisim != 0.0:
+            self._uygunluk_olaylari.append((zaman, degisim))
         return self.uygunluk_izi
 
     def gecikmis_modulatoru_isle(self, kimyasal_alan, zaman):
-        """Yerel ödül/ceza alanını örnekleyip uygunluk izini ağırlığa işler."""
+        """Ödül/ceza ile uygunluk izinin zaman-integralini ağırlığa işler.
+
+        Sabit örnekleme anındaki yoğunluğu kullanmak yerine, iki güncelleme
+        arasındaki kimyasal alan × uygunluk izi çarpımını Gauss-Legendre
+        kuadratürüyle entegre eder. Böylece kısa kimyasal darbeler, arada
+        nöron ateşlenmesi olmasa da sonraki bakımda hesaba katılır.
+        """
         zaman = float(zaman)
         if not math.isfinite(zaman) or zaman < self.son_modulator_zamani:
             raise ValueError("Modülatör zamanı sonlu olmalı ve geriye gitmemeli.")
+
+        baslangic = self.son_modulator_zamani
         self.uygunluk_izini_guncelle(zaman)
         if kimyasal_alan is None or self.kopuk:
             self.son_modulator_zamani = zaman
             self.son_modulator_degeri = 0.0
+            self.son_modulator_uygunluk_izi = self.uygunluk_izi
+            self._uygunluk_olaylari.clear()
             return 0.0
 
-        odul = kimyasal_alan.yogunluk("odul", self.terminal_konumu, zaman)
-        ceza = kimyasal_alan.yogunluk("ceza", self.terminal_konumu, zaman)
+        odul = kimyasal_alan.yogunluk(
+            "odul", self.terminal_konumu, zaman
+        )
+        ceza = kimyasal_alan.yogunluk(
+            "ceza", self.terminal_konumu, zaman
+        )
         deger = odul - ceza
-        gecen = zaman - self.son_modulator_zamani
-        integral = 0.5 * (self.son_modulator_degeri + deger) * gecen
+
+        olaylar = [
+            (olay_zamani, delta)
+            for olay_zamani, delta in self._uygunluk_olaylari
+            if baslangic <= olay_zamani <= zaman
+        ]
+        olaylar.sort(key=lambda oge: oge[0])
+        baslangic_izi = self.son_modulator_uygunluk_izi
+
+        # Kimyasal kaynak başlangıçları ve düzenleme yaşının kırılma noktaları
+        # integrali süreksizlik/köşe noktalarında parçalara ayırır.
+        sinirlar = {baslangic, zaman}
+        for olay_zamani, _ in olaylar:
+            sinirlar.add(olay_zamani)
+        for kaynak in getattr(kimyasal_alan, "kaynaklar", ()):
+            if kaynak.tur not in ("odul", "ceza"):
+                continue
+            for kirilma in (
+                kaynak.zaman,
+                kaynak.zaman + kaynak.baslangic_yasi
+            ):
+                if baslangic < kirilma < zaman:
+                    sinirlar.add(kirilma)
+        sinirlar = sorted(sinirlar)
+
+        dugumler = (
+            -0.9602898564975363, -0.7966664774136267,
+            -0.5255324099163290, -0.1834346424956498,
+             0.1834346424956498,  0.5255324099163290,
+             0.7966664774136267,  0.9602898564975363
+        )
+        agirliklar = (
+            0.1012285362903763, 0.2223810344533745,
+            0.3137066458778873, 0.3626837833783620,
+            0.3626837833783620, 0.3137066458778873,
+            0.2223810344533745, 0.1012285362903763
+        )
+
+        def iz_degeri(olcum_zamani):
+            iz = baslangic_izi
+            son_olay = baslangic
+            for olay_zamani, delta in olaylar:
+                if olay_zamani > olcum_zamani:
+                    break
+                gecen = olay_zamani - son_olay
+                if gecen > 0:
+                    iz *= math.exp(-gecen / self.uygunluk_tau)
+                iz = max(-1.0, min(1.0, iz + delta))
+                son_olay = olay_zamani
+            kalan = olcum_zamani - son_olay
+            if kalan > 0:
+                iz *= math.exp(-kalan / self.uygunluk_tau)
+            return iz
+
+        integral = 0.0
+        for sol, sag in zip(sinirlar, sinirlar[1:]):
+            if sag <= sol:
+                continue
+            orta = 0.5 * (sol + sag)
+            yari = 0.5 * (sag - sol)
+            for dugum, agirlik in zip(dugumler, agirliklar):
+                t = orta + yari * dugum
+                iz = iz_degeri(t)
+                kimyasal = (
+                    kimyasal_alan.yogunluk("odul", self.terminal_konumu, t)
+                    - kimyasal_alan.yogunluk("ceza", self.terminal_konumu, t)
+                )
+                integral += yari * agirlik * iz * kimyasal
+
         self.son_modulator_zamani = zaman
         self.son_modulator_degeri = deger
-        if self.modulator_ogrenme_orani == 0.0 or self.uygunluk_izi == 0.0:
+        self.son_modulator_uygunluk_izi = self.uygunluk_izi
+        self._uygunluk_olaylari.clear()
+
+        if self.modulator_ogrenme_orani == 0.0 or integral == 0.0:
             return 0.0
 
         onceki = self.sinaptik_agirlik
-        delta = self.modulator_ogrenme_orani * self.uygunluk_izi * integral
+        delta = self.modulator_ogrenme_orani * integral
         self.sinaptik_agirligi_ayarla(onceki + delta)
         gercek_delta = self.sinaptik_agirlik - onceki
         if gercek_delta != 0.0:
             self.modulator_guncelleme_sayisi += 1
             self.toplam_modulator_agirlik_degisim += gercek_delta
         return gercek_delta
+
     def etki_uygula(self, etki, zaman):
         if self.kopuk:
             return
