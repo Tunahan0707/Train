@@ -14,14 +14,16 @@ class Baglanti:
         kimyasal_temizlenme=0.1, transmitter_salimi_duyarliliklari=None,
         yapisal_yaslanma_tau=1000.0, bakim_kazanci=0.01,
         budama_kazanci=0.02, budama_esigi=0.1,
-        kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0
+        kullanim_izi_esigi=0.1, kopma_esigi=0.1, sinaptik_agirlik=1.0,
+        hebbian_oran=0.01
     ):
         sayisal = (
             uzunluk, iletim_hizi, esik, sonum_tau,
             baslangic_potansiyeli, etki, kimyasal_yayilim,
             kimyasal_temizlenme, yapisal_yaslanma_tau,
             bakim_kazanci, budama_kazanci, budama_esigi,
-            kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik
+            kullanim_izi_esigi, kopma_esigi, sinaptik_agirlik,
+            hebbian_oran
         )
         if not all(math.isfinite(float(v)) for v in sayisal):
             raise ValueError("Bağlantı parametreleri sonlu sayılar olmalı.")
@@ -52,6 +54,11 @@ class Baglanti:
         if not 0.0 <= sinaptik_agirlik <= 2.0:
             raise ValueError("Sinaptik ağırlık [0, 2] aralığında olmalı.")
         self.sinaptik_agirlik = float(sinaptik_agirlik)
+        if hebbian_oran < 0:
+            raise ValueError("Hebbian öğrenme oranı negatif olamaz.")
+        self.hebbian_oran = float(hebbian_oran)
+        self.hebbian_guncelleme_sayisi = 0
+        self.toplam_hebbian_degisim = 0.0
         self.uzunluk = float(uzunluk)
         self.iletim_hizi = float(iletim_hizi)
         self.esik = float(esik)
@@ -165,6 +172,31 @@ class Baglanti:
             raise ValueError("Sinaptik ağırlık sonlu olmalı.")
         self.sinaptik_agirlik = max(0.0, min(2.0, yeni_deger))
         return self.sinaptik_agirlik
+
+    def hebbian_ogren(self, zaman):
+        """Yerel pre/post birlikteliğini kalıcı elektriksel ağırlığa işler.
+
+        Yalnızca hedefin gerçek bir postsinaptik ateşlenmesi sırasında çağrılır.
+        Önceden oluşmuş presinaptik iz zaman farkını taşır; güncelleme
+        ağırlık üst sınırına yaklaştıkça doğal olarak küçülür.
+        """
+        if self.kopuk or self.hebbian_oran == 0.0:
+            return 0.0
+        self.izleri_guncelle(zaman)
+        if self.pre_iz <= 0.0:
+            return 0.0
+
+        aralik = self.sinaptik_agirlik_ust - self.sinaptik_agirlik_alt
+        kalan_pay = (
+            self.sinaptik_agirlik_ust - self.sinaptik_agirlik
+        ) / aralik
+        delta = self.hebbian_oran * self.pre_iz * kalan_pay
+        onceki = self.sinaptik_agirlik
+        yeni = self.sinaptik_agirligi_ayarla(onceki + delta)
+        gercek_delta = yeni - onceki
+        self.hebbian_guncelleme_sayisi += 1
+        self.toplam_hebbian_degisim += gercek_delta
+        return gercek_delta
 
     def etki_uygula(self, etki, zaman):
         if self.kopuk:
