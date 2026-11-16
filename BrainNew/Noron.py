@@ -47,6 +47,8 @@ class Noron:
         self.dendritler[dendrit.kimlik] = dendrit
 
     def cikis_sinapsi_ekle(self, sinaps):
+        if sinaps.kaynak is not self:
+            raise ValueError("Çıkış sinapsının kaynak nöronu bu nöron olmalı.")
         if sinaps not in self.cikis_sinapslari:
             self.cikis_sinapslari.append(sinaps)
 
