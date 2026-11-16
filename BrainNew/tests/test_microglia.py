@@ -40,6 +40,23 @@ class MikrogliaTestleri(unittest.TestCase):
         mikroglia.bakim_yap(indeks, None, 10.0)
         self.assertFalse(sinaps.kopuk)
 
+    def test_kullanim_suruyorsa_budama_sinyali_tek_basina_koparmaz(self):
+        alan = KimyasalAlan()
+        indeks = UzamsalIndeks()
+        sinaps = Baglanti(
+            "s", None, None, budama_kazanci=10.0,
+            budama_esigi=0.1, kopma_esigi=0.5
+        )
+        sinaps.iz = 1.0
+        indeks.ekle(sinaps)
+        alan.sal("budama", sinaps.terminal_konumu, 10.0, 0.0)
+        mikroglia = Mikroglia("m", algilama_yaricapi=2.0, bakim_araligi=1.0)
+
+        mikroglia.bakim_yap(indeks, alan, 1.0)
+
+        self.assertFalse(sinaps.kopuk)
+        self.assertGreater(sinaps.yapisal_butunluk, sinaps.kopma_esigi)
+
     def test_budama_sinyali_ve_dusuk_kullanim_birlikte_koparabilir(self):
         alan = KimyasalAlan()
         indeks = UzamsalIndeks()
