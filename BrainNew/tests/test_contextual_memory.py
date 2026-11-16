@@ -73,12 +73,26 @@ class BaglamaDuyarliHafizaTestleri(unittest.TestCase):
                 rapor[olcek]["Y"]["gerceklesen"], ("D", "E", "Gy")
             )
 
-    def test_esik_alti_genlikte_baglam_kapilari_sessiz_kalir(self):
-        rapor = BaglamaDuyarliHafizaDeneyi().gurultu_taramasi(
-            olcekler=(0.90,)
+    def test_ipucu_ve_baglam_genlikleri_bagimsiz_degerlendirilir(self):
+        rapor = BaglamaDuyarliHafizaDeneyi().bagimsiz_genlik_taramasi(
+            olcek_ciftleri=((0.90, 1.0), (1.0, 0.90), (0.90, 0.90))
         )
-        self.assertEqual(rapor[0.90]["X"]["gerceklesen"], ())
-        self.assertEqual(rapor[0.90]["Y"]["gerceklesen"], ())
+
+        # Kanallardan yalnızca biri %10 zayıfladığında diğeri kapıyı taşır.
+        for cift in ((0.90, 1.0), (1.0, 0.90)):
+            self.assertEqual(rapor[cift]["X"]["gerceklesen"], ("B", "C", "Gx"))
+            self.assertEqual(rapor[cift]["Y"]["gerceklesen"], ("D", "E", "Gy"))
+
+        # İki kanal aynı anda %10 zayıfladığında birleşik girdi eşik altında kalır.
+        self.assertEqual(rapor[(0.90, 0.90)]["X"]["gerceklesen"], ())
+        self.assertEqual(rapor[(0.90, 0.90)]["Y"]["gerceklesen"], ())
+
+
+    def test_bagimsiz_genlik_taramasi_gecersiz_olcegi_reddeder(self):
+        with self.assertRaises(ValueError):
+            BaglamaDuyarliHafizaDeneyi().bagimsiz_genlik_taramasi(
+                olcek_ciftleri=((0.0, 1.0),)
+            )
 
 
 if __name__ == "__main__":
