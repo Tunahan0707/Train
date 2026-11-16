@@ -536,8 +536,11 @@ class Noron:
             sinaps.post_iz = 0.0
             sinaps.son_iz_guncelleme = zaman
             sinaps.son_aktivasyon = None
+            sinaps.uygunluk_izini_guncelle(zaman)
             sinaps.son_modulator_zamani = zaman
             sinaps.son_modulator_degeri = 0.0
+            sinaps.son_modulator_uygunluk_izi = sinaps.uygunluk_izi
+            sinaps._uygunluk_olaylari.clear()
 
     def yeni_baglanti_adayi_degerlendir(
         self, aday_noronlar, kimyasal_alan, zaman, arama_yaricapi
