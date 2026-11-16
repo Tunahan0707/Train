@@ -140,3 +140,15 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - **Sınır:** Bu sabit duyusal kodlayıcı, sayısal büyüklükleri ağ için önceden popülasyon örüntüsüne dönüştürür. Henüz ağın kendi kendine sayı kavramı veya aritmetik öğrendiği anlamına gelmez. Sıfır ayrıca temsil edilmemiştir.
 - **Doğrulama:** Testler depoya eklendi; bu güncellemede yerel pytest çalıştırılmadı. Kullanıcı ortamında çalıştırılmalıdır.
 
+
+
+## Aşama M1 — Büyüklük karşılaştırması (ilk deney düzeneği)
+
+- `M1_BuyuklukKarsilastirma.py` eklendi.
+- Sol ve sağ sayılar, mevcut 1–9 popülasyon kodlayıcısıyla iki ayrı duyusal kanala sunulur.
+- Her duyusal nöron iki karar nöronuna da rastgele işaretli projeksiyon yapar. Başlangıç bağlantı düzeni sayısal büyüklük veya doğru cevap bilgisi içermez.
+- Karar nöronları arasında sabit karşılıklı inhibisyon, genel bir rekabet/WTA mekanizması olarak kullanılır; karşılaştırma kuralını kodlamaz.
+- Görev ortamı doğru/yanlış değerlendirmesinden sonra yalnızca kimyasal `odul` veya `ceza` kaynağı bırakır. Sinaptik ağırlıkları doğrudan değiştirmez; mevcut yerel uygunluk izi ve gecikmiş modülatör mekanizması güncellemeyi yapar.
+- Eğitim/test ayrımı sırasız sayı çiftleri üzerinden yapılır. Örneğin (2,7) eğitimdeyse (7,2) de eğitimdedir; ters sıralı çift testte tutulamaz.
+- Test ölçümü karar doğruluğunun yanında iki karar nöronunun birlikte ateşlenmesini, hiçbirinin ateşlenmemesini ve kararsız çıktıyı raporlar.
+- **Sınır:** Bu yalnızca ilk öğrenme deney düzeneğidir. Ağın büyüklük karşılaştırmasını öğrendiği veya görülmemiş çiftlere genellediği henüz gösterilmiş değildir. İlk kullanıcı çalıştırması öncesinde başarı iddiası yoktur.
