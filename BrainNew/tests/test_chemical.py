@@ -129,6 +129,38 @@ class KimyasalMekanizmaTestleri(unittest.TestCase):
 
         self.assertEqual(sinaps.sinaptik_agirlik, 1.0)
 
+    def test_signed_synaptic_efficacy_can_reverse_transmission_sign(self):
+        alan = KimyasalAlan()
+        sinaps = Baglanti(
+            "s", None, None, etki=1.0, sinaptik_agirlik=0.05,
+            modulator_ogrenme_orani=1.0, uygunluk_tau=100.0
+        )
+        sinaps.uygunluk_izini_guncelle(0.0, 1.0)
+        alan.sal(
+            "ceza", (0.0, 0.0), 1.0, 0.0,
+            yayilim=1.0, temizlenme=1.0
+        )
+
+        sinaps.gecikmis_modulatoru_isle(alan, 1.0)
+
+        self.assertLess(sinaps.sinaptik_agirlik, 0.0)
+        self.assertLess(sinaps.iletim_etkisi(), 0.0)
+
+    def test_hebbian_strengthening_preserves_existing_synaptic_sign(self):
+        sinaps = Baglanti("s", None, None, sinaptik_agirlik=-1.0)
+        sinaps.presinaptik_iz_arttir(0.0)
+        sinaps.hebbian_ogren(0.0)
+
+        self.assertLess(sinaps.sinaptik_agirlik, -1.0)
+
+    def test_stdp_depression_weakens_magnitude_without_flipping_sign(self):
+        sinaps = Baglanti("s", None, None, sinaptik_agirlik=-1.0)
+        sinaps.postsinaptik_iz_arttir(0.0)
+        sinaps.stdp_presinaptik_olayi_isle(0.0)
+
+        self.assertLess(sinaps.sinaptik_agirlik, 0.0)
+        self.assertGreater(sinaps.sinaptik_agirlik, -1.0)
+
     def test_sonmus_kimyasal_kaynaklar_tolerans_butcesiyle_temizlenir(self):
         alan = KimyasalAlan()
         alan.sal("A", (0.0, 0.0), 1.0, 0.0, temizlenme=1.0)
