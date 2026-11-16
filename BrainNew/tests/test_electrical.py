@@ -320,6 +320,42 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
             Baglanti("nan", None, None, sinaptik_agirlik=float("nan"))
         with self.assertRaises(ValueError):
             sinaps.sinaptik_agirligi_ayarla(float("inf"))
+    def test_hebbian_ogrenme_pre_post_birlikteliginde_agirligi_artirir(self):
+        sinaps = Baglanti("s", None, None, hebbian_oran=0.1)
+        sinaps.presinaptik_iz_arttir(0.0)
+        degisim = sinaps.hebbian_ogren(1.0)
+
+        beklenen_iz = math.exp(-1.0 / sinaps.pre_iz_tau)
+        beklenen_degisim = 0.1 * beklenen_iz * 0.5
+        self.assertAlmostEqual(degisim, beklenen_degisim)
+        self.assertAlmostEqual(
+            sinaps.sinaptik_agirlik, 1.0 + beklenen_degisim
+        )
+        self.assertEqual(sinaps.hebbian_guncelleme_sayisi, 1)
+
+    def test_hebbian_ogrenme_presinaptik_iz_yokken_agirligi_degistirmez(self):
+        sinaps = Baglanti("s", None, None)
+        onceki = sinaps.sinaptik_agirlik
+        self.assertEqual(sinaps.hebbian_ogren(1.0), 0.0)
+        self.assertEqual(sinaps.sinaptik_agirlik, onceki)
+        self.assertEqual(sinaps.hebbian_guncelleme_sayisi, 0)
+
+    def test_hebbian_ogrenme_agirligi_ust_sinirda_tutar(self):
+        sinaps = Baglanti(
+            "s", None, None, sinaptik_agirlik=1.999,
+            hebbian_oran=10.0
+        )
+        sinaps.presinaptik_iz_arttir(0.0)
+        sinaps.hebbian_ogren(0.0)
+        self.assertLessEqual(sinaps.sinaptik_agirlik, 2.0)
+        self.assertAlmostEqual(sinaps.sinaptik_agirlik, 2.0)
+
+    def test_hebbian_orani_gecersiz_degerleri_reddeder(self):
+        with self.assertRaises(ValueError):
+            Baglanti("negatif", None, None, hebbian_oran=-0.1)
+        with self.assertRaises(ValueError):
+            Baglanti("nan", None, None, hebbian_oran=float("nan"))
+
     def test_presinaptik_iz_sinaps_aktivasyonunda_artar(self):
         sinaps = Baglanti("s", None, None)
         sinaps.aktive_et(1.0)
@@ -357,6 +393,8 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
 
         self.assertEqual(hedef.ateslenme_sayisi, 1)
         self.assertGreater(aktif_sinaps.post_iz, 0.0)
+        self.assertGreater(aktif_sinaps.sinaptik_agirlik, 1.0)
+        self.assertEqual(sessiz_sinaps.sinaptik_agirlik, 1.0)
         self.assertEqual(sessiz_sinaps.pre_iz, 0.0)
         self.assertEqual(sessiz_sinaps.post_iz, 0.0)
 
