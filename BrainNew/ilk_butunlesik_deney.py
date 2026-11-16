@@ -42,7 +42,9 @@ for deneme in range(1, deneme_sayisi + 1):
     dogru = cikti == beklenen_cikti
 
     if not dogru:
-        beyin.geri_bildirim(-1.0)
+        # Öğretici sinyalin hedefi motor nöronudur. Çıktı 0 olduğunda
+        # motor ateşlenmemiş olsa bile geri bildirim bu nörona ulaşmalıdır.
+        beyin.geri_bildirim(-1.0, baslangic_noronlari=[motor])
 
     toplam_etki = sum(
         b.etki_mv for b in baglantilar if b.aktif
