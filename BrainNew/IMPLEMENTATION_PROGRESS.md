@@ -36,6 +36,15 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - Davranışsal örüntü geri çağırma, genelleme ve matematik görevleri.
 - Ablasyon, çoklu seed kalibrasyonu ve ölçek ölçümleri.
 
+## Aşama 15 — Homeostaz durumu
+
+- Nöronun uzun dönem ateşlenme izi ve yavaş eşik kayması yerel olarak güncellenir.
+- Simülasyon zamanı ilerlediğinde sessiz nöronlar da güncellenir; Beyin yalnızca zaman koordinasyonunu sağlar.
+- Homeostaz yalnızca nöron ateşlenme eşiğini değiştirir; belirli öğrenilmiş sinaptik ağırlıkları veya dendrit katkılarını doğrudan değiştirmez.
+- Episode geçişi uzun dönem homeostatik izi silmez; zamanla doğal sönüm devam eder.
+- Hedefe yakın etkinlik, aşırı etkinlik, sessizlik, episode kalıcılığı, sinaptik parametrelerin korunması ve homeostaz ablasyonu için testler eklendi.
+- Metaplastisite veya sinaptik ölçekleme eklenmedi; mevcut eşik homeostazının görevlerde yetersiz kaldığı gösterilmeden yeni mekanizma eklenmeyecek.
+
 ## Doğrulama durumu
 
-Yeni feedback dallanması için regresyon testleri eklendi. Bu oturumda test paketi henüz çalıştırılmadı; yeşil kabul edilmemelidir. Testler çalıştırılmadan başarılı kabul edilmeyecektir.
+Önceki kullanıcı doğrulamasında mevcut test paketi geçti. Bu güncellemede eklenen homeostaz testleri ve zaman/episode değişiklikleri henüz çalıştırılmadı; yeni değişiklikler yeşil kabul edilmemelidir. GitHub Actions son denemelerinde job kayıtları `steps=null` ve `logs_url=null` döndü; bu nedenle uzaktaki başarısızlıkların Python test hatası olduğu doğrulanamadı.
