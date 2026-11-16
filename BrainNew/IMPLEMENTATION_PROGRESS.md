@@ -12,6 +12,7 @@ Hedef dal: `fix/brainnew-architecture-audit`
 - [x] Refrakter dönemde gelen girdi tam genliğiyle bekletilip daha sonra yeniden oynatılmıyor.
 - [x] 2B kimyasal difüzyon çekirdeğinin salım anı tekilliği pozitif başlangıç yaşıyla düzenlendi.
 - [x] Yeni davranışlar için regresyon testleri eklendi.
+- [x] Seed'li, 2B uzamsal ve seyrek başlangıç ağı kurucusu eklendi; topoloji ve başlangıç parametreleri seed ile tekrarlanabilir.
 
 ## Henüz tamamlanmayan sprint başlıkları
 
