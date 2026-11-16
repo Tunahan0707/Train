@@ -67,7 +67,7 @@ def ozet_satiri(ozet):
         f"uyarici={ozet['uyarici']}, baskilayici={ozet['baskilayici']}, "
         f"sifir_etkili={ozet['sifir_etkili']}, "
         f"etki_toplami={ozet['etki_toplami']:.4f}, "
-        mutlak_etki_toplami={ozet['mutlak_etki_toplami']:.4f}"
+        f"mutlak_etki_toplami={ozet['mutlak_etki_toplami']:.4f}"
     )
 
 
