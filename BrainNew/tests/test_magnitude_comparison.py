@@ -146,7 +146,8 @@ class BuyuklukKarsilastirmaTests(unittest.TestCase):
         onceki = {s.kimlik: s.aktivasyon_sayisi for s in deney.sinapslar}
         katsayi = sinaps.iletim_etkisi()
         sinaps.aktivasyon_sayisi += 3
-        kayit = _episode_akisini_ozetle(deney, onceki)["SOL_GIRDI->SOL_BUYUK"]
+        katsayilar = {s.kimlik: s.iletim_etkisi() for s in deney.sinapslar}
+        kayit = _episode_akisini_ozetle(deney, onceki, katsayilar)["SOL_GIRDI->SOL_BUYUK"]
         self.assertEqual(kayit["terminal_aktivasyonu"], 3)
         self.assertAlmostEqual(kayit["imzali_iletim_toplami"], 3 * katsayi)
 
