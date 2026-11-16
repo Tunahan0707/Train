@@ -377,3 +377,13 @@ Bu sprintin her adımı ayrı ayrı uygulanır ve doğrulanır. **Teorik tasarı
 2. `Beyin`, yeni `kaynak_sinaps` anahtar sözcüğünü doğrudan `Noron.girdi_al` metoduna iletiyordu. Bu, `girdi_al` metodunu genişletmeden override eden `ZamanKayitliNoron` gibi alt sınıfların geriye dönük uyumluluğunu bozdu. Beyin artık eski imzayla girdiyi iletir ve kaynak bağlantı atfını ayrı `Noron.girdi_kaynagini_isaretle` yerel metodu üzerinden ekler.
 
 Bu düzeltmeler commit edildi. Güncel test paketi henüz kullanıcı ortamında doğrulanmadı.
+
+
+### Elektriksel sinaptik katsayı — altyapı adımı
+
+- `Baglanti.sinaptik_agirlik` eklendi; varsayılanı 1.0, sınırları [0,2].
+- Hedefe iletilen elektriksel etki `Baglanti.etki * Baglanti.sinaptik_agirlik` olarak hesaplanır.
+- Katsayı geçici `potansiyel`, kullanım izi ve yapısal bütünlükten ayrıdır.
+- Ağırlık sıfır olduğunda bağlantı fiziksel olarak kopmaz; elektriksel etkisi sıfırlanır.
+- Kimyasal transmitter salımı bu katsayıdan bağımsız bırakıldı.
+- Bu commit ağırlığı otomatik öğrenmez. Bir sonraki aşama yerel Hebbian güncelleme kuralını tanımlayıp sınamaktır.
