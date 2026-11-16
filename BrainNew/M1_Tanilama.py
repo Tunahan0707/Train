@@ -1,14 +1,16 @@
-"""M1 büyüklük karşılaştırması için öğrenme tanılama çalıştırıcısı.
+"""M1 büyüklük karşılaştırması için davranış ve ağırlık tanılaması.
 
-Çekirdek deneyin öğrenme kurallarını değiştirmez; eğitim akışını parçalara
-ayırıp doğruluk ve gerçek sinaptik ağırlık değişimlerini raporlar.
+Çekirdek deneyin öğrenme kurallarını değiştirmez. Eğitim boyunca karar
+dağılımını, sınıf bazlı doğruluğu ve duyusal projeksiyon ağırlıklarını ölçer.
 """
-
 from BrainNew.M1_BuyuklukKarsilastirma import BuyuklukKarsilastirmaDeneyi
 
 
 def _agirliklar(deney):
-    return {sinaps.kimlik: sinaps.sinaptik_agirlik for sinaps in deney.sinapslar}
+    return {
+        sinaps.kimlik: sinaps.sinaptik_agirlik
+        for sinaps in deney.sinapslar
+    }
 
 
 def _degisim_ozeti(deney, onceki):
@@ -33,6 +35,91 @@ def _degisim_ozeti(deney, onceki):
             abs(sinaps.uygunluk_izi) for sinaps in deney.sinapslar
         ),
     }
+
+
+def _davranis_ozeti(sonuclar, deney):
+    """Karar tercihlerini ve iki hedef sınıfındaki başarıyı ayırır."""
+    karar_sayilari = {deney.SOL: 0, deney.SAG: 0, None: 0}
+    siniflar = {
+        deney.SOL: {"ornek": 0, "dogru": 0},
+        deney.SAG: {"ornek": 0, "dogru": 0},
+    }
+    for sonuc in sonuclar:
+        karar_sayilari[sonuc["gerceklesen"]] += 1
+        beklenen = sonuc["beklenen"]
+        siniflar[beklenen]["ornek"] += 1
+        siniflar[beklenen]["dogru"] += int(sonuc["dogru"])
+    return {
+        "karar_dagilimi": karar_sayilari,
+        "sinif_bazli": {
+            sinif: {
+                **deger,
+                "dogruluk": (
+                    deger["dogru"] / deger["ornek"]
+                    if deger["ornek"] else None
+                ),
+            }
+            for sinif, deger in siniflar.items()
+        },
+    }
+
+
+def _agirlik_gruplari(deney, baslangic):
+    """Duyusal projeksiyonları WTA bağlantılarından ayrı raporlar."""
+    gruplar = {
+        deney.SOL: {"baslangic": [], "son": [], "delta": []},
+        deney.SAG: {"baslangic": [], "son": [], "delta": []},
+    }
+    wta = []
+    for sinaps in deney.sinapslar:
+        ilk = baslangic[sinaps.kimlik]
+        son = sinaps.sinaptik_agirlik
+        if sinaps.kimlik.endswith(":WTA"):
+            wta.append((ilk, son))
+            continue
+        hedef = sinaps.hedef.kimlik
+        grup = gruplar[hedef]
+        grup["baslangic"].append(ilk)
+        grup["son"].append(son)
+        grup["delta"].append(son - ilk)
+
+    def istatistik(degerler):
+        if not degerler:
+            return {"n": 0}
+        return {
+            "n": len(degerler),
+            "ortalama": sum(degerler) / len(degerler),
+            "minimum": min(degerler),
+            "maksimum": max(degerler),
+            "pozitif": sum(x > 1e-12 for x in degerler),
+            "negatif": sum(x < -1e-12 for x in degerler),
+            "sifir": sum(abs(x) <= 1e-12 for x in degerler),
+        }
+
+    sonuc = {}
+    for hedef, grup in gruplar.items():
+        sonuc[hedef] = {
+            "baslangic": istatistik(grup["baslangic"]),
+            "son": istatistik(grup["son"]),
+            "delta": istatistik(grup["delta"]),
+            "ortalama_mutlak_delta": (
+                sum(abs(x) for x in grup["delta"]) / len(grup["delta"])
+                if grup["delta"] else 0.0
+            ),
+        }
+    sonuc["WTA"] = {
+        "baglanti_sayisi": len(wta),
+        "ortalama_baslangic": (
+            sum(x[0] for x in wta) / len(wta) if wta else None
+        ),
+        "ortalama_son": (
+            sum(x[1] for x in wta) / len(wta) if wta else None
+        ),
+        "maksimum_mutlak_delta": max(
+            (abs(son - ilk) for ilk, son in wta), default=0.0
+        ),
+    }
+    return sonuc
 
 
 def tanilama_calistir(seed=20261120, parca_boyutu=10):
@@ -69,6 +156,7 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
         )
 
     egitim_degisim = _degisim_ozeti(deney, baslangic)
+    egitim_agirlik_gruplari = _agirlik_gruplari(deney, baslangic)
     test_onceki = _agirliklar(deney)
     test_sonuclari = deney.test_et()
     test_sonrasi = _agirliklar(deney)
@@ -78,8 +166,13 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
     )
 
     print("\nEğitim toplamı:", deney.ozetle(tum_sonuclar))
+    print("Eğitim davranış tanısı:", _davranis_ozeti(tum_sonuclar, deney))
     print("Eğitim ağırlık tanısı:", egitim_degisim)
+    print("Duyusal ağırlık grupları (başlangıç/son/delta):")
+    for hedef, ozet in egitim_agirlik_gruplari.items():
+        print(f"  {hedef}: {ozet}")
     print("Test:", deney.ozetle(test_sonuclari))
+    print("Test davranış tanısı:", _davranis_ozeti(test_sonuclari, deney))
     print(f"Test sırasında en büyük ağırlık değişimi: {test_degisim:.8g}")
 
     en_cok_degisenler = sorted(
@@ -98,6 +191,9 @@ def tanilama_calistir(seed=20261120, parca_boyutu=10):
         "egitim": tuple(tum_sonuclar),
         "test": test_sonuclari,
         "egitim_degisim": egitim_degisim,
+        "egitim_davranis": _davranis_ozeti(tum_sonuclar, deney),
+        "test_davranis": _davranis_ozeti(test_sonuclari, deney),
+        "egitim_agirlik_gruplari": egitim_agirlik_gruplari,
         "test_max_agirlik_degisim": test_degisim,
     }
 
