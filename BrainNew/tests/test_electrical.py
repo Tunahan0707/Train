@@ -328,7 +328,9 @@ class ElektrikselMekanizmaTestleri(unittest.TestCase):
 
         self.assertEqual(kaynak.ateslenme_sayisi, 1)
         self.assertEqual(hedef.ateslenme_sayisi, 1)
-        self.assertAlmostEqual(sinaps.pre_iz, 1.0)
+        # Presinaptik iz kaynak ateşlenmesinde t=0'da oluşur.
+        # Hedefe iletim 1 zaman birimi sürdüğü için hedef ateşlenirken iz sönmüştür.
+        self.assertAlmostEqual(sinaps.pre_iz, math.exp(-1.0 / sinaps.pre_iz_tau))
         self.assertAlmostEqual(sinaps.post_iz, 1.0)
 
     def test_pre_ve_post_izleri_bagimsiz_olarak_soner(self):
