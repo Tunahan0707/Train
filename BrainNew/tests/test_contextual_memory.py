@@ -88,6 +88,40 @@ class BaglamaDuyarliHafizaTestleri(unittest.TestCase):
         self.assertEqual(rapor[(0.90, 0.90)]["Y"]["gerceklesen"], ())
 
 
+    def test_rastgele_gurultu_taramasi_tekrarlanabilirdir(self):
+        deney = BaglamaDuyarliHafizaDeneyi()
+        bir = deney.rastgele_gurultu_taramasi(
+            gurultu_oranlari=(0.0, 0.05), tekrar=3, seed=17
+        )
+        iki = deney.rastgele_gurultu_taramasi(
+            gurultu_oranlari=(0.0, 0.05), tekrar=3, seed=17
+        )
+        for oran in (0.0, 0.05):
+            for baglam in ("X", "Y"):
+                self.assertEqual(
+                    bir[oran][baglam]["tam_eslesme_orani"],
+                    iki[oran][baglam]["tam_eslesme_orani"],
+                )
+                self.assertEqual(
+                    bir[oran][baglam]["yanlis_pozitif"],
+                    iki[oran][baglam]["yanlis_pozitif"],
+                )
+
+    def test_eksik_ipucu_veya_baglam_kanali_sessizlik_olusturur(self):
+        rapor = BaglamaDuyarliHafizaDeneyi().eksik_kanal_taramasi()
+        for kanal in ("ipucu", "baglam"):
+            for baglam in ("X", "Y"):
+                self.assertEqual(rapor[kanal][baglam]["gerceklesen"], ())
+                self.assertTrue(rapor[kanal][baglam]["dogru"])
+
+    def test_rastgele_gurultu_gecersiz_degerleri_reddeder(self):
+        with self.assertRaises(ValueError):
+            BaglamaDuyarliHafizaDeneyi().rastgele_gurultu_taramasi(
+                gurultu_oranlari=(-0.1,)
+            )
+        with self.assertRaises(ValueError):
+            BaglamaDuyarliHafizaDeneyi().rastgele_gurultu_taramasi(tekrar=0)
+
     def test_bagimsiz_genlik_taramasi_gecersiz_olcegi_reddeder(self):
         with self.assertRaises(ValueError):
             BaglamaDuyarliHafizaDeneyi().bagimsiz_genlik_taramasi(
