@@ -24,6 +24,9 @@ class BasicComponent(QGraphicsItem):
         "led": ("LED", "", ""),
         "switch": ("Anahtar", "", ""),
         "ground": ("Toprak", "", ""),
+        "fuse": ("Sigorta", "", ""),
+        "potentiometer": ("Potansiyometre", "10", "kΩ"),
+        "ac_source": ("AC Kaynak", "5", "V"),
     }
 
     def __init__(self, component_id, parent=None):
@@ -77,12 +80,17 @@ class BasicComponent(QGraphicsItem):
                 x = -12 + i * 8
                 path.cubicTo(x - 2, -h - 8, x + 6, -h - 8, x + 8, 0)
             path.lineTo(w, 0)
-        elif self.component_id in ("voltage_source", "battery"):
+        elif self.component_id in ("voltage_source", "battery", "ac_source"):
             path.moveTo(-18, 0); path.lineTo(-12, 0)
             path.addEllipse(QRectF(-12, -12, 24, 24)) if self.component_id == "voltage_source" else None
-            if self.component_id == "voltage_source":
-                path.moveTo(-5, 0); path.lineTo(5, 0)
-                path.moveTo(0, -5); path.lineTo(0, 5)
+            if self.component_id in ("voltage_source", "ac_source"):
+                if self.component_id == "voltage_source":
+                    path.moveTo(-5, 0); path.lineTo(5, 0)
+                    path.moveTo(0, -5); path.lineTo(0, 5)
+                else:
+                    path.moveTo(-7, 0)
+                    path.cubicTo(-4, -8, 0, -8, 3, 0)
+                    path.cubicTo(6, 8, 10, 8, 12, 0)
                 path.moveTo(12, 0); path.lineTo(w, 0)
             else:
                 path.moveTo(-7, -h); path.lineTo(-7, h)
@@ -96,6 +104,19 @@ class BasicComponent(QGraphicsItem):
             if self.component_id == "led":
                 path.moveTo(0, -17); path.lineTo(8, -25)
                 path.moveTo(5, -17); path.lineTo(8, -25); path.lineTo(1, -23)
+        elif self.component_id == "fuse":
+            path.moveTo(-18, 0); path.lineTo(-12, 0)
+            path.addRect(QRectF(-12, -8, 24, 16))
+            path.moveTo(12, 0); path.lineTo(w, 0)
+        elif self.component_id == "potentiometer":
+            path.moveTo(-18, 0); path.lineTo(-12, 0)
+            for i in range(4):
+                x = -12 + i * 6
+                path.lineTo(x + 3, -h if i % 2 == 0 else h)
+            path.lineTo(12, 0); path.lineTo(w, 0)
+            path.moveTo(0, -h - 12); path.lineTo(0, -h - 2)
+            path.lineTo(-4, -h - 7)
+            path.moveTo(0, -h - 2); path.lineTo(4, -h - 7)
         elif self.component_id == "switch":
             path.moveTo(-18, 0); path.lineTo(-8, 0)
             path.moveTo(-8, 0); path.lineTo(10, -12)
