@@ -1,4 +1,5 @@
 import re
+import math
 
 from circuit.netlist import build_netlist
 
@@ -27,12 +28,23 @@ def parse_engineering_value(value):
             break
     if not re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", text):
         raise ValueError(f"Geçersiz sayısal değer: {value}")
-    return float(text) * multiplier
+    result = float(text) * multiplier
+    if not math.isfinite(result):
+        raise ValueError(f"Değer sonlu bir sayı olmalı: {value}")
+    return result
 
 
 def gaussian_solve(matrix, vector):
     size = len(vector)
-    augmented = [list(matrix[row]) + [vector[row]] for row in range(size)]
+    if len(matrix) != size or any(len(row) != size for row in matrix):
+        raise ValueError("Doğrusal sistem kare bir katsayı matrisi gerektirir.")
+    if size == 0:
+        return []
+    if any(not math.isfinite(float(value)) for row in matrix for value in row):
+        raise ValueError("Katsayı matrisi sonlu olmayan değer içeriyor.")
+    if any(not math.isfinite(float(value)) for value in vector):
+        raise ValueError("Sağ taraf vektörü sonlu olmayan değer içeriyor.")
+    augmented = [list(map(float, matrix[row])) + [float(vector[row])] for row in range(size)]
 
     for column in range(size):
         pivot = max(range(column, size), key=lambda row: abs(augmented[row][column]))
