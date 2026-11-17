@@ -163,6 +163,6 @@ class BasicComponent(QGraphicsItem):
         painter.drawPath(path)
 
         if self.value:
-            painter.setPen(QPen(color, 1))
+            painter.setPen(QPen(color_value, 1))
             painter.drawText(QRectF(-w, h + 5, COMPONENT_WIDTH, 18),
                              Qt.AlignmentFlag.AlignHCenter, f"{self.value} {self.unit}".strip())
