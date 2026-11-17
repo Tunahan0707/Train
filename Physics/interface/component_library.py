@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QScrollArea, QMenu, QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal, QMimeData, QPoint, QTimer
+from PySide6.QtCore import Qt, Signal, QMimeData, QPoint, QTimer, QSize
 from PySide6.QtGui import QDrag, QAction
 from PySide6.QtWidgets import QApplication
 
@@ -27,8 +27,11 @@ class ComponentButton(QPushButton):
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setMinimumWidth(0)
         self.setMinimumHeight(34)
-        self.adjustSize()
         self.clicked.connect(self._clicked)
+
+    def sizeHint(self):
+        metrics = self.fontMetrics()
+        return QSize(metrics.horizontalAdvance(self.text()) + 26, max(34, metrics.height() + 16))
 
     def _clicked(self):
         if self._dragged:
@@ -154,22 +157,25 @@ class ComponentLibrary(QWidget):
             button.add_requested.connect(self._add_component)
             self.items_layout.addWidget(button)
 
-        self.items_layout.addStretch(1)
         self.items_layout.activate()
         QTimer.singleShot(0, self._fit_items_host)
 
     def _fit_items_host(self):
-        self.items_host.adjustSize()
-        hint = self.items_layout.sizeHint()
-        self.items_host.setFixedSize(max(1, hint.width()), max(54, hint.height()))
+        buttons = self.items_host.findChildren(ComponentButton)
+        margins = self.items_layout.contentsMargins()
+        spacing = self.items_layout.spacing()
+        width = margins.left() + margins.right()
+        width += sum(button.sizeHint().width() for button in buttons)
+        width += max(0, len(buttons) - 1) * spacing
+        height = max([34] + [button.sizeHint().height() for button in buttons])
+        height += margins.top() + margins.bottom()
+        self.items_host.setFixedSize(max(1, width), max(54, height))
         self.scroll.horizontalScrollBar().setValue(0)
         self.items_host.updateGeometry()
 
     def _add_component(self, component_id, shift):
         self.add_requested.emit(component_id, shift)
-        if shift:
-            self.shift_add_count += 1
-        else:
+        if not shift:
             self.collapse()
 
     def expand(self):
@@ -217,12 +223,12 @@ class ComponentLibrary(QWidget):
             "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
             "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
-            "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 34px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
+            "QPushButton#componentButton { background-color: transparent; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 34px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
         for button in self.items_host.findChildren(ComponentButton):
             button.setStyleSheet(
                 "QPushButton {"
-                "background-color: " + colors["panel"] + ";"
+                "background-color: transparent;"
                 "color: " + colors["text"] + ";"
                 "border: 1px solid " + colors["border"] + ";"
                 "border-radius: 0px;"
@@ -235,4 +241,4 @@ class ComponentLibrary(QWidget):
                 "border-color: " + colors["accent"] + ";"
                 "}"
             )
-            button.adjustSize()
+            button.updateGeometry()
