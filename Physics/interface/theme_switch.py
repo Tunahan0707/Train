@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
 
@@ -60,7 +60,20 @@ class ThemeSwitch(QWidget):
         painter.setBrush(track)
         painter.drawRoundedRect(1, 3, 60, 28, 14, 14)
 
+        # Güneş ve ay göstergeleri
+        painter.setPen(QPen(QColor("#a78b45"), 1.4))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(9, 13, 8, 8)
+        painter.drawLine(13, 9, 13, 11)
+        painter.drawLine(13, 23, 13, 25)
+        painter.drawLine(5, 17, 7, 17)
+        painter.drawLine(19, 17, 21, 17)
+
+        painter.setPen(QPen(QColor("#91a6c8"), 1.5))
+        painter.drawArc(43, 11, 11, 12, 35 * 16, 285 * 16)
+
         x = 4 + 28 * t
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(knob)
         painter.drawEllipse(round(x), 6, 22, 22)
         painter.end()
