@@ -198,11 +198,13 @@ def solve_dc_operating_point(scene):
     for source_index, item in enumerate(sources):
         current_index = len(unknown_nodes) + source_index
         current = solution[current_index]
+        voltage = parse_engineering_value(getattr(item, "value", ""))
         source_results.append({
             "name": _component_label(item),
-            "voltage": parse_engineering_value(getattr(item, "value", "")),
+            "voltage": voltage,
             "current": current,
-            "power": parse_engineering_value(getattr(item, "value", "")) * current,
+            "power_absorbed": voltage * current,
+            "power_delivered": -voltage * current,
         })
 
     return {
@@ -239,7 +241,7 @@ def format_dc_report(scene):
         lines.append(
             f"  {item['name']}: {item['voltage']:.6g} V, "
             f"kaynak akımı {item['current']:.6g} A, "
-            f"güç {item['power']:.6g} W"
+            f"devreye verilen güç {item['power_delivered']:.6g} W"
         )
 
     lines.extend([
