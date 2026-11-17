@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QGraphicsPathItem
 from PySide6.QtGui import QPainterPath, QPen, QColor
 from PySide6.QtCore import Qt, QPointF
 
-from settings import COLOR_COMPONENT, COLOR_COMPONENT_SELECTED
+from theme import color
 
 
 class WireItem(QGraphicsPathItem):
