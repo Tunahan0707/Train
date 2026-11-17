@@ -21,23 +21,26 @@ class ComponentButton(QPushButton):
         super().__init__(label, parent)
         self.component_id = component_id
         self.full_label = label
-        metrics = self.fontMetrics()
-        self.setText(metrics.elidedText(label, Qt.TextElideMode.ElideRight, 150))
+        self.setText(label)
         self.setToolTip(label)
         self.drag_start = QPoint()
         self._dragged = False
         self.setObjectName("componentButton")
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setMinimumWidth(0)
         self.setMinimumWidth(64)
-        self.setMinimumHeight(28)
-        self.setMaximumWidth(170)
+        self.setMinimumHeight(32)
+        self._update_button_size()
         self.clicked.connect(self._clicked)
 
-    def sizeHint(self):
+    def _update_button_size(self):
         metrics = self.fontMetrics()
-        return QSize(max(64, metrics.horizontalAdvance(self.text()) + 20), max(28, metrics.height() + 8))
+        width = max(64, metrics.horizontalAdvance(self.full_label) + 24)
+        height = max(32, metrics.height() + 12)
+        self.setFixedSize(width, height)
+
+    def sizeHint(self):
+        return self.size()
 
     def _clicked(self):
         if self._dragged:
@@ -178,9 +181,9 @@ class ComponentLibrary(QWidget):
         margins = self.items_layout.contentsMargins()
         spacing = self.items_layout.spacing()
         width = margins.left() + margins.right()
-        width += sum(button.sizeHint().width() for button in buttons)
+        width += sum(button.width() for button in buttons)
         width += max(0, len(buttons) - 1) * spacing
-        height = max([34] + [button.sizeHint().height() for button in buttons])
+        height = max([32] + [button.height() for button in buttons])
         height += margins.top() + margins.bottom()
         self.items_host.setFixedSize(max(1, width), max(54, height))
         self.scroll.horizontalScrollBar().setValue(0)
@@ -250,10 +253,9 @@ class ComponentLibrary(QWidget):
             "color: " + colors["text"] + ";"
             "border: 1px solid " + colors["border"] + ";"
             "border-radius: 0px;"
-            "padding: 3px 10px;"
+            "padding: 0px;"
             "min-width: 64px;"
-            "min-height: 28px;"
-            "max-width: 170px;"
+            "min-height: 32px;"
             "}"
             "QPushButton:hover {"
             "background-color: transparent;"
