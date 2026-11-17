@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(WINDOW_TITLE)
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN)
+        self.menuBar().hide()
         self.current_file = None
 
         central = QWidget()
