@@ -85,6 +85,7 @@ class TrashButton(QPushButton):
 
 class Workspace(QGraphicsView):
     history_changed = Signal()
+    component_added = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -275,25 +276,6 @@ class Workspace(QGraphicsView):
         super().resizeEvent(event)
         self.update_delete_button_position()
 
-    # Izgara
-    def drawBackground(self, painter, rect):
-        super().drawBackground(painter, rect)
-
-        left = int(rect.left()) - (int(rect.left()) % GRID_SIZE)
-        top = int(rect.top()) - (int(rect.top()) % GRID_SIZE)
-
-        painter.setPen(QPen(QColor(color("grid")), 0))
-
-        x = left
-        while x < rect.right():
-            painter.drawLine(x, rect.top(), x, rect.bottom())
-            x += GRID_SIZE
-
-        y = top
-        while y < rect.bottom():
-            painter.drawLine(rect.left(), y, rect.right(), y)
-            y += GRID_SIZE
-
     # Noktalı, içi boş kutu seçim çerçevesi
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
@@ -372,6 +354,32 @@ class Workspace(QGraphicsView):
         self.circuit_scene.update()
         self.viewport().update()
 
+    def add_component(self, component_id, shift=False, stack_index=0):
+        center = self.mapToScene(self.viewport().rect().center())
+        position = QPointF(center.x(), center.y() + stack_index * GRID_SIZE * 4) if shift else center
+        if GRID_SNAP_ENABLED:
+            position = self.snap_position(position)
+        if component_id == "wire":
+            half = GRID_SIZE * 2
+            item = WireItem(QPointF(position.x() - half, position.y()), QPointF(position.x() + half, position.y()))
+            item_position = QPointF(0, 0)
+        elif component_id == "resistor":
+            item = Resistor()
+            item_position = position
+        else:
+            try:
+                item = BasicComponent(component_id)
+            except ValueError:
+                return
+            item_position = position
+        if not shift or stack_index == 0:
+            self.circuit_scene.clearSelection()
+        self.history.execute(AddItemCommand(self.circuit_scene, item, item_position))
+        item.setSelected(True)
+        self.history_changed.emit()
+        self.component_added.emit()
+        self.setFocus()
+
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat("application/x-physics-component"):
             event.setDropAction(Qt.DropAction.CopyAction)
@@ -419,6 +427,7 @@ class Workspace(QGraphicsView):
         self.circuit_scene.clearSelection()
         item.setSelected(True)
         self.history_changed.emit()
+        self.component_added.emit()
         self.setFocus()
         event.setDropAction(Qt.DropAction.CopyAction)
         event.accept()
