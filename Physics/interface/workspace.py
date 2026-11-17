@@ -158,16 +158,26 @@ class Workspace(QGraphicsView):
         self.history_changed.emit()
         self.viewport().update()
 
-    def set_component_value(self, item, new_value):
-        if item is None or item.scene() != self.circuit_scene:
-            return
-        if not hasattr(item, "set_value"):
-            return
-        old_value = getattr(item, "value", "")
-        if str(old_value) == str(new_value):
-            return
-        self.history.execute(SetValueCommand(item, old_value, str(new_value)))
-        self.history_changed.emit()
+    def set_component_value(self, items, new_value):
+        if not isinstance(items, (list, tuple, set)):
+            items = [items]
+
+        changed = False
+        for item in items:
+            if item is None or item.scene() != self.circuit_scene:
+                continue
+            if not hasattr(item, "set_value"):
+                continue
+
+            old_value = getattr(item, "value", "")
+            if str(old_value) == str(new_value):
+                continue
+
+            self.history.execute(SetValueCommand(item, old_value, str(new_value)))
+            changed = True
+
+        if changed:
+            self.history_changed.emit()
 
     def snap_position(self, position):
         return type(position)(
