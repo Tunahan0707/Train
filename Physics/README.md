@@ -26,9 +26,10 @@ python main.py
 - Özellikler panelinden seçili bileşenin gösterilen değerini değiştirme.
 - Ctrl + N / Ctrl + O / Ctrl + S ile yeni devre, açma ve kaydetme.
 - Devre → Bağlantıları denetle ile uç noktaları ve T-bağlantılarını içeren temel netlist analizi.
+- Simülasyon → DC çalışma noktasını hesapla ile dirençler ve ideal DC kaynakları için temel doğrusal çözüm.
 
 ## Önemli sınır
 
-Şu anki bileşenler şematik çizim nesneleridir. Tel uçları ve T-bağlantıları üzerinden temel elektriksel düğüm/netlist analizi yapılabilir. İki telin yalnızca çapraz kesişmesi bağlantı sayılmaz. Bu netlist henüz devre simülasyonunda kullanılmıyor. Gerçek bileşen modelleri, devre çözümleyicisi, akım/gerilim hesapları ve hasar fiziği henüz uygulanmadı.
+Şu anki bileşenler şematik çizim nesneleridir. Tel uçları ve T-bağlantıları üzerinden temel elektriksel düğüm/netlist analizi yapılabilir. İki telin yalnızca çapraz kesişmesi bağlantı sayılmaz. Bu netlist henüz devre simülasyonunda kullanılmıyor. DC çözümleyici yalnızca direnç ve ideal DC kaynaklarını çözer. Diyot, LED, transistör, kondansatör, bobin, anahtar ve AC kaynak modelleri henüz çözülmez. Gerçek bileşen modelleri ve hasar fiziği henüz uygulanmadı.
 
 Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
