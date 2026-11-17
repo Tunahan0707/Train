@@ -45,6 +45,7 @@ from components.basic import BasicComponent
 from core.history import History
 from core.commands import (
     AddItemCommand,
+    AddItemsCommand,
     DeleteItemsCommand,
     MoveItemsCommand,
     RotateItemsCommand,
@@ -189,7 +190,10 @@ class Workspace(QGraphicsView):
         originals = list(self.circuit_scene.selectedItems())
         if not originals:
             return
-        self.circuit_scene.clearSelection()
+
+        duplicates = []
+        positions = {}
+        offset = GRID_SIZE * 2
         for original in originals:
             component_id = getattr(original, "component_id", None)
             if component_id == "resistor":
@@ -202,10 +206,19 @@ class Workspace(QGraphicsView):
                 duplicate.set_value(getattr(original, "value", ""))
             duplicate.setRotation(original.rotation())
             position = original.pos()
-            offset = GRID_SIZE * 2
-            target = type(position)(position.x() + offset, position.y() + offset)
-            self.history.execute(AddItemCommand(self.circuit_scene, duplicate, target))
-            duplicate.setSelected(True)
+            positions[duplicate] = type(position)(
+                position.x() + offset, position.y() + offset
+            )
+            duplicates.append(duplicate)
+
+        if not duplicates:
+            return
+        self.circuit_scene.clearSelection()
+        self.history.execute(
+            AddItemsCommand(self.circuit_scene, duplicates, positions)
+        )
+        for item in duplicates:
+            item.setSelected(True)
         self.viewport().update()
 
     def rotate_selected_items(self):
