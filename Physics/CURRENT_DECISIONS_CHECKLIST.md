@@ -15,30 +15,44 @@
 ## 2. Initial Component Library
 
 ### Passive components
-- [x] Resistor
-- [x] Capacitor
-- [x] Inductor
+- [x] Resistor symbol and basic value field
+- [ ] Resistor electrical model, ratings, tolerance and thermal behavior
+- [x] Capacitor symbol and basic value field
+- [ ] Capacitor DC/transient model, ESR, leakage and voltage limits
+- [x] Inductor symbol and basic value field
+- [ ] Inductor DC/transient model, winding resistance and saturation
 
 ### Semiconductors
-- [x] Diode
-- [x] LED
-- [x] BJT transistor
-- [x] MOSFET
+- [x] Diode symbol
+- [ ] Diode nonlinear electrical model and reverse breakdown
+- [x] LED symbol
+- [ ] LED electrical/light-output model and ratings
+- [x] BJT symbol
+- [ ] BJT nonlinear model and operating regions
+- [x] MOSFET symbol
+- [ ] MOSFET nonlinear model and operating regions
 
 ### Protection and adjustable components
-- [x] Fuse
-- [x] Potentiometer
+- [x] Fuse symbol
+- [ ] Fuse current/time and failure model
+- [x] Potentiometer symbol
+- [ ] Potentiometer three-terminal resistance model and wiper control
 
 ### Power sources
-- [x] DC voltage source
-- [x] AC voltage source
-- [x] Battery
+- [x] DC voltage source symbol
+- [ ] DC source internal resistance, current limit and source parameters
+- [x] AC voltage source symbol
+- [ ] AC waveform and transient source model
+- [x] Battery symbol
+- [ ] Battery internal resistance, capacity and discharge model
 
 ### Control and connectivity
-- [x] Switch
-- [x] Wire
-- [ ] Connection/junction point
-- [x] Ground reference (GND)
+- [x] Switch symbol and manual open/close state
+- [ ] Switch contact resistance, timing and transient behavior
+- [x] Wire drawing and basic geometric connectivity analysis
+- [ ] Editable wire endpoints, junction editing and robust topology validation
+- [ ] Connection/junction point component
+- [x] Ground reference symbol and shared reference-node handling
 
 ## 3. Measurement Instruments
 
@@ -51,8 +65,11 @@
 ## 4. Circuit Editing Tools
 
 - [x] Select and place components.
-- [x] Draw wires and create connections.
-- [ ] Delete and edit connections.
+- [x] Draw schematic wires and infer basic terminal/wire-segment connectivity.
+- [ ] Route wires interactively between selected terminals.
+- [ ] Select, move, reshape, split, join and delete wires.
+- [ ] Add and edit explicit junction points.
+- [ ] Validate dangling, shorted and ambiguous connections.
 - [x] Move and rotate components.
 - [x] Copy and paste components or selections (Ctrl+C / Ctrl+V).
 - [x] Duplicate selected components or selections.
@@ -169,9 +186,11 @@ These topics are deferred for now and are not part of the current agreed scope.
 
 The DC numeric foundation validates engineering-notation values, rejects non-finite inputs and malformed linear systems, and has standard-library unit tests for suffix parsing and Gaussian elimination. These tests do not yet replace end-to-end circuit simulation tests.
 
-The current prototype includes schematic symbols and basic editing for the listed components. Their displayed values are editable, but this does **not** mean their full physical models are implemented. The netlist analyzer recognizes wire endpoints, component terminals, and T-junction contact with wire segments; wire crossings without endpoint contact are not connected. A linear DC operating-point solver for resistors with ideal DC voltage sources is implemented. Nonlinear/transient simulation, most component models, and measurement tools remain unimplemented.
+The current prototype has schematic symbols for the listed component families; symbols and editable nominal values are not complete physical models. The netlist analyzer joins wire endpoints, component terminals, shared ground references and contacts to wire segments. Wire crossings without endpoint contact are not connected. The linear DC solver currently supports resistors, ideal DC voltage sources, batteries and ideal closed switches. It now rejects unsupported component types instead of silently presenting a partial solution. This is still a narrow DC solver: nonlinear semiconductor models, transient behavior, AC analysis, component ratings/failure, and measurement instruments are not implemented.
 
-Grid snapping, rotation, grouped duplication, JSON-based project save/load, a component properties panel, and visual orthogonal wire drawing with endpoint snapping are implemented in the current editor prototype. The wires are not yet part of an electrical netlist: visual contact does not currently mean the simulator recognizes an electrical connection.
+The editor currently stores one schematic scene per project file. It does not yet support a multi-circuit project, named/reorderable circuit tabs, reusable hierarchical subcircuits, custom component ports, or editing a saved subcircuit definition. Wires are drawn as fixed orthogonal paths; interactive endpoint editing/routing and junction objects are not implemented. Project persistence is JSON-based and currently stores component types, positions, rotations, values and switch state.
+
+Grid snapping, component rotation, grouped duplication, basic project save/load, a component properties panel, and schematic connectivity analysis exist. These are prototype capabilities and must not be interpreted as a finished circuit-design/simulation workflow.
 
 ## Scope Notes
 
@@ -212,4 +231,5 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 - The component drawer uses a horizontal scroll viewport sized to its contents; component entries are hollow, sharp-cornered tiles with widths calculated from their full labels and a minimum width.
 - The canvas (workspace) scrollbars now have explicit theme styling: navy tracks in dark mode, pale grey tracks in light mode, and muted grey handles in both.
 - The schematic switch toggles open/closed on click without treating a drag as a toggle. Its state is shown in the properties panel, saved in project files, and copied when duplicated.
-- Closed ideal switches join their two terminals in the netlist and are treated as closed connections by the linear DC solver. Open switches remain electrically disconnected and are reported as unsupported by the current DC solver.
+- Closed ideal switches join their two terminals in the netlist. The current linear DC solver treats the closed ideal switch as a short and lets an open switch remain disconnected.
+- The DC solver now refuses to produce a partial result when unsupported component types are present or a component terminal is reported disconnected.
