@@ -78,7 +78,7 @@ class Resistor(QGraphicsItem):
 
         painter.drawPath(path)
 
-        painter.setPen(QPen(QColor(color), 1))
+        painter.setPen(QPen(QColor(color_value), 1))
         painter.drawText(
             QRectF(-half_width, half_height + 4, RESISTOR_WIDTH, 18),
             Qt.AlignmentFlag.AlignHCenter,
