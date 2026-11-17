@@ -110,12 +110,15 @@ class TrashButton(QPushButton):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         cx, cy = self.width() / 2, self.height() / 2
         if self.shift_mode:
-            painter.drawLine(int(cx + 5), int(cy - 11), int(cx - 3), int(cy + 3))
-            painter.drawLine(int(cx - 3), int(cy + 3), int(cx - 8), int(cy + 8))
-            painter.drawLine(int(cx - 8), int(cy + 8), int(cx + 4), int(cy + 11))
-            painter.drawLine(int(cx + 4), int(cy + 11), int(cx + 8), int(cy + 5))
-            painter.drawLine(int(cx + 8), int(cy + 5), int(cx - 3), int(cy + 3))
-            painter.drawLine(int(cx - 5), int(cy + 7), int(cx + 5), int(cy + 9))
+            # Süpürge sapı ve belirgin fırça başı
+            painter.drawLine(int(cx + 6), int(cy - 11), int(cx - 3), int(cy + 4))
+            painter.drawLine(int(cx - 3), int(cy + 4), int(cx - 8), int(cy + 9))
+            painter.drawLine(int(cx - 8), int(cy + 9), int(cx + 5), int(cy + 12))
+            painter.drawLine(int(cx + 5), int(cy + 12), int(cx + 10), int(cy + 5))
+            painter.drawLine(int(cx + 10), int(cy + 5), int(cx - 3), int(cy + 4))
+            painter.drawLine(int(cx - 5), int(cy + 7), int(cx - 4), int(cy + 11))
+            painter.drawLine(int(cx - 1), int(cy + 6), int(cx), int(cy + 12))
+            painter.drawLine(int(cx + 3), int(cy + 7), int(cx + 4), int(cy + 11))
         else:
             painter.drawLine(int(cx - 8), int(cy - 9), int(cx + 8), int(cy - 9))
             painter.drawLine(int(cx - 3), int(cy - 12), int(cx + 3), int(cy - 12))
