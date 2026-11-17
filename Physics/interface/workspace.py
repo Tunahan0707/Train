@@ -49,6 +49,40 @@ from core.commands import (
 )
 
 
+class TrashButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(DELETE_BUTTON_SIZE, DELETE_BUTTON_SIZE)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setStyleSheet("""
+            QPushButton {
+                background: #873d4b;
+                border: none;
+                border-radius: 18px;
+            }
+            QPushButton:hover { background: #a84c58; }
+        """)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen(QColor("#f4f6fa"), 1.8)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        cx, cy = self.width() / 2, self.height() / 2
+        painter.drawLine(int(cx - 8), int(cy - 9), int(cx + 8), int(cy - 9))
+        painter.drawLine(int(cx - 3), int(cy - 12), int(cx + 3), int(cy - 12))
+        painter.drawLine(int(cx - 6), int(cy - 6), int(cx - 5), int(cy + 9))
+        painter.drawLine(int(cx + 6), int(cy - 6), int(cx + 5), int(cy + 9))
+        painter.drawLine(int(cx - 5), int(cy + 9), int(cx + 5), int(cy + 9))
+        painter.drawLine(int(cx - 2), int(cy - 5), int(cx - 2), int(cy + 6))
+        painter.drawLine(int(cx + 2), int(cy - 5), int(cx + 2), int(cy + 6))
+        painter.end()
+
+
 class Workspace(QGraphicsView):
     history_changed = Signal()
 
@@ -85,24 +119,7 @@ class Workspace(QGraphicsView):
         self.drag_start_positions = {}
 
         # Çöp kutusu
-        self.delete_button = QPushButton("×", self)
-        self.delete_button.setToolTip("Silmek için nesneleri buraya sürükle")
-        self.delete_button.setFixedSize(
-            DELETE_BUTTON_SIZE,
-            DELETE_BUTTON_SIZE,
-        )
-        self.delete_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.delete_button.setStyleSheet("""
-            QPushButton {
-                background: #873d4b;
-                color: #ffffff;
-                border: none;
-                border-radius: 18px;
-                font-size: 25px;
-                font-weight: 400;
-            }
-            QPushButton:hover { background: #a84c58; }
-        """)
+        self.delete_button = TrashButton(self)
         self.delete_button.clicked.connect(self.delete_selected_items)
 
         self.update_delete_button_position()
