@@ -49,7 +49,7 @@ def gaussian_solve(matrix, vector):
     for column in range(size):
         pivot = max(range(column, size), key=lambda row: abs(augmented[row][column]))
         if abs(augmented[pivot][column]) < 1e-12:
-            raise ValueError("Devre matrisi tekil. Bağlantıları veya referans GND'yi kontrol et.")
+            raise ValueError("Devre matrisi tekil. Bağlantıları, kaynakları ve referans GND'yi kontrol et.")
 
         augmented[column], augmented[pivot] = augmented[pivot], augmented[column]
         pivot_value = augmented[column][column]
@@ -68,12 +68,39 @@ def gaussian_solve(matrix, vector):
     return [augmented[row][size] for row in range(size)]
 
 
+def _component_label(item):
+    return getattr(item, "name", getattr(item, "component_id", "Bilinmeyen bileşen"))
+
+
 def solve_dc_operating_point(scene):
-    """Solve a linear DC operating point for resistors and ideal DC sources."""
+    """Solve a linear DC operating point; never silently omit unsupported devices."""
     netlist = build_netlist(scene)
     component_nodes = netlist["component_nodes"]
     if not component_nodes:
         raise ValueError("Devrede analiz edilecek bileşen bulunamadı.")
+
+    supported = {"resistor", "voltage_source", "battery", "switch", "ground"}
+    unsupported = [
+        f"{_component_label(item)} ({getattr(item, 'component_id', 'unknown')})"
+        for item in component_nodes
+        if getattr(item, "component_id", "") not in supported
+    ]
+    if unsupported:
+        names = ", ".join(sorted(unsupported))
+        raise ValueError(
+            "DC çözümü durduruldu. Şu bileşenlerin fiziksel modeli henüz uygulanmadı: "
+            + names
+            + ". Kısmi sonuç gösterilmedi."
+        )
+
+    disconnected = netlist.get("unconnected_terminals", [])
+    if disconnected:
+        preview = ", ".join(disconnected[:8])
+        extra = "" if len(disconnected) <= 8 else f" ve {len(disconnected) - 8} uç daha"
+        raise ValueError(
+            "DC çözümü durduruldu; bağlantısız bileşen uçları var: "
+            + preview + extra + ". Kabloları ve uç temaslarını kontrol et."
+        )
 
     net_ids = sorted({
         net_id
@@ -86,24 +113,27 @@ def solve_dc_operating_point(scene):
     ground_nodes = set(netlist["ground_nodes"])
     automatic_ground = not ground_nodes
     if automatic_ground:
-        ground_nodes.add(net_ids[0])
+        ground_nodes.add(net_ids[0]
 
+)
     unknown_nodes = [node for node in net_ids if node not in ground_nodes]
     node_index = {node: index for index, node in enumerate(unknown_nodes)}
 
     resistors = []
     sources = []
-    unsupported = []
-    for item in component_nodes:
+    for item, pins in component_nodes.items():
         component_id = getattr(item, "component_id", "")
         if component_id == "resistor":
+            if len(pins) != 2:
+                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             resistors.append(item)
         elif component_id in ("voltage_source", "battery"):
+            if len(pins) != 2:
+                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             sources.append(item)
-        elif component_id == "switch" and getattr(item, "closed", False):
-            pass
-        elif component_id != "ground":
-            unsupported.append(getattr(item, "name", component_id))
+        elif component_id == "switch":
+            if len(pins) != 2:
+                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
 
     size = len(unknown_nodes) + len(sources)
     matrix = [[0.0 for _ in range(size)] for _ in range(size)]
@@ -122,17 +152,13 @@ def solve_dc_operating_point(scene):
 
     for item in resistors:
         pins = component_nodes[item]
-        if len(pins) != 2:
-            continue
         resistance = parse_engineering_value(getattr(item, "value", ""))
         if resistance <= 0:
-            raise ValueError("Direnç değeri sıfırdan büyük olmalı.")
+            raise ValueError(f"{_component_label(item)} direnci sıfırdan büyük olmalı.")
         stamp_conductance(pins[0], pins[1], 1.0 / resistance)
 
     for source_index, item in enumerate(sources):
         pins = component_nodes[item]
-        if len(pins) != 2:
-            continue
         positive_node, negative_node = pins
         source_column = len(unknown_nodes) + source_index
         positive = node_index.get(positive_node)
@@ -145,14 +171,12 @@ def solve_dc_operating_point(scene):
             matrix[negative][source_column] -= 1.0
             matrix[source_column][negative] -= 1.0
 
-        vector[source_column] = parse_engineering_value(
-            getattr(item, "value", "")
-        )
+        source_voltage = parse_engineering_value(getattr(item, "value", ""))
+        if source_voltage == 0:
+            raise ValueError(f"{_component_label(item)} gerilimi sıfır olamaz.")
+        vector[source_column] = source_voltage
 
-    if size == 0:
-        solution = []
-    else:
-        solution = gaussian_solve(matrix, vector)
+    solution = gaussian_solve(matrix, vector) if size else []
 
     node_voltages = {node: 0.0 for node in net_ids}
     for node, index in node_index.items():
@@ -161,33 +185,33 @@ def solve_dc_operating_point(scene):
     resistor_results = []
     for item in resistors:
         pins = component_nodes[item]
-        if len(pins) != 2:
-            continue
         resistance = parse_engineering_value(getattr(item, "value", ""))
-        current = (node_voltages[pins[0]] - node_voltages[pins[1]]) / resistance
+        voltage = node_voltages[pins[0]] - node_voltages[pins[1]]
+        current = voltage / resistance
         resistor_results.append({
-            "name": getattr(item, "name", "Direnç"),
+            "name": _component_label(item),
             "resistance": resistance,
             "current": current,
-            "voltage": node_voltages[pins[0]] - node_voltages[pins[1]],
+            "voltage": voltage,
             "power": current * current * resistance,
         })
 
     source_results = []
     for source_index, item in enumerate(sources):
         current_index = len(unknown_nodes) + source_index
-        current = solution[current_index] if current_index < len(solution) else 0.0
+        current = solution[current_index]
         source_results.append({
-            "name": getattr(item, "name", "DC kaynak"),
+            "name": _component_label(item),
             "voltage": parse_engineering_value(getattr(item, "value", "")),
             "current": current,
+            "power": parse_engineering_value(getattr(item, "value", "")) * current,
         })
 
     return {
         "node_voltages": node_voltages,
         "resistors": resistor_results,
         "sources": source_results,
-        "unsupported": sorted(set(unsupported)),
+        "unsupported": [],
         "automatic_ground": automatic_ground,
         "net_count": len(net_ids),
     }
@@ -216,21 +240,15 @@ def format_dc_report(scene):
     for item in result["sources"]:
         lines.append(
             f"  {item['name']}: {item['voltage']:.6g} V, "
-            f"kaynak akımı {item['current']:.6g} A"
+            f"kaynak akımı {item['current']:.6g} A, "
+            f"güç {item['power']:.6g} W"
         )
-
-    if result["unsupported"]:
-        lines.extend([
-            "",
-            "MODELLENMEYEN BİLEŞENLER (bu çözümde yok sayıldı)",
-        ])
-        lines.extend(f"  {name}" for name in result["unsupported"])
 
     lines.extend([
         "",
-        "Sınır: Bu, yalnızca dirençler ve ideal DC kaynakları için doğrusal DC çözümüdür.",
-        "Diyot, LED, transistör, kondansatör, bobin, anahtar ve AC kaynak modelleri henüz çözülmez.",
-        "GND yoksa hesap için bir düğüm geçici referans olarak seçilir.",
+        "Model kapsamı: direnç, ideal DC gerilim kaynağı, pil ve kapalı ideal anahtar.",
+        "Diyot, LED, transistör, kondansatör, bobin, sigorta, potansiyometre ve AC kaynak için çözüm üretilmez.",
+        "GND yoksa bir düğüm geçici referans olarak seçilir.",
         "Kaynak akımının pozitif yönü, kaynağın sol (+) ucundan sağ (-) ucuna doğrudur.",
     ])
     return "\n".join(lines)
