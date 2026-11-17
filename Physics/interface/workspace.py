@@ -69,6 +69,8 @@ class Workspace(QGraphicsView):
             QGraphicsView.ViewportAnchor.AnchorUnderMouse
         )
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setDragMode(QGraphicsView.DragMode.NoDrag)
+        self.viewport().setMouseTracking(True)
 
         # History
         self.history = History()
@@ -78,6 +80,7 @@ class Workspace(QGraphicsView):
         self.selecting = False
         self.pan_start = None
         self.selection_start = None
+        self.selection_start_scene = None
         self.drag_start_positions = {}
 
         # Kutu seçim alanı (koordinatlar sahne koordinatlarıdır)
@@ -330,6 +333,7 @@ class Workspace(QGraphicsView):
         ):
             self.selecting = True
             self.selection_start = event.position().toPoint()
+            self.selection_start_scene = self.mapToScene(self.selection_start)
             self.selection_path = QPainterPath()
 
             self.circuit_scene.clearSelection()
@@ -369,11 +373,10 @@ class Workspace(QGraphicsView):
             return
 
         if self.selecting:
-            start_scene = self.mapToScene(self.selection_start)
             current_scene = self.mapToScene(current_pos)
 
             selection_rect = QRectF(
-                start_scene,
+                self.selection_start_scene,
                 current_scene,
             ).normalized()
 
@@ -403,25 +406,28 @@ class Workspace(QGraphicsView):
         ):
             # Son fare konumunu da hesaba kat.
             release_pos = event.position().toPoint()
-            start_scene = self.mapToScene(self.selection_start)
             release_scene = self.mapToScene(release_pos)
 
             selection_rect = QRectF(
-                start_scene,
+                self.selection_start_scene,
                 release_scene,
             ).normalized()
 
             selection_path = QPainterPath()
             selection_path.addRect(selection_rect)
 
+            # İkinci argüman seçim işlemi, üçüncü argüman kesişim modudur.
+            self.circuit_scene.setSelectionArea(
+                selection_path,
+                Qt.ItemSelectionOperation.ReplaceSelection,
+                Qt.ItemSelectionMode.IntersectsItemShape,
+            )
+
+            # Seçim tamamlandı; çerçeveyi aynı olay içinde temizle.
             self.selecting = False
             self.selection_path = QPainterPath()
             self.selection_start = None
-
-            self.circuit_scene.setSelectionArea(
-                selection_path,
-                Qt.ItemSelectionMode.IntersectsItemShape,
-            )
+            self.selection_start_scene = None
 
             self.viewport().update()
             event.accept()
