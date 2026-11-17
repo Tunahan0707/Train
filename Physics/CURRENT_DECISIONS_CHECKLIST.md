@@ -176,3 +176,12 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 - This checklist captures accepted product-level decisions only.
 - It does not imply that every listed feature must be implemented in the first milestone.
 - Implementation order, exact UI layout, detailed numerical methods, file formats, and other unconfirmed technical choices remain open until discussed and accepted.
+
+
+## Recent interface changes
+
+- Component placement now uses drag and drop from the library.
+- Selected components can be dragged onto the trash target.
+- Fullscreen control removed.
+- Navy dark/light themes with an animated sliding switch.
+- Interface explanatory copy removed; component labels retained.
