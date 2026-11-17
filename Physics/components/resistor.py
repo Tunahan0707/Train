@@ -37,9 +37,9 @@ class Resistor(QGraphicsItem):
     def boundingRect(self):
         return QRectF(
             -RESISTOR_WIDTH / 2,
-            -RESISTOR_HEIGHT / 2,
+            -RESISTOR_HEIGHT / 2 - 5,
             RESISTOR_WIDTH,
-            RESISTOR_HEIGHT,
+            RESISTOR_HEIGHT + 30,
         )
 
     def paint(self, painter, option, widget=None):
@@ -76,3 +76,10 @@ class Resistor(QGraphicsItem):
         path.lineTo(half_width, 0)
 
         painter.drawPath(path)
+
+        painter.setPen(QPen(QColor(color), 1))
+        painter.drawText(
+            QRectF(-half_width, half_height + 4, RESISTOR_WIDTH, 18),
+            Qt.AlignmentFlag.AlignHCenter,
+            f"{self.value} {self.unit}",
+        )
