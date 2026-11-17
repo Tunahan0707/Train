@@ -228,7 +228,8 @@ class MainWindow(QMainWindow):
 
     def update_properties(self):
         selected = self.workspace.circuit_scene.selectedItems()
-        self.properties_panel.set_item(selected[0] if len(selected) == 1 else None)
+        item = selected[0] if len(selected) == 1 else None
+        self.properties_panel.set_item(item if getattr(item, "component_id", None) != "wire" else None)
 
     def on_placement_changed(self, component_id):
         if component_id:
