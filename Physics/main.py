@@ -67,6 +67,8 @@ class MainWindow(QMainWindow):
         )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.properties_dock)
         self.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
+        self.workspace.history_changed.connect(self.update_properties)
+        self.properties_panel.value_change_requested.connect(self.workspace.set_component_value)
 
         self.component_library.component_requested.connect(
             self.workspace.start_placement
