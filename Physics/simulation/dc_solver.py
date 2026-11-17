@@ -100,6 +100,8 @@ def solve_dc_operating_point(scene):
             resistors.append(item)
         elif component_id in ("voltage_source", "battery"):
             sources.append(item)
+        elif component_id == "switch" and getattr(item, "closed", False):
+            pass
         elif component_id != "ground":
             unsupported.append(getattr(item, "name", component_id))
 
