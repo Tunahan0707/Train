@@ -36,7 +36,7 @@
 
 ### Control and connectivity
 - [x] Switch
-- [ ] Wire
+- [x] Wire
 - [ ] Connection/junction point
 - [x] Ground reference (GND)
 
@@ -205,3 +205,11 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 - Editing a shared property sends one batch update for the selected same-type components and refreshes the panel once.
 - Mixed values show an empty field with a placeholder instead of retaining one component's old value.
 - Component value annotations were removed from the canvas; values remain editable in the properties panel. This removes the stray-looking default resistor annotation (1000 Ω) from below its symbol.
+
+
+## Recent functional fixes
+- Component palette entries are restored as bordered, filled tiles rather than bare text labels.
+- The component drawer uses a horizontal scroll viewport sized to its contents; entries remain inside the available viewport and can be reached by scrolling.
+- The canvas (workspace) scrollbars now have explicit theme styling: navy tracks in dark mode, pale grey tracks in light mode, and muted grey handles in both.
+- The schematic switch toggles open/closed on click without treating a drag as a toggle. Its state is shown in the properties panel, saved in project files, and copied when duplicated.
+- Closed ideal switches join their two terminals in the netlist and are treated as closed connections by the linear DC solver. Open switches remain electrically disconnected and are reported as unsupported by the current DC solver.
