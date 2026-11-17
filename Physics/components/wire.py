@@ -12,6 +12,7 @@ class WireItem(QGraphicsPathItem):
         self.start_point = QPointF(start)
         self.end_point = QPointF(end)
         self.setFlag(QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setPen(QPen(QColor(COLOR_COMPONENT), 8))
         self.setZValue(-1)
         self.update_path()
 
