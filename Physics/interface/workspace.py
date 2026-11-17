@@ -86,6 +86,7 @@ class TrashButton(QPushButton):
 class Workspace(QGraphicsView):
     history_changed = Signal()
     component_added = Signal()
+    component_dropped = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -428,6 +429,7 @@ class Workspace(QGraphicsView):
         item.setSelected(True)
         self.history_changed.emit()
         self.component_added.emit()
+        self.component_dropped.emit()
         self.setFocus()
         event.setDropAction(Qt.DropAction.CopyAction)
         event.accept()
