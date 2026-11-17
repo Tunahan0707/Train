@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QToolBar,
 )
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtCore import Qt, QSignalBlocker
+from PySide6.QtCore import Qt, QEvent, QSignalBlocker
 
 from settings import (
     WINDOW_HEIGHT,
@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
     def changeEvent(self, event):
         super().changeEvent(event)
 
-        if event.type() == event.Type.WindowStateChange:
+        if event.type() == QEvent.Type.WindowStateChange:
             is_fullscreen = self.isFullScreen()
             if self.fullscreen_action.isChecked() != is_fullscreen:
                 blocker = QSignalBlocker(self.fullscreen_action)
