@@ -11,7 +11,7 @@ from PySide6.QtGui import (
     QPainterPath,
     QShortcut,
 )
-from PySide6.QtCore import Qt, QRectF, Signal
+from PySide6.QtCore import Qt, QRectF, QPointF, Signal
 
 from settings import (
     COLOR_WORKSPACE_BACKGROUND,
@@ -42,6 +42,7 @@ from settings import (
 
 from components.resistor import Resistor
 from components.basic import BasicComponent
+from components.wire import WireItem
 from core.history import History
 from core.commands import (
     AddItemCommand,
@@ -85,6 +86,8 @@ class Workspace(QGraphicsView):
         self.selection_path = QPainterPath()
         self.drag_start_positions = {}
         self.placement_component = None
+        self.wire_start = None
+        self.wire_preview_end = None
 
         # Çöp kutusu
         self.delete_button = QPushButton("🗑", self)
@@ -142,7 +145,7 @@ class Workspace(QGraphicsView):
 
     # Bileşen yerleştirme
     def start_placement(self, component_id):
-        supported = {"resistor", "capacitor", "inductor", "diode", "led", "voltage_source", "battery", "switch", "ground"}
+        supported = {"resistor", "capacitor", "inductor", "diode", "led", "voltage_source", "battery", "switch", "ground", "wire"}
         if component_id not in supported:
             return
 
@@ -160,6 +163,10 @@ class Workspace(QGraphicsView):
         self.placement_changed.emit("")
 
     def place_component_at(self, position):
+        if self.placement_component == "wire":
+            self.place_wire_at(position)
+            return
+
         if self.placement_component == "resistor":
             item = Resistor()
         elif self.placement_component:
@@ -175,6 +182,43 @@ class Workspace(QGraphicsView):
 
         self.circuit_scene.clearSelection()
         item.setSelected(True)
+
+    def snap_to_terminal(self, position):
+        nearest = None
+        nearest_distance = 12 * 12
+        for item in self.circuit_scene.items():
+            terminal_method = getattr(item, "terminal_positions", None)
+            if terminal_method is None:
+                continue
+            for local_x, local_y in terminal_method():
+                terminal = item.mapToScene(QPointF(local_x, local_y))
+                distance = (
+                    (terminal.x() - position.x()) ** 2
+                    + (terminal.y() - position.y()) ** 2
+                )
+                if distance < nearest_distance:
+                    nearest = terminal
+                    nearest_distance = distance
+        return nearest if nearest is not None else self.snap_position(position)
+
+    def place_wire_at(self, position):
+        position = self.snap_to_terminal(position) if GRID_SNAP_ENABLED else QPointF(position)
+        if self.wire_start is None:
+            self.wire_start = QPointF(position)
+            self.wire_preview_end = QPointF(position)
+            self.viewport().update()
+            return
+        if (position - self.wire_start).manhattanLength() < 1:
+            return
+        wire = WireItem(self.wire_start, position)
+        self.history.execute(
+            AddItemCommand(self.circuit_scene, wire, QPointF(0, 0))
+        )
+        self.wire_start = None
+        self.wire_preview_end = None
+        self.circuit_scene.clearSelection()
+        wire.setSelected(True)
+        self.viewport().update()
 
     def snap_position(self, position):
         return type(position)(
@@ -307,6 +351,19 @@ class Workspace(QGraphicsView):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(self.selection_path)
+
+        if self.wire_start is not None and self.wire_preview_end is not None:
+            preview_pen = QPen(
+                QColor(COLOR_COMPONENT_SELECTED),
+                2,
+                Qt.PenStyle.DashLine,
+            )
+            painter.setPen(preview_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            preview = QPainterPath(self.wire_start)
+            preview.lineTo(self.wire_preview_end.x(), self.wire_start.y())
+            preview.lineTo(self.wire_preview_end)
+            painter.drawPath(preview)
 
         painter.restore()
 
@@ -443,6 +500,12 @@ class Workspace(QGraphicsView):
             self.viewport().update()
             return
 
+        if self.placement_component == "wire" and self.wire_start is not None:
+            current_scene = self.mapToScene(current_pos)
+            self.wire_preview_end = self.snap_to_terminal(current_scene) if GRID_SNAP_ENABLED else current_scene
+            self.viewport().update()
+            return
+
         super().mouseMoveEvent(event)
 
     # Fare bırakılması
@@ -540,6 +603,8 @@ class Workspace(QGraphicsView):
                 self.selection_start_scene = None
                 self.viewport().update()
 
+            self.wire_start = None
+            self.wire_preview_end = None
             self.cancel_placement()
             event.accept()
             return
