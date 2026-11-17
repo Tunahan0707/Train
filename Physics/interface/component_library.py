@@ -25,6 +25,7 @@ class ComponentButton(QPushButton):
         self.setObjectName("componentButton")
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.setMinimumWidth(0)
         self.clicked.connect(self._clicked)
 
     def _clicked(self):
@@ -98,6 +99,7 @@ class ComponentLibrary(QWidget):
         bottom.setContentsMargins(0, 0, 0, 0)
         bottom.setSpacing(5)
         self.menu_button = QPushButton("Menü")
+        self.menu_button.setStyleSheet("QPushButton::menu-indicator { image: none; width: 0px; }")
         self.menu_button.setObjectName("paletteMenuButton")
         menu = QMenu(self.menu_button)
         for label, key in [("Yeni devre", "new"), ("Aç", "open"), ("Kaydet", "save"), ("Farklı kaydet", "save_as")]:
@@ -142,15 +144,19 @@ class ComponentLibrary(QWidget):
             item = self.items_layout.takeAt(0)
             widget = item.widget()
             if widget:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
         components = dict(COMPONENTS)[category]
         for component_id, label in components:
             button = ComponentButton(component_id, label, self.items_host)
             button.add_requested.connect(self._add_component)
             self.items_layout.addWidget(button)
-        self.items_layout.addStretch(1)
         self.items_host.adjustSize()
-        self.items_host.setFixedHeight(max(54, self.items_host.sizeHint().height()))
+        content_size = self.items_layout.sizeHint()
+        self.items_host.setFixedSize(max(1, content_size.width()), max(54, content_size.height()))
+        self.items_host.updateGeometry()
+        self.scroll.horizontalScrollBar().setValue(0)
 
     def _add_component(self, component_id, shift):
         self.add_requested.emit(component_id, shift)
@@ -204,5 +210,5 @@ class ComponentLibrary(QWidget):
             "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
             "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
-            "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 6px; padding: 8px 14px; min-width: 82px; min-height: 30px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
+            "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 30px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
