@@ -554,6 +554,9 @@ class Workspace(QGraphicsView):
             viewport_point = event.position().toPoint()
             widget_point = self.mapFromGlobal(self.viewport().mapToGlobal(viewport_point))
             if self.delete_button.geometry().contains(widget_point):
+                for item, old_position in self.drag_start_positions.items():
+                    if item.scene() == self.circuit_scene:
+                        item.setPos(old_position)
                 self.delete_selected_items()
                 self.drag_start_positions.clear()
                 event.accept()
