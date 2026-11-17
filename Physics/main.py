@@ -1,16 +1,13 @@
 import sys
 
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QDockWidget, QToolBar,
-    QFileDialog, QMessageBox,
+    QApplication, QMainWindow, QDockWidget, QToolBar, QWidget,
+    QVBoxLayout, QFileDialog, QMessageBox,
 )
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
 
-from settings import (
-    WINDOW_HEIGHT, WINDOW_HEIGHT_MIN, WINDOW_TITLE,
-    WINDOW_WIDTH, WINDOW_WIDTH_MIN,
-)
+from settings import WINDOW_HEIGHT, WINDOW_HEIGHT_MIN, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_WIDTH_MIN, GRID_SIZE
 from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
@@ -27,18 +24,18 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(WINDOW_TITLE)
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN)
+        self.current_file = None
+        self.shift_stack_count = 0
 
+        central = QWidget()
+        layout = QVBoxLayout(central)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         self.workspace = Workspace()
-        self.setCentralWidget(self.workspace)
-
         self.component_library = ComponentLibrary()
-        self.component_dock = QDockWidget("Bileşenler", self)
-        self.component_dock.setObjectName("componentDock")
-        self.component_dock.setWidget(self.component_library)
-        self.component_dock.setAllowedAreas(
-            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
-        )
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.component_dock)
+        layout.addWidget(self.workspace, 1)
+        layout.addWidget(self.component_library, 0)
+        self.setCentralWidget(central)
 
         self.properties_panel = PropertiesPanel()
         self.properties_dock = QDockWidget("Özellikler", self)
@@ -52,48 +49,41 @@ class MainWindow(QMainWindow):
         self.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
         self.workspace.history_changed.connect(self.update_properties)
         self.properties_panel.value_change_requested.connect(self.workspace.set_component_value)
-
-        self.current_file = None
-        self.build_menus()
+        self.component_library.add_requested.connect(self.add_component_from_palette)
+        self.component_library.menu_action.connect(self.handle_palette_menu)
+        self.workspace.component_dropped.connect(self.component_library.collapse)
 
         toolbar = QToolBar("Tema", self)
         toolbar.setMovable(False)
-        toolbar.setObjectName("themeToolbar")
         toolbar.setFloatable(False)
+        toolbar.setObjectName("themeToolbar")
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, toolbar)
         self.theme_switch = ThemeSwitch(dark=True)
         toolbar.addWidget(self.theme_switch)
         self.theme_switch.progress_changed.connect(self.apply_theme_progress)
         self.apply_theme_progress(1.0)
 
-    def build_menus(self):
-        file_menu = self.menuBar().addMenu("Dosya")
-        actions = [
-            ("Yeni devre", "Ctrl+N", self.new_circuit),
-            ("Aç...", "Ctrl+O", self.open_circuit),
-            ("Kaydet", "Ctrl+S", self.save_circuit),
-            ("Farklı kaydet...", None, self.save_circuit_as),
-        ]
-        for label, shortcut, callback in actions:
-            action = QAction(label, self)
-            if shortcut:
-                action.setShortcut(shortcut)
-            action.triggered.connect(callback)
-            file_menu.addAction(action)
+    def add_component_from_palette(self, component_id, shift):
+        if shift:
+            index = self.shift_stack_count
+            self.workspace.add_component(component_id, True, index)
+            self.shift_stack_count += 1
+        else:
+            self.shift_stack_count = 0
+            self.workspace.add_component(component_id, False, 0)
 
-        circuit_menu = self.menuBar().addMenu("Devre")
-        analyze = QAction("Bağlantıları denetle", self)
-        analyze.triggered.connect(self.check_connections)
-        circuit_menu.addAction(analyze)
-
-        simulation_menu = self.menuBar().addMenu("Simülasyon")
-        solve = QAction("DC çalışma noktası", self)
-        solve.triggered.connect(self.run_dc_simulation)
-        simulation_menu.addAction(solve)
-
-        view_menu = self.menuBar().addMenu("Görünüm")
-        view_menu.addAction(self.component_dock.toggleViewAction())
-        view_menu.addAction(self.properties_dock.toggleViewAction())
+    def handle_palette_menu(self, action):
+        actions = {
+            "new": self.new_circuit,
+            "open": self.open_circuit,
+            "save": self.save_circuit,
+            "save_as": self.save_circuit_as,
+            "check": self.check_connections,
+            "simulate": self.run_dc_simulation,
+        }
+        callback = actions.get(action)
+        if callback:
+            callback()
 
     @staticmethod
     def blend_color(first, second, amount):
@@ -106,94 +96,96 @@ class MainWindow(QMainWindow):
 
     def apply_theme_progress(self, progress):
         amount = max(0.0, min(1.0, progress))
-        colors = {
-            key: self.blend_color(LIGHT[key], DARK[key], amount)
-            for key in DARK
-        }
+        colors = {key: self.blend_color(LIGHT[key], DARK[key], amount) for key in DARK}
         set_current(colors)
         self.workspace.apply_theme(colors)
-
         self.setStyleSheet(f"""
             QMainWindow, QWidget#componentLibrary, QWidget#propertiesPanel {{
                 background: {colors["panel"]};
                 color: {colors["text"]};
             }}
-            QMenuBar {{
+            QWidget {{ color: {colors["text"]}; }}
+            QToolBar#themeToolbar {{
+                background: {colors["window"]};
+                border: none;
+                padding: 2px 8px;
+            }}
+            QDockWidget {{ color: {colors["text"]}; }}
+            QDockWidget::title {{
                 background: {colors["window"]};
                 color: {colors["text"]};
-                padding: 3px 5px;
+                padding: 6px 8px;
+                border: none;
             }}
-            QMenuBar::item:selected, QMenu::item:selected {{
+            QPushButton#paletteTab, QPushButton#paletteMenuButton {{
+                background: transparent;
+                color: {colors["text"]};
+                border: none;
+                border-right: 1px solid {colors["border"]};
+                padding: 7px 13px;
+            }}
+            QPushButton#paletteTab:hover, QPushButton#paletteMenuButton:hover {{
                 background: {colors["hover"]};
             }}
+            QPushButton#paletteTab:checked {{
+                background: {colors["hover"]};
+                border-bottom: 2px solid {colors["accent"]};
+            }}
+            QPushButton#componentButton {{
+                background: transparent;
+                color: {colors["text"]};
+                border: 1px solid {colors["border"]};
+                padding: 7px 12px;
+                min-width: 75px;
+            }}
+            QPushButton#componentButton:hover {{
+                background: {colors["hover"]};
+            }}
+            QScrollArea {{ border: none; background: transparent; }}
+            QScrollBar:horizontal {{
+                height: 8px;
+                background: {colors["panel"]};
+            }}
+            QScrollBar::handle:horizontal {{
+                background: {colors["muted"]};
+                min-width: 25px;
+            }}
+            QLineEdit#inlinePropertyValue {{
+                background: transparent;
+                color: {colors["text"]};
+                border: none;
+                border-bottom: 1px solid transparent;
+                padding: 1px 0;
+            }}
+            QLineEdit#inlinePropertyValue:focus {{
+                border-bottom: 1px solid {colors["accent"]};
+            }}
+            QLabel#propertyGroupTitle {{
+                color: {colors["text"]};
+                font-weight: 600;
+                padding-top: 4px;
+            }}
+            QFrame {{ color: {colors["border"]}; }}
             QMenu {{
                 background: {colors["panel"]};
                 color: {colors["text"]};
                 border: 1px solid {colors["border"]};
                 padding: 4px;
             }}
-            QToolBar#themeToolbar {{
-                background: {colors["window"]};
-                border: none;
-                spacing: 8px;
-                padding: 2px 10px;
-            }}
-            QDockWidget {{
-                color: {colors["text"]};
-                font-size: 12px;
-            }}
-            QDockWidget::title {{
-                background: {colors["window"]};
-                padding: 7px 9px;
-                border-bottom: 1px solid {colors["border"]};
-            }}
-            QLineEdit#componentSearch, QLineEdit {{
-                background: {colors["panel_alt"]};
-                color: {colors["text"]};
-                border: 1px solid {colors["border"]};
-                border-radius: 7px;
-                padding: 7px 9px;
-                selection-background-color: {colors["accent"]};
-            }}
-            QLabel#sectionTitle {{
-                color: {colors["muted"]};
-                font-size: 10px;
-                font-weight: 600;
-                padding: 8px 2px 3px 2px;
-            }}
-            QPushButton#componentButton {{
-                background: transparent;
-                color: {colors["text"]};
-                border: 1px solid transparent;
-                border-radius: 6px;
-                padding: 8px 10px;
-                text-align: left;
-            }}
-            QPushButton#componentButton:hover {{
-                background: {colors["hover"]};
-                border-color: {colors["border"]};
-            }}
-            QScrollArea {{ border: none; background: transparent; }}
+            QMenu::item:selected {{ background: {colors["hover"]}; }}
             QToolTip {{
                 background: {colors["panel_alt"]};
                 color: {colors["text"]};
                 border: 1px solid {colors["border"]};
-                padding: 4px;
             }}
         """)
 
     def check_connections(self):
-        QMessageBox.information(
-            self, "Bağlantı analizi",
-            format_netlist_report(self.workspace.circuit_scene),
-        )
+        QMessageBox.information(self, "Bağlantı analizi", format_netlist_report(self.workspace.circuit_scene))
 
     def run_dc_simulation(self):
         try:
-            QMessageBox.information(
-                self, "DC çalışma noktası",
-                format_dc_report(self.workspace.circuit_scene),
-            )
+            QMessageBox.information(self, "DC çalışma noktası", format_dc_report(self.workspace.circuit_scene))
         except (ValueError, ZeroDivisionError) as error:
             QMessageBox.warning(self, "DC çözümü yapılamadı", str(error))
 
@@ -206,9 +198,7 @@ class MainWindow(QMainWindow):
         self.update_properties()
 
     def open_circuit(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Devre aç", "", "Physics Devreleri (*.physics);;JSON (*.json)"
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, "Devre aç", "", "Physics Devreleri (*.physics);;JSON (*.json)")
         if not file_path:
             return
         try:
@@ -231,9 +221,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
 
     def save_circuit_as(self):
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, "Devreyi kaydet", "", "Physics Devreleri (*.physics)"
-        )
+        file_path, _ = QFileDialog.getSaveFileName(self, "Devreyi kaydet", "", "Physics Devreleri (*.physics)")
         if not file_path:
             return
         if not file_path.lower().endswith(".physics"):
@@ -247,11 +235,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
 
     def update_properties(self):
-        selected = self.workspace.circuit_scene.selectedItems()
-        item = selected[0] if len(selected) == 1 else None
-        self.properties_panel.set_item(
-            item if getattr(item, "component_id", None) != "wire" else None
-        )
+        self.properties_panel.set_items(self.workspace.circuit_scene.selectedItems())
 
 
 def main():
