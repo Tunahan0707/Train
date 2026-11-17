@@ -54,7 +54,7 @@
 - [x] Draw wires and create connections.
 - [ ] Delete and edit connections.
 - [x] Move and rotate components.
-- [ ] Copy and paste components or selections.
+- [x] Copy and paste components or selections (Ctrl+C / Ctrl+V).
 - [x] Duplicate selected components or selections.
 - [x] Zoom in/out and pan around the workspace.
 - [x] Support selection, multi-selection, and deletion.
@@ -169,7 +169,7 @@ These topics are deferred for now and are not part of the current agreed scope.
 
 The DC numeric foundation validates engineering-notation values, rejects non-finite inputs and malformed linear systems, and has standard-library unit tests for suffix parsing and Gaussian elimination. These tests do not yet replace end-to-end circuit simulation tests.
 
-The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their full physical models are implemented. A basic endpoint/T-junction netlist analyzer and a linear DC operating-point solver for resistors with ideal DC voltage sources are implemented. Nonlinear/transient simulation, most component models, and measurement tools remain unimplemented.
+The current prototype includes schematic symbols and basic editing for the listed components. Their displayed values are editable, but this does **not** mean their full physical models are implemented. The netlist analyzer recognizes wire endpoints, component terminals, and T-junction contact with wire segments; wire crossings without endpoint contact are not connected. A linear DC operating-point solver for resistors with ideal DC voltage sources is implemented. Nonlinear/transient simulation, most component models, and measurement tools remain unimplemented.
 
 Grid snapping, rotation, grouped duplication, JSON-based project save/load, a component properties panel, and visual orthogonal wire drawing with endpoint snapping are implemented in the current editor prototype. The wires are not yet part of an electrical netlist: visual contact does not currently mean the simulator recognizes an electrical connection.
 
@@ -208,8 +208,8 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 
 
 ## Recent functional fixes
-- Component palette entries are restored as bordered, filled tiles rather than bare text labels.
-- The component drawer uses a horizontal scroll viewport sized to its contents; component entries are hollow, sharp-cornered, text-sized tiles with a compact height, minimum width, and right-side text elision for long labels.
+- Component palette entries use hollow, sharp-cornered tiles; their widths are calculated from full labels and the active style, with a minimum width.
+- The component drawer uses a horizontal scroll viewport sized to its contents; component entries are hollow, sharp-cornered tiles with widths calculated from their full labels and a minimum width.
 - The canvas (workspace) scrollbars now have explicit theme styling: navy tracks in dark mode, pale grey tracks in light mode, and muted grey handles in both.
 - The schematic switch toggles open/closed on click without treating a drag as a toggle. Its state is shown in the properties panel, saved in project files, and copied when duplicated.
 - Closed ideal switches join their two terminals in the netlist and are treated as closed connections by the linear DC solver. Open switches remain electrically disconnected and are reported as unsupported by the current DC solver.
