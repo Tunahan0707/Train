@@ -135,7 +135,7 @@ These are examples of intended modeling detail, not a finalized parameter schema
 - [ ] Dark and light themes.
 - [ ] Customizable workspace.
 - [ ] Drag-and-drop component library.
-- [x] Component search and categories.
+- [ ] Component search and categories.
 - [x] Keyboard shortcuts.
 - [x] Customizable panels.
 - [ ] Animated electrical-flow indicators.
@@ -167,7 +167,7 @@ These topics are deferred for now and are not part of the current agreed scope.
 
 The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their electrical models or simulation behavior are implemented yet. Wire connectivity, numerical simulation, measurement tools, and physical component models remain unimplemented.
 
-Grid snapping, rotation, grouped duplication, JSON-based project save/load, and a component properties panel are implemented in the current editor prototype.
+Grid snapping, rotation, grouped duplication, JSON-based project save/load, a component properties panel, and visual orthogonal wire drawing with endpoint snapping are implemented in the current editor prototype. The wires are not yet part of an electrical netlist: visual contact does not currently mean the simulator recognizes an electrical connection.
 
 ## Scope Notes
 
