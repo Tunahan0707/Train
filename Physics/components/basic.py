@@ -27,6 +27,8 @@ class BasicComponent(QGraphicsItem):
         "fuse": ("Sigorta", "", ""),
         "potentiometer": ("Potansiyometre", "10", "kΩ"),
         "ac_source": ("AC Kaynak", "5", "V"),
+        "bjt": ("BJT Transistör (NPN)", "", ""),
+        "mosfet": ("MOSFET (N-Kanal)", "", ""),
     }
 
     def __init__(self, component_id, parent=None):
@@ -48,6 +50,10 @@ class BasicComponent(QGraphicsItem):
     def terminal_positions(self):
         if self.component_id == "ground":
             return [(0, -COMPONENT_HEIGHT / 2)]
+        if self.component_id == "bjt":
+            return [(-COMPONENT_WIDTH / 2, 0), (COMPONENT_WIDTH / 2, -24), (COMPONENT_WIDTH / 2, 24)]
+        if self.component_id == "mosfet":
+            return [(-COMPONENT_WIDTH / 2, 0), (COMPONENT_WIDTH / 2, -24), (COMPONENT_WIDTH / 2, 24)]
         half = COMPONENT_WIDTH / 2
         return [(-half, 0), (half, 0)]
 
@@ -123,6 +129,18 @@ class BasicComponent(QGraphicsItem):
             path.addEllipse(QRectF(-11, -3, 6, 6))
             path.addEllipse(QRectF(8, -3, 6, 6))
             path.moveTo(14, 0); path.lineTo(w, 0)
+        elif self.component_id == "bjt":
+            path.moveTo(-40, 0); path.lineTo(-5, 0)
+            path.moveTo(-5, -15); path.lineTo(-5, 15)
+            path.moveTo(-5, -9); path.lineTo(12, -24); path.lineTo(40, -24)
+            path.moveTo(-5, 9); path.lineTo(12, 24); path.lineTo(40, 24)
+            path.moveTo(3, 16); path.lineTo(12, 24); path.lineTo(1, 23)
+        elif self.component_id == "mosfet":
+            path.moveTo(-40, 0); path.lineTo(-10, 0)
+            path.moveTo(-5, -16); path.lineTo(-5, 16)
+            path.moveTo(5, -18); path.lineTo(5, 18)
+            path.moveTo(5, -12); path.lineTo(22, -24); path.lineTo(40, -24)
+            path.moveTo(5, 12); path.lineTo(22, 24); path.lineTo(40, 24)
         elif self.component_id == "ground":
             path.moveTo(0, -h); path.lineTo(0, 0)
             path.moveTo(-16, 0); path.lineTo(16, 0)
