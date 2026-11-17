@@ -29,7 +29,6 @@ class ComponentButton(QPushButton):
         self.setObjectName("componentButton")
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setMinimumWidth(0)
         self.setMinimumWidth(64)
         self.setMinimumHeight(28)
         self.setMaximumWidth(170)
@@ -180,7 +179,7 @@ class ComponentLibrary(QWidget):
         width = margins.left() + margins.right()
         width += sum(button.sizeHint().width() for button in buttons)
         width += max(0, len(buttons) - 1) * spacing
-        height = max([34] + [button.sizeHint().height() for button in buttons])
+        height = max([28] + [button.sizeHint().height() for button in buttons])
         height += margins.top() + margins.bottom()
         self.items_host.setFixedSize(max(1, width), max(54, height))
         self.scroll.horizontalScrollBar().setValue(0)
@@ -236,7 +235,7 @@ class ComponentLibrary(QWidget):
             "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
             "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
-            "QPushButton#componentButton { background-color: transparent; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 34px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
+            "QPushButton#componentButton { background-color: transparent; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 3px 10px; min-width: 64px; min-height: 28px; max-width: 170px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
         self.current_colors = colors
         for button in self.component_buttons:
