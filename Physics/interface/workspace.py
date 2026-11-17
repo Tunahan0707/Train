@@ -29,6 +29,8 @@ from settings import (
     SHORTCUT_DELETE,
     SHORTCUT_UNDO,
     SHORTCUT_REDO,
+    SHORTCUT_ROTATE,
+    GRID_SNAP_ENABLED,
     MOUSE_SELECTION_BUTTON,
     MOUSE_PAN_BUTTON,
     MOUSE_PAN_MODIFIER,
@@ -37,11 +39,13 @@ from settings import (
 )
 
 from components.resistor import Resistor
+from components.basic import BasicComponent
 from core.history import History
 from core.commands import (
     AddItemCommand,
     DeleteItemsCommand,
     MoveItemsCommand,
+    RotateItemsCommand,
 )
 
 
@@ -110,6 +114,7 @@ class Workspace(QGraphicsView):
             (SHORTCUT_DELETE, self.delete_selected_items),
             (SHORTCUT_UNDO, self.undo),
             (SHORTCUT_REDO, self.redo),
+            (SHORTCUT_ROTATE, self.rotate_selected_items),
         ]
 
         self.shortcuts = []
@@ -132,7 +137,8 @@ class Workspace(QGraphicsView):
 
     # Bileşen yerleştirme
     def start_placement(self, component_id):
-        if component_id != "resistor":
+        supported = {"resistor", "capacitor", "inductor", "diode", "led", "voltage_source", "battery", "switch", "ground"}
+        if component_id not in supported:
             return
 
         self.placement_component = component_id
@@ -151,18 +157,33 @@ class Workspace(QGraphicsView):
     def place_component_at(self, position):
         if self.placement_component == "resistor":
             item = Resistor()
+        elif self.placement_component:
+            item = BasicComponent(self.placement_component)
         else:
             return
 
-        command = AddItemCommand(
-            self.circuit_scene,
-            item,
-            position,
-        )
+        if GRID_SNAP_ENABLED:
+            position = self.snap_position(position)
+
+        command = AddItemCommand(self.circuit_scene, item, position)
         self.history.execute(command)
 
         self.circuit_scene.clearSelection()
         item.setSelected(True)
+
+    def snap_position(self, position):
+        return type(position)(
+            round(position.x() / GRID_SIZE) * GRID_SIZE,
+            round(position.y() / GRID_SIZE) * GRID_SIZE,
+        )
+
+    def rotate_selected_items(self):
+        items = self.circuit_scene.selectedItems()
+        if not items:
+            return
+        rotations = {item: item.rotation() for item in items}
+        self.history.execute(RotateItemsCommand(rotations))
+        self.viewport().update()
 
     # Silme
     def delete_selected_items(self):
@@ -428,6 +449,10 @@ class Workspace(QGraphicsView):
 
         if event.button() == Qt.MouseButton.LeftButton:
             super().mouseReleaseEvent(event)
+
+            if GRID_SNAP_ENABLED:
+                for item in self.circuit_scene.selectedItems():
+                    item.setPos(self.snap_position(item.pos()))
 
             old_positions = self.drag_start_positions
             new_positions = {
