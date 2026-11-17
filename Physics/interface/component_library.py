@@ -219,3 +219,20 @@ class ComponentLibrary(QWidget):
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
             "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 34px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
+        for button in self.items_host.findChildren(ComponentButton):
+            button.setStyleSheet(
+                "QPushButton {"
+                "background-color: " + colors["panel"] + ";"
+                "color: " + colors["text"] + ";"
+                "border: 1px solid " + colors["border"] + ";"
+                "border-radius: 0px;"
+                "padding: 7px 12px;"
+                "min-width: 0px;"
+                "min-height: 34px;"
+                "}"
+                "QPushButton:hover {"
+                "background-color: " + colors["hover"] + ";"
+                "border-color: " + colors["accent"] + ";"
+                "}"
+            )
+            button.adjustSize()
