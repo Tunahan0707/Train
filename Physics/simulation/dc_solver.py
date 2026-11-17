@@ -79,7 +79,7 @@ def solve_dc_operating_point(scene):
     if not component_nodes:
         raise ValueError("Devrede analiz edilecek bileşen bulunamadı.")
 
-    supported = {"resistor", "voltage_source", "battery", "switch", "ground"}
+    supported = {"resistor", "voltage_source", "battery", "switch", "ground", "capacitor", "inductor"}
     unsupported = [
         f"{_component_label(item)} ({getattr(item, 'component_id', 'unknown')})"
         for item in component_nodes
@@ -119,6 +119,8 @@ def solve_dc_operating_point(scene):
 
     resistors = []
     sources = []
+    inductors = []
+    capacitors = []
     for item, pins in component_nodes.items():
         component_id = getattr(item, "component_id", "")
         if component_id == "resistor":
@@ -129,11 +131,22 @@ def solve_dc_operating_point(scene):
             if len(pins) != 2:
                 raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             sources.append(item)
+        elif component_id == "inductor":
+            if len(pins) != 2:
+                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
+            inductors.append(item)
+        elif component_id == "capacitor":
+            if len(pins) != 2:
+                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
+            capacitors.append(item)
         elif component_id == "switch":
             if len(pins) != 2:
                 raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
 
-    size = len(unknown_nodes) + len(sources)
+    # Ideal DC steady state: capacitors are open circuits, inductors are zero-volt branches.
+    branches = [(item, parse_engineering_value(getattr(item, "value", ""))) for item in sources]
+    branches.extend((item, 0.0) for item in inductors)
+    size = len(unknown_nodes) + len(branches)
     matrix = [[0.0 for _ in range(size)] for _ in range(size)]
     vector = [0.0 for _ in range(size)]
 
@@ -155,10 +168,10 @@ def solve_dc_operating_point(scene):
             raise ValueError(f"{_component_label(item)} direnci sıfırdan büyük olmalı.")
         stamp_conductance(pins[0], pins[1], 1.0 / resistance)
 
-    for source_index, item in enumerate(sources):
+    for branch_index, (item, source_voltage) in enumerate(branches):
         pins = component_nodes[item]
         positive_node, negative_node = pins
-        source_column = len(unknown_nodes) + source_index
+        source_column = len(unknown_nodes) + branch_index
         positive = node_index.get(positive_node)
         negative = node_index.get(negative_node)
 
@@ -169,8 +182,7 @@ def solve_dc_operating_point(scene):
             matrix[negative][source_column] -= 1.0
             matrix[source_column][negative] -= 1.0
 
-        source_voltage = parse_engineering_value(getattr(item, "value", ""))
-        if source_voltage == 0:
+        if getattr(item, "component_id", "") != "inductor" and source_voltage == 0:
             raise ValueError(f"{_component_label(item)} gerilimi sıfır olamaz.")
         vector[source_column] = source_voltage
 
@@ -195,10 +207,20 @@ def solve_dc_operating_point(scene):
         })
 
     source_results = []
-    for source_index, item in enumerate(sources):
-        current_index = len(unknown_nodes) + source_index
+    inductor_results = []
+    for branch_index, (item, branch_voltage) in enumerate(branches):
+        current_index = len(unknown_nodes) + branch_index
         current = solution[current_index]
-        voltage = parse_engineering_value(getattr(item, "value", ""))
+        if getattr(item, "component_id", "") == "inductor":
+            inductor_results.append({
+                "name": _component_label(item),
+                "inductance": parse_engineering_value(getattr(item, "value", "")),
+                "voltage": 0.0,
+                "current": current,
+                "power": 0.0,
+            })
+            continue
+        voltage = branch_voltage
         source_results.append({
             "name": _component_label(item),
             "voltage": voltage,
@@ -211,6 +233,15 @@ def solve_dc_operating_point(scene):
         "node_voltages": node_voltages,
         "resistors": resistor_results,
         "sources": source_results,
+        "inductors": inductor_results,
+        "capacitors": [
+            {
+                "name": _component_label(item),
+                "current": 0.0,
+                "voltage": node_voltages[component_nodes[item][0]] - node_voltages[component_nodes[item][1]],
+            }
+            for item in capacitors
+        ],
         "unsupported": [],
         "automatic_ground": automatic_ground,
         "net_count": len(net_ids),
@@ -236,6 +267,14 @@ def format_dc_report(scene):
             f"{item['current']:.6g} A, {item['power']:.6g} W"
         )
 
+    if result["inductors"]:
+        lines.extend(["", "BOBİNLER (DC kararlı hâl)"])
+        for item in result["inductors"]:
+            lines.append(f"  {item['name']}: {item['voltage']:.6g} V, {item['current']:.6g} A")
+    if result["capacitors"]:
+        lines.extend(["", "KONDANSATÖRLER (DC kararlı hâl)"])
+        for item in result["capacitors"]:
+            lines.append(f"  {item['name']}: {item['voltage']:.6g} V, 0 A (ideal açık devre)")
     lines.extend(["", "DC KAYNAKLARI"])
     for item in result["sources"]:
         lines.append(
@@ -246,8 +285,9 @@ def format_dc_report(scene):
 
     lines.extend([
         "",
-        "Model kapsamı: direnç, ideal DC gerilim kaynağı, pil ve kapalı ideal anahtar.",
-        "Diyot, LED, transistör, kondansatör, bobin, sigorta, potansiyometre ve AC kaynak için çözüm üretilmez.",
+        "Model kapsamı: direnç, ideal DC gerilim kaynağı, pil, ideal anahtar, ideal kondansatör ve ideal bobin.",
+        "DC kararlı hâlde kondansatör açık devre, bobin kısa devre kabul edilir; geçici rejim hesaplanmaz.",
+        "Diyot, LED, transistör, sigorta, potansiyometre ve AC kaynak için çözüm üretilmez.",
         "GND yoksa bir düğüm geçici referans olarak seçilir.",
         "Kaynak akımının pozitif yönü, kaynağın sol (+) ucundan sağ (-) ucuna doğrudur.",
     ])
