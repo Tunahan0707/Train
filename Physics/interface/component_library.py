@@ -1,4 +1,6 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QScrollArea
+)
 from PySide6.QtCore import Qt, Signal
 
 
@@ -18,8 +20,8 @@ COMPONENTS = [
     ]),
     ("GÜÇ KAYNAKLARI", [
         ("voltage_source", "＋   DC Kaynak"),
-        ("battery", "▰   Pil"),
         ("ac_source", "∿   AC Kaynak"),
+        ("battery", "▰   Pil"),
     ]),
     ("KONTROL VE BAĞLANTI", [
         ("switch", "／   Anahtar"),
@@ -41,23 +43,31 @@ class ComponentLibrary(QWidget):
         self.buttons = {}
         self.section_groups = []
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 18, 14, 14)
-        layout.setSpacing(9)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(12, 14, 12, 10)
+        outer.setSpacing(9)
 
         title = QLabel("BİLEŞEN KÜTÜPHANESİ")
         title.setObjectName("panelTitle")
-        layout.addWidget(title)
+        outer.addWidget(title)
 
         description = QLabel("Bileşen seç, ardından çalışma alanına tıklayarak yerleştir.")
         description.setObjectName("panelDescription")
         description.setWordWrap(True)
-        layout.addWidget(description)
+        outer.addWidget(description)
 
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("Bileşen ara...")
         self.search_edit.textChanged.connect(self.filter_components)
-        layout.addWidget(self.search_edit)
+        outer.addWidget(self.search_edit)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(8)
 
         for section_name, components in COMPONENTS:
             section = QLabel(section_name)
@@ -65,6 +75,7 @@ class ComponentLibrary(QWidget):
             layout.addWidget(section)
             section_buttons = []
             self.section_groups.append((section, section_buttons))
+
             for component_id, label in components:
                 button = QPushButton(label)
                 button.setObjectName("componentButton")
@@ -78,15 +89,17 @@ class ComponentLibrary(QWidget):
                 layout.addWidget(button)
 
         layout.addStretch()
-        hint = QLabel("ESC: yerleştirmeyi iptal et  •  R: döndür")
+        scroll.setWidget(content)
+        outer.addWidget(scroll, 1)
+
+        hint = QLabel("ESC: iptal  •  R: döndür  •  Ctrl+D: çoğalt")
         hint.setObjectName("panelHint")
-        layout.addWidget(hint)
+        outer.addWidget(hint)
 
         self.setStyleSheet("""
             QWidget#componentLibrary { background-color: #201d2b; color: #e8e3f2; }
             QLabel#panelTitle { color: #c4b5fd; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
             QLabel#panelDescription { color: #aaa3ba; font-size: 12px; }
-            QLineEdit { color:#e8e3f2; background:#302b3d; border:1px solid #494158; border-radius:7px; padding:8px; }
             QLabel#sectionTitle { color: #8e879f; font-size: 10px; font-weight: 700; margin-top: 10px; }
             QPushButton#componentButton {
                 color: #e8e3f2; background-color: #302b3d; border: 1px solid #494158;
@@ -94,7 +107,9 @@ class ComponentLibrary(QWidget):
             }
             QPushButton#componentButton:hover { background-color: #3b3450; border-color: #8b75c7; }
             QPushButton#componentButton:checked { background-color: #493b68; border: 1px solid #a78bfa; color: white; }
+            QLineEdit { color:#e8e3f2; background:#302b3d; border:1px solid #494158; border-radius:7px; padding:8px; }
             QLabel#panelHint { color: #827b91; font-size: 10px; }
+            QScrollArea { border: none; background: transparent; }
         """)
 
     def filter_components(self, query):
