@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QDockWidget,
     QToolBar,
+    QFileDialog,
+    QMessageBox,
 )
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtCore import Qt, QEvent, QSignalBlocker
@@ -22,6 +24,7 @@ from settings import (
 from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
+from core.project_io import save_circuit, load_circuit
 
 
 class MainWindow(QMainWindow):
@@ -74,6 +77,26 @@ class MainWindow(QMainWindow):
         self.workspace.placement_changed.connect(
             self.on_placement_changed
         )
+
+        self.current_file = None
+
+        # Dosya menüsü
+        file_menu = self.menuBar().addMenu("Dosya")
+        new_action = QAction("Yeni devre", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(self.new_circuit)
+        file_menu.addAction(new_action)
+        open_action = QAction("Aç...", self)
+        open_action.setShortcut("Ctrl+O")
+        open_action.triggered.connect(self.open_circuit)
+        file_menu.addAction(open_action)
+        save_action = QAction("Kaydet", self)
+        save_action.setShortcut("Ctrl+S")
+        save_action.triggered.connect(self.save_circuit)
+        file_menu.addAction(save_action)
+        save_as_action = QAction("Farklı kaydet...", self)
+        save_as_action.triggered.connect(self.save_circuit_as)
+        file_menu.addAction(save_as_action)
 
         # Üst araç çubuğu
         toolbar = QToolBar("Ana araç çubuğu", self)
@@ -157,6 +180,51 @@ class MainWindow(QMainWindow):
                 color: #aaa3ba;
             }}
         """)
+
+    def new_circuit(self):
+        self.workspace.circuit_scene.clear()
+        self.workspace.history.undo_stack.clear()
+        self.workspace.history.redo_stack.clear()
+        self.current_file = None
+        self.setWindowTitle(WINDOW_TITLE)
+        self.update_properties()
+
+    def open_circuit(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Devre aç", "", "Physics Devreleri (*.physics);;JSON (*.json)"
+        )
+        if not file_path:
+            return
+        try:
+            load_circuit(self.workspace.circuit_scene, file_path)
+            self.workspace.history.undo_stack.clear()
+            self.workspace.history.redo_stack.clear()
+            self.current_file = file_path
+            self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
+            self.update_properties()
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            QMessageBox.critical(self, "Devre açılamadı", str(error))
+
+    def save_circuit(self):
+        if self.current_file is None:
+            self.save_circuit_as()
+            return
+        try:
+            save_circuit(self.workspace.circuit_scene, self.current_file)
+        except OSError as error:
+            QMessageBox.critical(self, "Kaydedilemedi", str(error))
+
+    def save_circuit_as(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Devreyi kaydet", "", "Physics Devreleri (*.physics)"
+        )
+        if not file_path:
+            return
+        if not file_path.lower().endswith(".physics"):
+            file_path += ".physics"
+        self.current_file = file_path
+        self.save_circuit()
+        self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
 
     def update_properties(self):
         selected = self.workspace.circuit_scene.selectedItems()
