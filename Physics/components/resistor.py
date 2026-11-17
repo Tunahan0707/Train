@@ -15,12 +15,20 @@ from settings import (
 class Resistor(QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.component_id = "resistor"
+        self.name = "Direnç"
+        self.value = "1000"
+        self.unit = "Ω"
 
         self.setFlags(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable
             | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
             | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
+
+    def set_value(self, value):
+        self.value = str(value)
+        self.update()
 
     def boundingRect(self):
         return QRectF(
