@@ -2,6 +2,7 @@ from PySide6.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QPushButton,
+    QApplication,
 )
 from PySide6.QtGui import (
     QPainter,
@@ -11,7 +12,7 @@ from PySide6.QtGui import (
     QPainterPath,
     QShortcut,
 )
-from PySide6.QtCore import Qt, QRectF, QPointF, Signal
+from PySide6.QtCore import Qt, QRectF, QPointF, Signal, QEvent
 
 from settings import (
     GRID_SIZE,
@@ -50,10 +51,16 @@ from core.commands import (
 
 
 class TrashButton(QPushButton):
+    clear_all_requested = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(DELETE_BUTTON_SIZE, DELETE_BUTTON_SIZE)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.shift_mode = False
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
         self.setStyleSheet("""
             QPushButton {
                 background: #873d4b;
@@ -62,6 +69,35 @@ class TrashButton(QPushButton):
             }
             QPushButton:hover { background: #a84c58; }
         """)
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Shift:
+            self.set_shift_mode(True)
+        elif event.type() == QEvent.Type.KeyRelease and event.key() == Qt.Key.Key_Shift:
+            self.set_shift_mode(False)
+        elif event.type() == QEvent.Type.ApplicationDeactivate:
+            self.set_shift_mode(False)
+        return False
+
+    def set_shift_mode(self, enabled):
+        enabled = bool(enabled)
+        if self.shift_mode != enabled:
+            self.shift_mode = enabled
+            self.update()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and (
+            event.modifiers() & Qt.KeyboardModifier.ShiftModifier
+        ):
+            self.set_shift_mode(True)
+            self.clear_all_requested.emit()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        self.set_shift_mode(bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier))
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -73,13 +109,21 @@ class TrashButton(QPushButton):
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         cx, cy = self.width() / 2, self.height() / 2
-        painter.drawLine(int(cx - 8), int(cy - 9), int(cx + 8), int(cy - 9))
-        painter.drawLine(int(cx - 3), int(cy - 12), int(cx + 3), int(cy - 12))
-        painter.drawLine(int(cx - 6), int(cy - 6), int(cx - 5), int(cy + 9))
-        painter.drawLine(int(cx + 6), int(cy - 6), int(cx + 5), int(cy + 9))
-        painter.drawLine(int(cx - 5), int(cy + 9), int(cx + 5), int(cy + 9))
-        painter.drawLine(int(cx - 2), int(cy - 5), int(cx - 2), int(cy + 6))
-        painter.drawLine(int(cx + 2), int(cy - 5), int(cx + 2), int(cy + 6))
+        if self.shift_mode:
+            painter.drawLine(int(cx + 5), int(cy - 11), int(cx - 3), int(cy + 3))
+            painter.drawLine(int(cx - 3), int(cy + 3), int(cx - 8), int(cy + 8))
+            painter.drawLine(int(cx - 8), int(cy + 8), int(cx + 4), int(cy + 11))
+            painter.drawLine(int(cx + 4), int(cy + 11), int(cx + 8), int(cy + 5))
+            painter.drawLine(int(cx + 8), int(cy + 5), int(cx - 3), int(cy + 3))
+            painter.drawLine(int(cx - 5), int(cy + 7), int(cx + 5), int(cy + 9))
+        else:
+            painter.drawLine(int(cx - 8), int(cy - 9), int(cx + 8), int(cy - 9))
+            painter.drawLine(int(cx - 3), int(cy - 12), int(cx + 3), int(cy - 12))
+            painter.drawLine(int(cx - 6), int(cy - 6), int(cx - 5), int(cy + 9))
+            painter.drawLine(int(cx + 6), int(cy - 6), int(cx + 5), int(cy + 9))
+            painter.drawLine(int(cx - 5), int(cy + 9), int(cx + 5), int(cy + 9))
+            painter.drawLine(int(cx - 2), int(cy - 5), int(cx - 2), int(cy + 6))
+            painter.drawLine(int(cx + 2), int(cy - 5), int(cx + 2), int(cy + 6))
         painter.end()
 
 
@@ -123,6 +167,7 @@ class Workspace(QGraphicsView):
         # Çöp kutusu
         self.delete_button = TrashButton(self)
         self.delete_button.clicked.connect(self.delete_selected_items)
+        self.delete_button.clear_all_requested.connect(self.delete_all_items)
 
         self.update_delete_button_position()
         self.setup_shortcuts()
@@ -256,6 +301,14 @@ class Workspace(QGraphicsView):
 
         command = DeleteItemsCommand(self.circuit_scene, items)
         self.history.execute(command)
+        self.history_changed.emit()
+        self.setFocus()
+
+    def delete_all_items(self):
+        items = list(self.circuit_scene.items())
+        if not items:
+            return
+        self.history.execute(DeleteItemsCommand(self.circuit_scene, items))
         self.history_changed.emit()
         self.setFocus()
 
@@ -399,9 +452,13 @@ class Workspace(QGraphicsView):
         position = QPointF(center.x(), center.y() + stack_index * GRID_SIZE * 4) if shift else center
         if GRID_SNAP_ENABLED:
             position = self.snap_position(position)
+
         if component_id == "wire":
             half = GRID_SIZE * 2
-            item = WireItem(QPointF(position.x() - half, position.y()), QPointF(position.x() + half, position.y()))
+            item = WireItem(
+                QPointF(position.x() - half, position.y()),
+                QPointF(position.x() + half, position.y()),
+            )
             item_position = QPointF(0, 0)
         elif component_id == "resistor":
             item = Resistor()
@@ -410,8 +467,17 @@ class Workspace(QGraphicsView):
             try:
                 item = BasicComponent(component_id)
             except ValueError:
-                return
+                return False
             item_position = position
+
+        item.setPos(item_position)
+        visible_area = self.mapToScene(self.viewport().rect()).boundingRect().adjusted(2, 2, -2, -2)
+        item_bounds = item.mapRectToScene(item.boundingRect())
+        if not visible_area.contains(item_bounds):
+            item.setParentItem(None)
+            del item
+            return False
+
         if not shift or stack_index == 0:
             self.circuit_scene.clearSelection()
         self.history.execute(AddItemCommand(self.circuit_scene, item, item_position))
@@ -419,6 +485,7 @@ class Workspace(QGraphicsView):
         self.history_changed.emit()
         self.component_added.emit()
         self.setFocus()
+        return True
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat("application/x-physics-component"):
