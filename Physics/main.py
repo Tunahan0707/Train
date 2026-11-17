@@ -102,7 +102,16 @@ class MainWindow(QMainWindow):
                 background: {colors["panel"]};
                 color: {colors["text"]};
             }}
-            QWidget {{ color: {colors["text"]}; }}
+            QWidget#componentDrawer, QWidget#componentItemsHost {{
+                background: {colors["panel_alt"]};
+                color: {colors["text"]};
+            }}
+            QWidget, QLabel, QLineEdit, QPushButton, QMenu, QDockWidget {{
+                color: {colors["text"]};
+            }}
+            QLabel#propertyStaticValue {{
+                color: {colors["text"]};
+            }}
             QToolBar#themeToolbar {{
                 background: {colors["window"]};
                 border: none;
@@ -139,14 +148,23 @@ class MainWindow(QMainWindow):
             QPushButton#componentButton:hover {{
                 background: {colors["hover"]};
             }}
-            QScrollArea {{ border: none; background: transparent; }}
-            QScrollBar:horizontal {{
+            QScrollArea, QScrollArea QWidget {{
+                border: none;
+                background: {colors["panel_alt"]};
+                color: {colors["text"]};
+            }}
+            QScrollBar:horizontal, QScrollBar:vertical {{
                 height: 8px;
                 background: {colors["panel"]};
             }}
             QScrollBar::handle:horizontal {{
                 background: {colors["muted"]};
                 min-width: 25px;
+            }}
+            QScrollBar:vertical {{ width: 8px; }}
+            QScrollBar::handle:vertical {{
+                background: {colors["muted"]};
+                min-height: 25px;
             }}
             QLineEdit#inlinePropertyValue {{
                 background: transparent;
@@ -163,7 +181,13 @@ class MainWindow(QMainWindow):
                 font-weight: 600;
                 padding-top: 4px;
             }}
-            QFrame {{ color: {colors["border"]}; }}
+            QFrame, QFrame#propertySeparator {{
+                color: {colors["border"]};
+                background: transparent;
+            }}
+            QLineEdit#inlinePropertyValue::placeholder {{
+                color: {colors["muted"]};
+            }}
             QMenu {{
                 background: {colors["panel"]};
                 color: {colors["text"]};
