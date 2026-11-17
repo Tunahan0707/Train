@@ -51,7 +51,7 @@
 ## 4. Circuit Editing Tools
 
 - [x] Select and place components.
-- [ ] Draw wires and create connections.
+- [x] Draw wires and create connections.
 - [ ] Delete and edit connections.
 - [x] Move and rotate components.
 - [ ] Copy and paste components or selections.
@@ -167,7 +167,7 @@ These topics are deferred for now and are not part of the current agreed scope.
 
 ## Implementation Notes
 
-The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their electrical models or simulation behavior are implemented yet. Electrical wire connectivity/netlist generation, numerical simulation, measurement tools, and physical component models remain unimplemented.
+The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their electrical models or simulation behavior are implemented yet. A basic endpoint/T-junction netlist analyzer is implemented. Numerical simulation, measurement tools, and physical component models remain unimplemented.
 
 Grid snapping, rotation, grouped duplication, JSON-based project save/load, a component properties panel, and visual orthogonal wire drawing with endpoint snapping are implemented in the current editor prototype. The wires are not yet part of an electrical netlist: visual contact does not currently mean the simulator recognizes an electrical connection.
 
