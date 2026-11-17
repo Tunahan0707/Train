@@ -1,0 +1,67 @@
+import json
+from pathlib import Path
+
+from components.resistor import Resistor
+from components.basic import BasicComponent
+
+
+def save_circuit(scene, file_path):
+    components = []
+    for item in scene.items():
+        component_id = getattr(item, "component_id", None)
+        if component_id is None:
+            continue
+        components.append({
+            "type": component_id,
+            "x": item.pos().x(),
+            "y": item.pos().y(),
+            "rotation": item.rotation(),
+            "value": getattr(item, "value", ""),
+        })
+
+    data = {
+        "format": "physics-circuit",
+        "version": 1,
+        "components": components,
+    }
+    Path(file_path).write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def load_circuit(scene, file_path):
+    data = json.loads(Path(file_path).read_text(encoding="utf-8"))
+    if data.get("format") != "physics-circuit":
+        raise ValueError("Bu dosya bir Physics devre projesi değil.")
+    if data.get("version") != 1:
+        raise ValueError("Desteklenmeyen proje dosyası sürümü.")
+
+    constructors = {
+        "resistor": Resistor,
+        "capacitor": lambda: BasicComponent("capacitor"),
+        "inductor": lambda: BasicComponent("inductor"),
+        "diode": lambda: BasicComponent("diode"),
+        "led": lambda: BasicComponent("led"),
+        "voltage_source": lambda: BasicComponent("voltage_source"),
+        "battery": lambda: BasicComponent("battery"),
+        "switch": lambda: BasicComponent("switch"),
+        "ground": lambda: BasicComponent("ground"),
+    }
+
+    new_items = []
+    for entry in data.get("components", []):
+        component_type = entry.get("type")
+        if component_type not in constructors:
+            continue
+        item = constructors[component_type]()
+        item.setPos(float(entry.get("x", 0)), float(entry.get("y", 0)))
+        item.setRotation(float(entry.get("rotation", 0)))
+        if hasattr(item, "set_value"):
+            item.set_value(entry.get("value", ""))
+        new_items.append(item)
+
+    scene.clear()
+    for item in new_items:
+        scene.addItem(item)
+    scene.clearSelection()
