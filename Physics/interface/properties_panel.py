@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QFormLayout
-from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFrame
+from PySide6.QtCore import Signal, Qt
 
 
 class PropertiesPanel(QWidget):
@@ -8,45 +8,72 @@ class PropertiesPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("propertiesPanel")
-        self.current_item = None
-        self.setMinimumWidth(210)
+        self.groups = []
+        self.root = QVBoxLayout(self)
+        self.root.setContentsMargins(8, 8, 8, 8)
+        self.root.setSpacing(8)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
-        title = QLabel("ÖZELLİKLER")
-        title.setObjectName("propertiesTitle")
-        layout.addWidget(title)
+    def clear_rows(self):
+        while self.root.count():
+            item = self.root.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        self.groups.clear()
 
-        form = QFormLayout()
-        self.name_label = QLabel("—")
-        self.value_edit = QLineEdit()
-        self.value_edit.setPlaceholderText("—")
-        self.unit_label = QLabel("—")
-        form.addRow("Bileşen", self.name_label)
-        form.addRow("Değer", self.value_edit)
-        form.addRow("Birim", self.unit_label)
-        layout.addLayout(form)
-        layout.addStretch()
+    def set_items(self, items):
+        self.clear_rows()
+        valid = [item for item in items if getattr(item, "component_id", None) != "wire"]
+        grouped = {}
+        for item in valid:
+            grouped.setdefault(item.component_id, []).append(item)
 
-        self.value_edit.editingFinished.connect(self.apply_value)
-        self.set_item(None)
+        for component_id, group_items in grouped.items():
+            name = getattr(group_items[0], "name", component_id)
+            heading = QLabel(name)
+            heading.setObjectName("propertyGroupTitle")
+            self.root.addWidget(heading)
+
+            self._add_value_row(group_items)
+            unit = getattr(group_items[0], "unit", "")
+            if unit:
+                self._add_static_row("Birim", unit)
+
+            if len(grouped) > 1:
+                line = QFrame()
+                line.setFrameShape(QFrame.Shape.HLine)
+                line.setFrameShadow(QFrame.Shadow.Plain)
+                self.root.addWidget(line)
+
+        self.root.addStretch(1)
+
+    def _add_value_row(self, items):
+        row = QHBoxLayout()
+        label = QLabel("Değer:")
+        edit = QLineEdit()
+        edit.setFrame(False)
+        edit.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        edit.setObjectName("inlinePropertyValue")
+        values = {str(getattr(item, "value", "")) for item in items}
+        edit.setText(next(iter(values)) if len(values) == 1 else "—")
+        edit.setEnabled(all(hasattr(item, "set_value") for item in items))
+        edit.editingFinished.connect(lambda selected=tuple(items), field=edit: self._apply(selected, field))
+        row.addWidget(label)
+        row.addWidget(edit, 1)
+        self.root.addLayout(row)
+
+    def _add_static_row(self, label_text, value_text):
+        row = QHBoxLayout()
+        row.addWidget(QLabel(f"{label_text}:"))
+        value = QLabel(value_text)
+        row.addWidget(value, 1)
+        self.root.addLayout(row)
+
+    def _apply(self, items, field):
+        value = field.text().strip()
+        for item in items:
+            if str(getattr(item, "value", "")) != value:
+                self.value_change_requested.emit(item, value)
 
     def set_item(self, item):
-        self.current_item = item
-        if item is None:
-            self.name_label.setText("—")
-            self.value_edit.setText("")
-            self.value_edit.setEnabled(False)
-            self.unit_label.setText("—")
-            return
-
-        self.name_label.setText(getattr(item, "name", "—"))
-        self.value_edit.setText(str(getattr(item, "value", "")))
-        self.value_edit.setEnabled(hasattr(item, "set_value"))
-        self.unit_label.setText(getattr(item, "unit", "—"))
-
-    def apply_value(self):
-        if self.current_item is not None and hasattr(self.current_item, "set_value"):
-            self.value_change_requested.emit(
-                self.current_item, self.value_edit.text().strip()
-            )
+        self.set_items([item] if item is not None else [])
