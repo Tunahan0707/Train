@@ -3,6 +3,8 @@ from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter, QPen, QColor, QPainterPath
 from PySide6.QtCore import QRectF, Qt
 
+from theme import color
+
 from settings import (
     COLOR_COMPONENT,
     COLOR_COMPONENT_SELECTED,
@@ -48,13 +50,9 @@ class Resistor(QGraphicsItem):
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        color = (
-            COLOR_COMPONENT_SELECTED
-            if self.isSelected()
-            else COLOR_COMPONENT
-        )
+        color_value = color("selected") if self.isSelected() else color("component")
 
-        pen = QPen(QColor(color), RESISTOR_LINE_WIDTH)
+        pen = QPen(QColor(color_value), RESISTOR_LINE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
 
