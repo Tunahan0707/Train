@@ -3,7 +3,6 @@ from PySide6.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QPushButton,
-    QRubberBand,
 )
 from PySide6.QtGui import (
     QPainter,
@@ -13,11 +12,12 @@ from PySide6.QtGui import (
     QPainterPath,
     QShortcut,
 )
-from PySide6.QtCore import Qt, QRect, QPoint
+from PySide6.QtCore import Qt, QRectF
 
 from settings import (
     COLOR_WORKSPACE_BACKGROUND,
     COLOR_GRID,
+    COLOR_COMPONENT_SELECTED,
     GRID_SIZE,
     ZOOM_FACTOR,
     MIN_ZOOM,
@@ -80,11 +80,8 @@ class Workspace(QGraphicsView):
         self.selection_start = None
         self.drag_start_positions = {}
 
-        # Kutu seçim alanı
-        self.rubber_band = QRubberBand(
-            QRubberBand.Shape.Rectangle,
-            self.viewport(),
-        )
+        # Kutu seçim alanı (koordinatlar sahne koordinatlarıdır)
+        self.selection_path = QPainterPath()
 
         # Çöp kutusu
         self.delete_button = QPushButton("🗑", self)
@@ -239,6 +236,28 @@ class Workspace(QGraphicsView):
             )
             y += GRID_SIZE
 
+    # Kutu seçim çerçevesi
+    def drawForeground(self, painter, rect):
+        super().drawForeground(painter, rect)
+
+        if not self.selecting or self.selection_path.isEmpty():
+            return
+
+        painter.save()
+
+        pen = QPen(
+            QColor(COLOR_COMPONENT_SELECTED),
+            1.5,
+            Qt.PenStyle.DotLine,
+        )
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPath(self.selection_path)
+
+        painter.restore()
+
     # Yakınlaştırma
     def wheelEvent(self, event):
         current_zoom = self.transform().m11()
@@ -311,13 +330,10 @@ class Workspace(QGraphicsView):
         ):
             self.selecting = True
             self.selection_start = event.position().toPoint()
-
-            self.rubber_band.setGeometry(
-                QRect(self.selection_start, self.selection_start)
-            )
-            self.rubber_band.show()
+            self.selection_path = QPainterPath()
 
             self.circuit_scene.clearSelection()
+            self.viewport().update()
 
             event.accept()
             return
@@ -353,12 +369,18 @@ class Workspace(QGraphicsView):
             return
 
         if self.selecting:
-            self.rubber_band.setGeometry(
-                QRect(
-                    self.selection_start,
-                    current_pos,
-                ).normalized()
-            )
+            start_scene = self.mapToScene(self.selection_start)
+            current_scene = self.mapToScene(current_pos)
+
+            selection_rect = QRectF(
+                start_scene,
+                current_scene,
+            ).normalized()
+
+            self.selection_path = QPainterPath()
+            self.selection_path.addRect(selection_rect)
+
+            self.viewport().update()
             return
 
         super().mouseMoveEvent(event)
@@ -379,22 +401,29 @@ class Workspace(QGraphicsView):
             event.button() == Qt.MouseButton.MiddleButton
             and self.selecting
         ):
-            selection_rect = self.rubber_band.geometry()
+            # Son fare konumunu da hesaba kat.
+            release_pos = event.position().toPoint()
+            start_scene = self.mapToScene(self.selection_start)
+            release_scene = self.mapToScene(release_pos)
 
-            self.rubber_band.hide()
-            self.selecting = False
-
-            polygon = self.mapToScene(selection_rect)
+            selection_rect = QRectF(
+                start_scene,
+                release_scene,
+            ).normalized()
 
             selection_path = QPainterPath()
-            selection_path.addPolygon(polygon)
+            selection_path.addRect(selection_rect)
+
+            self.selecting = False
+            self.selection_path = QPainterPath()
+            self.selection_start = None
 
             self.circuit_scene.setSelectionArea(
                 selection_path,
                 Qt.ItemSelectionMode.IntersectsItemShape,
             )
 
-            self.selection_start = None
+            self.viewport().update()
             event.accept()
             return
 
