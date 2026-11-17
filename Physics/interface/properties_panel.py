@@ -48,9 +48,6 @@ class PropertiesPanel(QWidget):
                 states = {bool(getattr(item, "closed", False)) for item in group_items}
                 state_text = ("Kapalı" if True in states else "Açık") if len(states) == 1 else "Karışık"
                 self._add_static_row("Durum", state_text)
-                hint = QLabel("Durumu değiştirmek için anahtara tıkla")
-                hint.setObjectName("propertyHint")
-                self.root.addWidget(hint)
 
             unit = getattr(group_items[0], "unit", "")
             if unit:
