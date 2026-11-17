@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QGraphicsItem
+from PySide6.QtWidgets import QGraphicsItem, QApplication
 from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QPainterPath
 from PySide6.QtCore import QRectF, Qt
 
@@ -39,6 +39,8 @@ class BasicComponent(QGraphicsItem):
             raise ValueError(f"Bilinmeyen bileşen: {component_id}")
         self.component_id = component_id
         self.name, self.value, self.unit = self.DEFINITIONS[component_id]
+        self.closed = False if component_id == "switch" else None
+        self._press_scene_pos = None
         self.setFlags(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable
             | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
@@ -73,6 +75,20 @@ class BasicComponent(QGraphicsItem):
     def set_value(self, value):
         self.value = str(value)
         self.update()
+
+    def mousePressEvent(self, event):
+        self._press_scene_pos = event.scenePos()
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        start = self._press_scene_pos
+        super().mouseReleaseEvent(event)
+        if self.component_id == "switch" and start is not None:
+            moved = (event.scenePos() - start).manhattanLength()
+            if moved < QApplication.startDragDistance():
+                self.closed = not self.closed
+                self.update()
+        self._press_scene_pos = None
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -139,7 +155,7 @@ class BasicComponent(QGraphicsItem):
             path.moveTo(0, -h - 2); path.lineTo(4, -h - 7)
         elif self.component_id == "switch":
             path.moveTo(-18, 0); path.lineTo(-8, 0)
-            path.moveTo(-8, 0); path.lineTo(10, -12)
+            path.moveTo(-8, 0); path.lineTo(10, 0 if self.closed else -12)
             path.addEllipse(QRectF(-11, -3, 6, 6))
             path.addEllipse(QRectF(8, -3, 6, 6))
             path.moveTo(14, 0); path.lineTo(w, 0)
