@@ -46,8 +46,8 @@ This document distinguishes existing prototype behavior from verified engineerin
 - No simulation timeline, pause/resume/step/speed controls, or result history exists.
 
 ### Reliability and validation
-- The current automated tests cover engineering-value parsing and Gaussian elimination only.
-- There are no tests for netlist construction, circuit persistence, component behavior, source polarity, Ohm's law, KCL/KVL, nonlinear convergence, or transient accuracy.
+- Automated tests cover engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, and a dangling-wire case.
+- There are still no tests for full netlist topology, circuit persistence, component behavior, source polarity, Ohm's law, KCL/KVL, nonlinear convergence, or transient accuracy.
 - GUI interaction has not been verified automatically.
 - No crash recovery/autosave or project backup/version history exists.
 
