@@ -177,19 +177,28 @@ class ComponentLibrary(QWidget):
         from PySide6.QtGui import QColor, QPalette
 
         surface = QColor(colors["panel_alt"])
-        for widget in (self.drawer, self.scroll, self.scroll.viewport(), self.items_host):
+        surfaces = (self.drawer, self.scroll, self.scroll.viewport(), self.items_host)
+        for widget in surfaces:
             palette = widget.palette()
             palette.setColor(QPalette.ColorRole.Window, surface)
             palette.setColor(QPalette.ColorRole.Base, surface)
             widget.setPalette(palette)
+            widget.setBackgroundRole(QPalette.ColorRole.Window)
             widget.setAutoFillBackground(True)
+            widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            # QScrollArea'nın viewport'u ayrı bir QWidget olduğundan rengi
+            # yalnızca QScrollArea'ya verilen stil sayfasından devralmayabilir.
+            widget.setStyleSheet(
+                "background-color: " + colors["panel_alt"] + ";"
+                "color: " + colors["text"] + ";"
+                "border: none;"
+            )
 
         self.setStyleSheet(
             "QWidget#componentLibrary { background-color: " + colors["panel"] + "; }"
             "QWidget#componentDrawer, QScrollArea#componentScrollArea, "
             "QWidget#componentScrollViewport, QWidget#componentItemsHost { "
             "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
-            "QScrollArea#componentScrollArea::viewport { background-color: " + colors["panel_alt"] + "; border: none; }"
             "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
         )
