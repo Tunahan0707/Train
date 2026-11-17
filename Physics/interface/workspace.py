@@ -305,7 +305,10 @@ class Workspace(QGraphicsView):
         self.setFocus()
 
     def delete_all_items(self):
-        items = list(self.circuit_scene.items())
+        items = [
+            item for item in self.circuit_scene.items()
+            if item.parentItem() is None
+        ]
         if not items:
             return
         self.history.execute(DeleteItemsCommand(self.circuit_scene, items))
