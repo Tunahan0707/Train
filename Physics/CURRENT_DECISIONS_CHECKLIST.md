@@ -197,7 +197,8 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 ## Recent interface fixes
 - Theme-switch sun/moon symbols now rotate with the moving knob and crossfade during the transition.
 - The crescent icon uses a filled crescent shape rather than a static arc.
-- Component drawer, scroll area, tab buttons, property labels, inputs, menus, and dock text use the interpolated active theme colors.
+- Component drawer, scroll area, viewport, tab buttons, property labels, inputs, menus, and dock text use the interpolated active theme colors.
+- Light/dark theme application explicitly synchronizes the component drawer scroll viewport palette and stylesheet, preventing a surface-color mismatch in the expanded drawer.
 - Property-panel cleanup recursively removes nested row layouts and their widgets, preventing stale values/labels after edits or deselection.
 - Editing a shared property sends one batch update for the selected same-type components and refreshes the panel once.
 - Mixed values show an empty field with a placeholder instead of retaining one component's old value.
