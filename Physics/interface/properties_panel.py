@@ -71,6 +71,8 @@ class PropertiesPanel(QWidget):
 
     def _apply(self, items, field):
         value = field.text().strip()
+        if value == "—":
+            return
         for item in items:
             if str(getattr(item, "value", "")) != value:
                 self.value_change_requested.emit(item, value)
