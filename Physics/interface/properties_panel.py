@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QFormLayout
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 
 class PropertiesPanel(QWidget):
+    value_change_requested = Signal(object, str)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_item = None
@@ -54,4 +55,4 @@ class PropertiesPanel(QWidget):
 
     def apply_value(self):
         if self.current_item is not None and hasattr(self.current_item, "set_value"):
-            self.current_item.set_value(self.value_edit.text().strip())
+            self.value_change_requested.emit(self.current_item, self.value_edit.text().strip())
