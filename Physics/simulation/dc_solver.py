@@ -217,5 +217,6 @@ def format_dc_report(scene):
         "Sınır: Bu, yalnızca dirençler ve ideal DC kaynakları için doğrusal DC çözümüdür.",
         "Diyot, LED, transistör, kondansatör, bobin, anahtar ve AC kaynak modelleri henüz çözülmez.",
         "GND yoksa hesap için bir düğüm geçici referans olarak seçilir.",
+        "Kaynak akımının pozitif yönü, kaynağın sol (+) ucundan sağ (-) ucuna doğrudur.",
     ])
     return "\n".join(lines)
