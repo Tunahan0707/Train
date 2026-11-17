@@ -13,6 +13,8 @@ COMPONENTS = [
     ("YARI İLETKENLER", [
         ("diode", "▷   Diyot"),
         ("led", "◈   LED"),
+        ("bjt", "◁   BJT Transistör"),
+        ("mosfet", "⊢   MOSFET"),
     ]),
     ("GÜÇ KAYNAKLARI", [
         ("voltage_source", "＋   DC Kaynak"),
