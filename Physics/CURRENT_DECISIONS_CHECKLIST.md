@@ -15,13 +15,13 @@
 ## 2. Initial Component Library
 
 ### Passive components
-- [ ] Resistor
-- [ ] Capacitor
-- [ ] Inductor
+- [x] Resistor
+- [x] Capacitor
+- [x] Inductor
 
 ### Semiconductors
-- [ ] Diode
-- [ ] LED
+- [x] Diode
+- [x] LED
 - [ ] BJT transistor
 - [ ] MOSFET
 
@@ -30,15 +30,15 @@
 - [ ] Potentiometer
 
 ### Power sources
-- [ ] DC voltage source
+- [x] DC voltage source
 - [ ] AC voltage source
-- [ ] Battery
+- [x] Battery
 
 ### Control and connectivity
-- [ ] Switch
+- [x] Switch
 - [ ] Wire
 - [ ] Connection/junction point
-- [ ] Ground reference (GND)
+- [x] Ground reference (GND)
 
 ## 3. Measurement Instruments
 
@@ -53,11 +53,11 @@
 - [x] Select and place components.
 - [ ] Draw wires and create connections.
 - [ ] Delete and edit connections.
-- [ ] Move and rotate components.
+- [x] Move and rotate components.
 - [ ] Copy and paste components or selections.
 - [x] Zoom in/out and pan around the workspace.
 - [x] Support selection, multi-selection, and deletion.
-- [ ] Save, open, and duplicate circuits.
+- [x] Save, open, and duplicate circuits.
 
 ## 5. Reusable Custom Components
 
@@ -88,7 +88,7 @@
 
 ## 8. Component Properties and Models
 
-- [ ] Provide a properties panel for components.
+- [x] Provide a properties panel for components.
 - [ ] Expose relevant physical parameters, not only idealized values.
 - [ ] Support general parameter-based component configuration.
 - [ ] Support importing or using real component models and manufacturer data where practical.
@@ -135,7 +135,7 @@ These are examples of intended modeling detail, not a finalized parameter schema
 - [ ] Dark and light themes.
 - [ ] Customizable workspace.
 - [ ] Drag-and-drop component library.
-- [ ] Component search and categories.
+- [x] Component search and categories.
 - [x] Keyboard shortcuts.
 - [x] Customizable panels.
 - [ ] Animated electrical-flow indicators.
@@ -162,6 +162,12 @@ These are examples of intended modeling detail, not a finalized parameter schema
 These topics are deferred for now and are not part of the current agreed scope.
 
 ---
+
+## Implementation Notes
+
+The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their electrical models or simulation behavior are implemented yet. Wire connectivity, numerical simulation, measurement tools, and physical component models remain unimplemented.
+
+Grid snapping, rotation, grouped duplication, JSON-based project save/load, and a component properties panel are implemented in the current editor prototype.
 
 ## Scope Notes
 
