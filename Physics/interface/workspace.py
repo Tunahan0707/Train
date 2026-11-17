@@ -260,19 +260,27 @@ class Workspace(QGraphicsView):
         offset = GRID_SIZE * 2
         for original in originals:
             component_id = getattr(original, "component_id", None)
-            if component_id == "resistor":
+            if component_id == "wire":
+                duplicate = WireItem(
+                    QPointF(original.start_point.x() + offset, original.start_point.y() + offset),
+                    QPointF(original.end_point.x() + offset, original.end_point.y() + offset),
+                )
+                positions[duplicate] = QPointF(0, 0)
+            elif component_id == "resistor":
                 duplicate = Resistor()
             elif component_id:
                 duplicate = BasicComponent(component_id)
             else:
                 continue
+
             if hasattr(duplicate, "set_value"):
                 duplicate.set_value(getattr(original, "value", ""))
-            duplicate.setRotation(original.rotation())
-            position = original.pos()
-            positions[duplicate] = type(position)(
-                position.x() + offset, position.y() + offset
-            )
+            if component_id != "wire":
+                duplicate.setRotation(original.rotation())
+                position = original.pos()
+                positions[duplicate] = type(position)(
+                    position.x() + offset, position.y() + offset
+                )
             duplicates.append(duplicate)
 
         if not duplicates:
@@ -286,7 +294,10 @@ class Workspace(QGraphicsView):
         self.viewport().update()
 
     def rotate_selected_items(self):
-        items = self.circuit_scene.selectedItems()
+        items = [
+            item for item in self.circuit_scene.selectedItems()
+            if getattr(item, "component_id", None) != "wire"
+        ]
         if not items:
             return
         rotations = {item: item.rotation() for item in items}
