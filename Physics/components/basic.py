@@ -47,6 +47,14 @@ class BasicComponent(QGraphicsItem):
         return QRectF(-COMPONENT_WIDTH / 2, -32,
                       COMPONENT_WIDTH, 82)
 
+    def terminal_names(self):
+        names = {
+            "ground": ["GND"],
+            "bjt": ["Base", "Collector", "Emitter"],
+            "mosfet": ["Gate", "Drain", "Source"],
+        }
+        return names.get(self.component_id, ["Uç 1", "Uç 2"])
+
     def terminal_positions(self):
         if self.component_id == "ground":
             return [(0, -COMPONENT_HEIGHT / 2)]
