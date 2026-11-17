@@ -13,7 +13,7 @@ python main.py
 
 ## Şu an kullanılabilenler
 
-- Direnç, kondansatör, bobin, diyot, LED, DC kaynak, pil, anahtar ve GND sembollerini yerleştirme.
+- Direnç, kondansatör, bobin, sigorta, potansiyometre, diyot, LED, DC/AC kaynak, pil, anahtar ve GND sembollerini yerleştirme.
 - İletken çizme: Tel aracını seç, başlangıç noktasına ve bitiş noktasına tıkla. Tel uçları yakındaki bileşen uçlarına veya ızgaraya oturur.
 - Sol tıkla seçme ve taşıma; orta tuşla dikdörtgen çoklu seçim.
 - Shift + orta tuşla çalışma alanını kaydırma.
