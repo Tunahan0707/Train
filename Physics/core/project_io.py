@@ -58,6 +58,8 @@ def load_circuit(scene, file_path):
         "fuse": lambda: BasicComponent("fuse"),
         "potentiometer": lambda: BasicComponent("potentiometer"),
         "ac_source": lambda: BasicComponent("ac_source"),
+        "bjt": lambda: BasicComponent("bjt"),
+        "mosfet": lambda: BasicComponent("mosfet"),
     }
 
     new_items = []
