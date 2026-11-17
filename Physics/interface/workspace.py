@@ -183,6 +183,8 @@ class Workspace(QGraphicsView):
             (SHORTCUT_REDO, self.redo),
             (SHORTCUT_ROTATE, self.rotate_selected_items),
             (SHORTCUT_DUPLICATE, self.duplicate_selected_items),
+            ("Ctrl+C", self.copy_selected_items),
+            ("Ctrl+V", self.paste_copied_items),
             (SHORTCUT_RESET_ZOOM, self.reset_zoom),
         ]
 
@@ -237,47 +239,93 @@ class Workspace(QGraphicsView):
         self.resetTransform()
         self.centerOn(0, 0)
 
+    def _capture_items(self, items):
+        snapshots = []
+        for item in items:
+            component_id = getattr(item, "component_id", None)
+            if component_id == "wire":
+                snapshots.append({
+                    "component_id": "wire",
+                    "start": QPointF(item.start_point),
+                    "end": QPointF(item.end_point),
+                })
+                continue
+            if component_id is None:
+                continue
+            snapshots.append({
+                "component_id": component_id,
+                "position": QPointF(item.pos()),
+                "rotation": item.rotation(),
+                "value": str(getattr(item, "value", "")),
+                "closed": bool(getattr(item, "closed", False)),
+            })
+        return snapshots
+
+    def _create_item_copies(self, snapshots, offset):
+        copies = []
+        positions = {}
+        for snapshot in snapshots:
+            component_id = snapshot["component_id"]
+            if component_id == "wire":
+                item = WireItem(
+                    QPointF(snapshot["start"].x() + offset, snapshot["start"].y() + offset),
+                    QPointF(snapshot["end"].x() + offset, snapshot["end"].y() + offset),
+                )
+                position = QPointF(0, 0)
+            elif component_id == "resistor":
+                item = Resistor()
+                position = QPointF(snapshot["position"].x() + offset, snapshot["position"].y() + offset)
+            else:
+                try:
+                    item = BasicComponent(component_id)
+                except ValueError:
+                    continue
+                position = QPointF(snapshot["position"].x() + offset, snapshot["position"].y() + offset)
+
+            if hasattr(item, "set_value"):
+                item.set_value(snapshot.get("value", ""))
+            if component_id == "switch":
+                item.closed = snapshot.get("closed", False)
+            if component_id != "wire":
+                item.setRotation(snapshot.get("rotation", 0.0))
+            copies.append(item)
+            positions[item] = position
+        return copies, positions
+
+    def copy_selected_items(self):
+        selected = list(self.circuit_scene.selectedItems())
+        if not selected:
+            return
+        snapshots = self._capture_items(selected)
+        if snapshots:
+            self.copied_items = snapshots
+
+    def paste_copied_items(self):
+        snapshots = getattr(self, "copied_items", None)
+        if not snapshots:
+            return
+        offset = GRID_SIZE * 2
+        copies, positions = self._create_item_copies(snapshots, offset)
+        if not copies:
+            return
+        self.circuit_scene.clearSelection()
+        self.history.execute(AddItemsCommand(self.circuit_scene, copies, positions))
+        for item in copies:
+            item.setSelected(True)
+        self.history_changed.emit()
+        self.viewport().update()
+        self.setFocus()
+
     def duplicate_selected_items(self):
         originals = list(self.circuit_scene.selectedItems())
         if not originals:
             return
-
-        duplicates = []
-        positions = {}
-        offset = GRID_SIZE * 2
-        for original in originals:
-            component_id = getattr(original, "component_id", None)
-            if component_id == "wire":
-                duplicate = WireItem(
-                    QPointF(original.start_point.x() + offset, original.start_point.y() + offset),
-                    QPointF(original.end_point.x() + offset, original.end_point.y() + offset),
-                )
-                positions[duplicate] = QPointF(0, 0)
-            elif component_id == "resistor":
-                duplicate = Resistor()
-            elif component_id:
-                duplicate = BasicComponent(component_id)
-            else:
-                continue
-
-            if hasattr(duplicate, "set_value"):
-                duplicate.set_value(getattr(original, "value", ""))
-            if component_id == "switch":
-                duplicate.closed = bool(getattr(original, "closed", False))
-            if component_id != "wire":
-                duplicate.setRotation(original.rotation())
-                position = original.pos()
-                positions[duplicate] = type(position)(
-                    position.x() + offset, position.y() + offset
-                )
-            duplicates.append(duplicate)
-
+        snapshots = self._capture_items(originals)
+        duplicates, positions = self._create_item_copies(snapshots, GRID_SIZE * 2)
         if not duplicates:
             return
         self.circuit_scene.clearSelection()
-        self.history.execute(
-            AddItemsCommand(self.circuit_scene, duplicates, positions)
-        )
+        self.history.execute(AddItemsCommand(self.circuit_scene, duplicates, positions))
         for item in duplicates:
             item.setSelected(True)
         self.history_changed.emit()
