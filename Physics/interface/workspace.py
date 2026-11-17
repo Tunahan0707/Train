@@ -149,6 +149,9 @@ class Workspace(QGraphicsView):
         if component_id not in supported:
             return
 
+        if component_id != self.placement_component:
+            self.wire_start = None
+            self.wire_preview_end = None
         self.placement_component = component_id
         self.setCursor(Qt.CursorShape.CrossCursor)
         self.setFocus()
