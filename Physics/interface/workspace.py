@@ -14,18 +14,12 @@ from PySide6.QtGui import (
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
 
 from settings import (
-    COLOR_WORKSPACE_BACKGROUND,
-    COLOR_GRID,
-    COLOR_COMPONENT_SELECTED,
     GRID_SIZE,
     ZOOM_FACTOR,
     MIN_ZOOM,
     MAX_ZOOM,
     DELETE_BUTTON_SIZE,
     DELETE_BUTTON_MARGIN,
-    COLOR_DELETE_BUTTON_BACKGROUND,
-    COLOR_DELETE_BUTTON_HOVER,
-    COLOR_DELETE_BUTTON_TEXT,
     SHORTCUT_DELETE,
     SHORTCUT_UNDO,
     SHORTCUT_REDO,
@@ -43,7 +37,6 @@ from settings import (
 from components.resistor import Resistor
 from components.basic import BasicComponent
 from components.wire import WireItem
-from theme import color
 from theme import color
 from core.history import History
 from core.commands import (
@@ -71,7 +64,7 @@ class Workspace(QGraphicsView):
         self.viewport().setAcceptDrops(True)
 
         # Görünüm
-        self.setBackgroundBrush(QColor(COLOR_WORKSPACE_BACKGROUND))
+        self.setBackgroundBrush(QColor(color("workspace")))
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setTransformationAnchor(
             QGraphicsView.ViewportAnchor.AnchorUnderMouse
@@ -390,7 +383,7 @@ class Workspace(QGraphicsView):
 
         if self.wire_start is not None and self.wire_preview_end is not None:
             preview_pen = QPen(
-                QColor(COLOR_COMPONENT_SELECTED),
+                QColor(color("selected")),
                 2,
                 Qt.PenStyle.DashLine,
             )
