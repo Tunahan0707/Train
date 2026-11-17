@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve, QRectF
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QColor, QPainter, QPen, QPainterPath
 from PySide6.QtWidgets import QWidget
 
 
@@ -87,9 +87,13 @@ class ThemeSwitch(QWidget):
         moon_alpha = round(255 * t)
         if moon_alpha:
             moon_color = QColor(76, 100, 133, moon_alpha)
-            painter.setPen(QPen(moon_color, 1.6))
-            painter.drawArc(QRectF(-5, -6, 11, 12), 48 * 16, 264 * 16)
-            painter.drawArc(QRectF(-1, -5, 8, 10), 70 * 16, 220 * 16)
+            moon = QPainterPath()
+            moon.setFillRule(Qt.FillRule.OddEvenFill)
+            moon.addEllipse(QRectF(-5, -6, 12, 12))
+            moon.addEllipse(QRectF(-1, -8, 11, 12))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(moon_color)
+            painter.drawPath(moon)
 
         painter.restore()
         painter.end()
