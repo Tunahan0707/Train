@@ -214,6 +214,8 @@ class Workspace(QGraphicsView):
 
             if hasattr(duplicate, "set_value"):
                 duplicate.set_value(getattr(original, "value", ""))
+            if component_id == "switch":
+                duplicate.closed = bool(getattr(original, "closed", False))
             if component_id != "wire":
                 duplicate.setRotation(original.rotation())
                 position = original.pos()
@@ -598,6 +600,8 @@ class Workspace(QGraphicsView):
 
         if event.button() == Qt.MouseButton.LeftButton:
             super().mouseReleaseEvent(event)
+            if any(getattr(item, "component_id", None) == "switch" for item in self.circuit_scene.selectedItems()):
+                self.history_changed.emit()
 
             viewport_point = event.position().toPoint()
             widget_point = self.mapFromGlobal(self.viewport().mapToGlobal(viewport_point))
