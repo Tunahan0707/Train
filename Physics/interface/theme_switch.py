@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve, QRectF
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
@@ -13,10 +13,10 @@ class ThemeSwitch(QWidget):
         self._position = 1.0 if dark else 0.0
         self.setFixedSize(62, 34)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Temayı değiştir")
+        self.setToolTip("Açık / koyu tema")
 
         self.animation = QPropertyAnimation(self, b"position", self)
-        self.animation.setDuration(520)
+        self.animation.setDuration(620)
         self.animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
 
     def get_position(self):
@@ -56,28 +56,40 @@ class ThemeSwitch(QWidget):
             round(255 + (230 - 255) * t),
             round(255 + (244 - 255) * t),
         )
+
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(track)
-        painter.drawRoundedRect(1, 3, 60, 28, 14, 14)
+        painter.drawRoundedRect(QRectF(1, 3, 60, 28), 14, 14)
 
-        x = 4 + 28 * t
-        painter.setPen(Qt.PenStyle.NoPen)
+        knob_x = 4 + 28 * t
         painter.setBrush(knob)
-        painter.drawEllipse(round(x), 6, 22, 22)
+        painter.drawEllipse(QRectF(knob_x, 6, 22, 22))
 
-        # Aktif temanın simgesi hareketli düğmenin üzerinde kalır.
-        icon_color = QColor("#52677f")
-        painter.setPen(QPen(icon_color, 1.35))
+        # Simge de düğmeyle birlikte döner; güneş ve ay birbirine yumuşakça geçer.
+        painter.save()
+        painter.translate(knob_x + 11, 17)
+        painter.rotate(180 * t)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        cx = round(x) + 11
-        if t < 0.5:
-            painter.drawEllipse(cx - 4, 13, 8, 8)
-            painter.drawLine(cx, 9, cx, 11)
-            painter.drawLine(cx, 23, cx, 25)
-            painter.drawLine(cx - 8, 17, cx - 6, 17)
-            painter.drawLine(cx + 6, 17, cx + 8, 17)
-            painter.drawLine(cx - 6, 11, cx - 5, 12)
-            painter.drawLine(cx + 5, 22, cx + 6, 23)
-        else:
-            painter.drawArc(cx - 5, 11, 11, 12, 35 * 16, 285 * 16)
+
+        sun_alpha = round(255 * (1.0 - t))
+        if sun_alpha:
+            sun_color = QColor(164, 119, 35, sun_alpha)
+            painter.setPen(QPen(sun_color, 1.35))
+            painter.drawEllipse(QRectF(-3.5, -3.5, 7, 7))
+            for x1, y1, x2, y2 in [
+                (0, -7, 0, -5), (0, 5, 0, 7),
+                (-7, 0, -5, 0), (5, 0, 7, 0),
+                (-5, -5, -4, -4), (4, 4, 5, 5),
+                (-5, 5, -4, 4), (4, -4, 5, -5),
+            ]:
+                painter.drawLine(x1, y1, x2, y2)
+
+        moon_alpha = round(255 * t)
+        if moon_alpha:
+            moon_color = QColor(76, 100, 133, moon_alpha)
+            painter.setPen(QPen(moon_color, 1.6))
+            painter.drawArc(QRectF(-5, -6, 11, 12), 48 * 16, 264 * 16)
+            painter.drawArc(QRectF(-1, -5, 8, 10), 70 * 16, 220 * 16)
+
+        painter.restore()
         painter.end()
