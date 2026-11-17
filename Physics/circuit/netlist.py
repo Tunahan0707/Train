@@ -72,6 +72,14 @@ def build_netlist(scene, tolerance=2.0):
     for first, second in wire_pairs:
         union(first, second)
 
+    ground_pin_indices = [
+        index for index, node in enumerate(nodes)
+        if node["kind"] == "component"
+        and getattr(node["item"], "component_id", None) == "ground"
+    ]
+    for index in ground_pin_indices[1:]:
+        union(ground_pin_indices[0], index)
+
     def distance_to_segment(point, start, end):
         dx = end.x() - start.x()
         dy = end.y() - start.y()
