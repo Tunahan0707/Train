@@ -72,6 +72,16 @@ def build_netlist(scene, tolerance=2.0):
     for first, second in wire_pairs:
         union(first, second)
 
+    # A closed ideal switch electrically joins its two terminals.
+    switch_pins = {}
+    for index, node in enumerate(nodes):
+        item = node.get("item")
+        if item is not None and getattr(item, "component_id", None) == "switch":
+            switch_pins.setdefault(item, []).append(index)
+    for item, pins in switch_pins.items():
+        if getattr(item, "closed", False) and len(pins) >= 2:
+            union(pins[0], pins[1])
+
     ground_pin_indices = [
         index for index, node in enumerate(nodes)
         if node["kind"] == "component"
