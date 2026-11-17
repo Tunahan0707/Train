@@ -10,6 +10,7 @@ def build_netlist(scene, tolerance=2.0):
     """
     nodes = []
     wire_pairs = []
+    wire_segments = []
     component_counts = {}
 
     for item in scene.items():
@@ -31,6 +32,9 @@ def build_netlist(scene, tolerance=2.0):
                 "point": QPointF(item.end_point),
             })
             wire_pairs.append((start_index, end_index))
+            corner = QPointF(item.end_point.x(), item.start_point.y())
+            wire_segments.append((start_index, item.start_point, corner))
+            wire_segments.append((start_index, corner, item.end_point))
             continue
 
         component_counts[component_id] = component_counts.get(component_id, 0) + 1
@@ -63,6 +67,27 @@ def build_netlist(scene, tolerance=2.0):
 
     for first, second in wire_pairs:
         union(first, second)
+
+    def distance_to_segment(point, start, end):
+        dx = end.x() - start.x()
+        dy = end.y() - start.y()
+        length_squared = dx * dx + dy * dy
+        if length_squared == 0:
+            return hypot(point.x() - start.x(), point.y() - start.y())
+        projection = (
+            (point.x() - start.x()) * dx
+            + (point.y() - start.y()) * dy
+        ) / length_squared
+        projection = max(0.0, min(1.0, projection))
+        closest_x = start.x() + projection * dx
+        closest_y = start.y() + projection * dy
+        return hypot(point.x() - closest_x, point.y() - closest_y)
+
+    # Component pins and wire endpoints also connect to the middle of a wire.
+    for node_index, node in enumerate(nodes):
+        for wire_index, start, end in wire_segments:
+            if distance_to_segment(node["point"], start, end) <= tolerance:
+                union(node_index, wire_index)
 
     tolerance_squared = tolerance * tolerance
     for first in range(len(nodes)):
@@ -122,7 +147,7 @@ def format_netlist_report(scene):
 
     lines.extend([
         "",
-        "Not: Tel kesişimleri, uç noktası veya açık bir birleşim olmadan bağlanmış sayılmaz.",
+        "Not: Tel uçları ve T-bağlantıları tel gövdesine bağlanır; iki telin yalnızca çapraz kesişmesi bağlantı sayılmaz.",
         "Bu analiz bağlantı topolojisini çıkarır; henüz akım/gerilim simülasyonu yapmaz.",
     ])
     return "\n".join(lines)
