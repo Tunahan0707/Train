@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QPainterPath
 from PySide6.QtCore import QRectF, Qt
 
+from theme import color
+
 from settings import (
     COLOR_COMPONENT,
     COLOR_COMPONENT_SELECTED,
@@ -74,8 +76,8 @@ class BasicComponent(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        color = QColor(COLOR_COMPONENT_SELECTED if self.isSelected() else COLOR_COMPONENT)
-        pen = QPen(color, COMPONENT_LINE_WIDTH)
+        color_value = QColor(color("selected") if self.isSelected() else color("component"))
+        pen = QPen(color_value, COMPONENT_LINE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
