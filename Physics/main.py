@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
         self.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
         self.workspace.history_changed.connect(self.update_properties)
         self.properties_panel.value_change_requested.connect(self.workspace.set_component_value)
+        self.properties_panel.name_change_requested.connect(self.workspace.set_component_name)
         self.component_library.add_requested.connect(self.add_component_from_palette)
         self.component_library.menu_action.connect(self.handle_palette_menu)
         self.workspace.component_dropped.connect(self.component_library.collapse)
