@@ -43,6 +43,7 @@ from settings import (
 from components.resistor import Resistor
 from components.basic import BasicComponent
 from components.wire import WireItem
+from theme import color
 from core.history import History
 from core.commands import (
     AddItemCommand,
@@ -65,6 +66,8 @@ class Workspace(QGraphicsView):
         self.circuit_scene = QGraphicsScene(self)
         self.circuit_scene.setSceneRect(-10000, -10000, 20000, 20000)
         self.setScene(self.circuit_scene)
+        self.setAcceptDrops(True)
+        self.viewport().setAcceptDrops(True)
 
         # Görünüm
         self.setBackgroundBrush(QColor(COLOR_WORKSPACE_BACKGROUND))
@@ -92,24 +95,23 @@ class Workspace(QGraphicsView):
         self.wire_preview_end = None
 
         # Çöp kutusu
-        self.delete_button = QPushButton("🗑", self)
-        self.delete_button.setToolTip("Seçili nesneleri sil")
+        self.delete_button = QPushButton("×", self)
+        self.delete_button.setToolTip("Silmek için nesneleri buraya sürükle")
         self.delete_button.setFixedSize(
             DELETE_BUTTON_SIZE,
             DELETE_BUTTON_SIZE,
         )
         self.delete_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.delete_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {COLOR_DELETE_BUTTON_BACKGROUND};
-                color: {COLOR_DELETE_BUTTON_TEXT};
+        self.delete_button.setStyleSheet("""
+            QPushButton {
+                background: #873d4b;
+                color: #ffffff;
                 border: none;
-                border-radius: 12px;
-                font-size: 22px;
-            }}
-            QPushButton:hover {{
-                background-color: {COLOR_DELETE_BUTTON_HOVER};
-            }}
+                border-radius: 18px;
+                font-size: 25px;
+                font-weight: 400;
+            }
+            QPushButton:hover { background: #a84c58; }
         """)
         self.delete_button.clicked.connect(self.delete_selected_items)
 
@@ -188,6 +190,7 @@ class Workspace(QGraphicsView):
 
         command = AddItemCommand(self.circuit_scene, item, position)
         self.history.execute(command)
+        self.history_changed.emit()
 
         self.circuit_scene.clearSelection()
         item.setSelected(True)
@@ -313,6 +316,7 @@ class Workspace(QGraphicsView):
 
         command = DeleteItemsCommand(self.circuit_scene, items)
         self.history.execute(command)
+        self.history_changed.emit()
         self.setFocus()
 
     def delete_item_at(self, position):
@@ -438,6 +442,73 @@ class Workspace(QGraphicsView):
         }
         return buttons.get(button_name) == event.button()
 
+    def apply_theme(self, colors):
+        self.setBackgroundBrush(QColor(colors["workspace"]))
+        self.delete_button.setStyleSheet(f"""
+            QPushButton {{
+                background: {colors["danger"]};
+                color: #ffffff;
+                border: none;
+                border-radius: 18px;
+                font-size: 25px;
+                font-weight: 400;
+            }}
+            QPushButton:hover {{ background: {colors["accent"]}; }}
+        """)
+        self.circuit_scene.update()
+        self.viewport().update()
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasFormat("application/x-physics-component"):
+            event.setDropAction(Qt.DropAction.CopyAction)
+            event.accept()
+            return
+        event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasFormat("application/x-physics-component"):
+            event.accept()
+            return
+        event.ignore()
+
+    def dropEvent(self, event):
+        if not event.mimeData().hasFormat("application/x-physics-component"):
+            event.ignore()
+            return
+
+        component_id = bytes(event.mimeData().data(
+            "application/x-physics-component"
+        )).decode("utf-8")
+        position = self.mapToScene(event.position().toPoint())
+        if GRID_SNAP_ENABLED:
+            position = self.snap_position(position)
+
+        if component_id == "wire":
+            half = GRID_SIZE * 2
+            item = WireItem(
+                QPointF(position.x() - half, position.y()),
+                QPointF(position.x() + half, position.y()),
+            )
+            item_position = QPointF(0, 0)
+        elif component_id == "resistor":
+            item = Resistor()
+            item_position = position
+        else:
+            try:
+                item = BasicComponent(component_id)
+            except ValueError:
+                event.ignore()
+                return
+            item_position = position
+
+        self.history.execute(AddItemCommand(self.circuit_scene, item, item_position))
+        self.circuit_scene.clearSelection()
+        item.setSelected(True)
+        self.history_changed.emit()
+        self.setFocus()
+        event.setDropAction(Qt.DropAction.CopyAction)
+        event.accept()
+
     # Fare basılması
     def mousePressEvent(self, event):
         # Shift + sağ tık: bileşen sil
@@ -475,18 +546,6 @@ class Workspace(QGraphicsView):
             self.circuit_scene.clearSelection()
             self.viewport().update()
 
-            event.accept()
-            return
-
-        # Kütüphaneden seçilen bileşeni yerleştir
-        if (
-            event.button() == Qt.MouseButton.LeftButton
-            and self.placement_component is not None
-        ):
-            scene_position = self.mapToScene(
-                event.position().toPoint()
-            )
-            self.place_component_at(scene_position)
             event.accept()
             return
 
@@ -587,6 +646,14 @@ class Workspace(QGraphicsView):
 
         if event.button() == Qt.MouseButton.LeftButton:
             super().mouseReleaseEvent(event)
+
+            viewport_point = event.position().toPoint()
+            widget_point = self.mapFromGlobal(self.viewport().mapToGlobal(viewport_point))
+            if self.delete_button.geometry().contains(widget_point):
+                self.delete_selected_items()
+                self.drag_start_positions.clear()
+                event.accept()
+                return
 
             old_positions = self.drag_start_positions
             if GRID_SNAP_ENABLED:
