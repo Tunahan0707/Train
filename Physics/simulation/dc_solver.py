@@ -113,9 +113,7 @@ def solve_dc_operating_point(scene):
     ground_nodes = set(netlist["ground_nodes"])
     automatic_ground = not ground_nodes
     if automatic_ground:
-        ground_nodes.add(net_ids[0]
-
-)
+        ground_nodes.add(net_ids[0])
     unknown_nodes = [node for node in net_ids if node not in ground_nodes]
     node_index = {node: index for index, node in enumerate(unknown_nodes)}
 
