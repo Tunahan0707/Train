@@ -9,12 +9,18 @@ class WireItem(QGraphicsPathItem):
     def __init__(self, start, end, parent=None):
         super().__init__(parent)
         self.component_id = "wire"
-        self.start_point = QPointF(start)
-        self.end_point = QPointF(end)
+        self.start_point = self.to_point(start)
+        self.end_point = self.to_point(end)
         self.setFlag(QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setPen(QPen(QColor(COLOR_COMPONENT), 8))
         self.setZValue(-1)
         self.update_path()
+
+    @staticmethod
+    def to_point(value):
+        if hasattr(value, "x") and hasattr(value, "y"):
+            return QPointF(value.x(), value.y())
+        return QPointF(float(value[0]), float(value[1]))
 
     def terminal_positions(self):
         return [
@@ -30,7 +36,7 @@ class WireItem(QGraphicsPathItem):
         self.setPath(path)
 
     def set_end_point(self, point):
-        self.end_point = QPointF(point)
+        self.end_point = self.to_point(point)
         self.update_path()
 
     def paint(self, painter, option, widget=None):
