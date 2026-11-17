@@ -8,42 +8,53 @@ class PropertiesPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("propertiesPanel")
-        self.groups = []
         self.root = QVBoxLayout(self)
         self.root.setContentsMargins(8, 8, 8, 8)
         self.root.setSpacing(8)
 
-    def clear_rows(self):
-        while self.root.count():
-            item = self.root.takeAt(0)
+    def _clear_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
             widget = item.widget()
-            if widget:
+            child_layout = item.layout()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
-        self.groups.clear()
+            elif child_layout is not None:
+                self._clear_layout(child_layout)
+                child_layout.deleteLater()
+
+    def clear_rows(self):
+        self._clear_layout(self.root)
 
     def set_items(self, items):
         self.clear_rows()
-        valid = [item for item in items if getattr(item, "component_id", None) != "wire"]
         grouped = {}
-        for item in valid:
-            grouped.setdefault(item.component_id, []).append(item)
+        for item in items:
+            component_id = getattr(item, "component_id", None)
+            if component_id and component_id != "wire":
+                grouped.setdefault(component_id, []).append(item)
 
-        for component_id, group_items in grouped.items():
+        for index, (component_id, group_items) in enumerate(grouped.items()):
             name = getattr(group_items[0], "name", component_id)
             heading = QLabel(name)
             heading.setObjectName("propertyGroupTitle")
             self.root.addWidget(heading)
 
-            self._add_value_row(group_items)
+            if all(hasattr(item, "set_value") for item in group_items):
+                self._add_value_row(group_items)
+
             unit = getattr(group_items[0], "unit", "")
             if unit:
                 self._add_static_row("Birim", unit)
 
-            if len(grouped) > 1:
-                line = QFrame()
-                line.setFrameShape(QFrame.Shape.HLine)
-                line.setFrameShadow(QFrame.Shadow.Plain)
-                self.root.addWidget(line)
+            if index < len(grouped) - 1:
+                separator = QFrame()
+                separator.setFrameShape(QFrame.Shape.HLine)
+                separator.setFrameShadow(QFrame.Shadow.Plain)
+                separator.setObjectName("propertySeparator")
+                self.root.addWidget(separator)
 
         self.root.addStretch(1)
 
@@ -52,12 +63,20 @@ class PropertiesPanel(QWidget):
         label = QLabel("Değer:")
         edit = QLineEdit()
         edit.setFrame(False)
+        edit.setClearButtonEnabled(False)
         edit.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit.setObjectName("inlinePropertyValue")
+
         values = {str(getattr(item, "value", "")) for item in items}
-        edit.setText(next(iter(values)) if len(values) == 1 else "—")
-        edit.setEnabled(all(hasattr(item, "set_value") for item in items))
-        edit.editingFinished.connect(lambda selected=tuple(items), field=edit: self._apply(selected, field))
+        if len(values) == 1:
+            edit.setText(next(iter(values)))
+        else:
+            edit.clear()
+            edit.setPlaceholderText("Farklı değerler")
+
+        edit.editingFinished.connect(
+            lambda selected=tuple(items), field=edit: self._apply(selected, field)
+        )
         row.addWidget(label)
         row.addWidget(edit, 1)
         self.root.addLayout(row)
@@ -66,16 +85,15 @@ class PropertiesPanel(QWidget):
         row = QHBoxLayout()
         row.addWidget(QLabel(f"{label_text}:"))
         value = QLabel(value_text)
+        value.setObjectName("propertyStaticValue")
         row.addWidget(value, 1)
         self.root.addLayout(row)
 
     def _apply(self, items, field):
         value = field.text().strip()
-        if value == "—":
+        if not value:
             return
-        for item in items:
-            if str(getattr(item, "value", "")) != value:
-                self.value_change_requested.emit(item, value)
+        self.value_change_requested.emit(list(items), value)
 
     def set_item(self, item):
         self.set_items([item] if item is not None else [])
