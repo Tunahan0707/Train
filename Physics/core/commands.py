@@ -64,3 +64,20 @@ class MoveItemsCommand:
     def redo(self):
         for item, position in self.new_positions.items():
             item.setPos(position)
+
+
+class RotateItemsCommand:
+    def __init__(self, rotations, delta=90):
+        self.old_rotations = dict(rotations)
+        self.new_rotations = {
+            item: (rotation + delta) % 360
+            for item, rotation in rotations.items()
+        }
+
+    def undo(self):
+        for item, rotation in self.old_rotations.items():
+            item.setRotation(rotation)
+
+    def redo(self):
+        for item, rotation in self.new_rotations.items():
+            item.setRotation(rotation)
