@@ -25,9 +25,10 @@ python main.py
 - F11 ile tam ekran.
 - Özellikler panelinden seçili bileşenin gösterilen değerini değiştirme.
 - Ctrl + N / Ctrl + O / Ctrl + S ile yeni devre, açma ve kaydetme.
+- Devre → Bağlantıları denetle ile uç noktaları ve T-bağlantılarını içeren temel netlist analizi.
 
 ## Önemli sınır
 
-Şu anki bileşenler şematik çizim nesneleridir. Tel çizimi ve uçlara oturtma görseldir; henüz elektriksel düğüm/netlist oluşturulmaz. Bu nedenle bağlantı çizilmiş görünse bile devre simülasyonunda elektriksel bağlantı olarak değerlendirilmez. Gerçek bileşen modelleri, devre çözümleyicisi, akım/gerilim hesapları ve hasar fiziği henüz uygulanmadı.
+Şu anki bileşenler şematik çizim nesneleridir. Tel uçları ve T-bağlantıları üzerinden temel elektriksel düğüm/netlist analizi yapılabilir. İki telin yalnızca çapraz kesişmesi bağlantı sayılmaz. Bu netlist henüz devre simülasyonunda kullanılmıyor. Gerçek bileşen modelleri, devre çözümleyicisi, akım/gerilim hesapları ve hasar fiziği henüz uygulanmadı.
 
 Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
