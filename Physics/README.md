@@ -13,16 +13,17 @@ python main.py
 
 ## Kullanım
 
-- Bileşenleri sol panelden çalışma alanına sürükleyip bırak.
-- İstenmeyen nesneleri çöp kutusuna sürükle.
+- Alt çubuktaki kategori sekmesine basarak bileşen çekmecesini yukarı aç.
+- Bileşenleri çalışma alanına sürükle veya tek tıklamayla ekranın ortasına ekle.
+- Shift basılıyken bileşen düğmesine tıklayarak aynı hizada alt alta yeni bileşenler ekle; eklenenler birlikte seçili kalır.
+- Normal ekleme ve sürükle-bırak sonrasında kategori çekmecesi kapanır.
 - Orta tuşla kutu seçimi, Shift + orta tuşla alanı kaydırma.
 - R ile döndürme, Ctrl + D ile çoğaltma.
 - Ctrl + Z / Ctrl + Y ile geri alma ve yineleme.
 - Fare tekerleğiyle yakınlaştırma; Ctrl + 0 ile sıfırlama.
-- Üstteki anahtarla koyu/açık temayı değiştir.
-- Özellikler panelinden seçili bileşenin değerini düzenle.
-- Ctrl + N / Ctrl + O / Ctrl + S ile yeni devre, açma ve kaydetme.
-- Devre menüsünden bağlantı analizi, Simülasyon menüsünden DC çözümü.
+- Üstteki güneş/ay göstergeli anahtarla koyu/açık temayı değiştir.
+- Sağdaki özellikler paneli seçili bileşenlerin ortak özelliklerini düzenler; farklı türler ayrı bölümlerde gösterilir.
+- Alt çubuktaki Menü üzerinden devre oluşturma, açma, kaydetme, bağlantı analizi ve DC çözümüne ulaş.
 
 ## Önemli sınır
 
