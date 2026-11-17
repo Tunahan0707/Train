@@ -24,17 +24,22 @@ class ComponentButton(QPushButton):
         super().__init__(label, parent)
         self.component_id = component_id
         self.drag_start = QPoint()
+        self._dragged = False
         self.setObjectName("componentButton")
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.clicked.connect(self._clicked)
 
     def _clicked(self):
+        if self._dragged:
+            self._dragged = False
+            return
         shift = bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier)
         self.add_requested.emit(self.component_id, shift)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
+            self._dragged = False
             self.drag_start = event.position().toPoint()
         super().mousePressEvent(event)
 
@@ -43,6 +48,7 @@ class ComponentButton(QPushButton):
             return
         if (event.position().toPoint() - self.drag_start).manhattanLength() < QApplication.startDragDistance():
             return
+        self._dragged = True
         mime = QMimeData()
         mime.setData("application/x-physics-component", self.component_id.encode("utf-8"))
         drag = QDrag(self)
