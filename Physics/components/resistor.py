@@ -26,6 +26,10 @@ class Resistor(QGraphicsItem):
             | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
 
+    def terminal_positions(self):
+        half = RESISTOR_WIDTH / 2
+        return [(-half, 0), (half, 0)]
+
     def set_value(self, value):
         self.value = str(value)
         self.update()
