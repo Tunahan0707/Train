@@ -3,6 +3,7 @@ from pathlib import Path
 
 from components.resistor import Resistor
 from components.basic import BasicComponent
+from components.wire import WireItem
 
 
 def save_circuit(scene, file_path):
@@ -11,13 +12,20 @@ def save_circuit(scene, file_path):
         component_id = getattr(item, "component_id", None)
         if component_id is None:
             continue
-        components.append({
-            "type": component_id,
-            "x": item.pos().x(),
-            "y": item.pos().y(),
-            "rotation": item.rotation(),
-            "value": getattr(item, "value", ""),
-        })
+        if component_id == "wire":
+            components.append({
+                "type": "wire",
+                "start": [item.start_point.x(), item.start_point.y()],
+                "end": [item.end_point.x(), item.end_point.y()],
+            })
+        else:
+            components.append({
+                "type": component_id,
+                "x": item.pos().x(),
+                "y": item.pos().y(),
+                "rotation": item.rotation(),
+                "value": getattr(item, "value", ""),
+            })
 
     data = {
         "format": "physics-circuit",
@@ -52,6 +60,13 @@ def load_circuit(scene, file_path):
     new_items = []
     for entry in data.get("components", []):
         component_type = entry.get("type")
+        if component_type == "wire":
+            start = entry.get("start", [0, 0])
+            end = entry.get("end", [0, 0])
+            item = WireItem((float(start[0]), float(start[1])),
+                            (float(end[0]), float(end[1])))
+            new_items.append(item)
+            continue
         if component_type not in constructors:
             continue
         item = constructors[component_type]()
