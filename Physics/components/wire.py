@@ -16,6 +16,12 @@ class WireItem(QGraphicsPathItem):
         self.setZValue(-1)
         self.update_path()
 
+    def terminal_positions(self):
+        return [
+            (self.start_point.x(), self.start_point.y()),
+            (self.end_point.x(), self.end_point.y()),
+        ]
+
     def update_path(self):
         path = QPainterPath(self.start_point)
         # Schematic wires use a clean right-angle route.
