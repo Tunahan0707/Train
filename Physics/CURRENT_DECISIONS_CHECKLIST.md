@@ -193,3 +193,12 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 - Fullscreen control removed.
 - Navy dark/light themes with an animated sliding switch.
 - Interface explanatory copy removed; component labels retained.
+
+## Recent interface fixes
+- Theme-switch sun/moon symbols now rotate with the moving knob and crossfade during the transition.
+- The crescent icon uses a filled crescent shape rather than a static arc.
+- Component drawer, scroll area, tab buttons, property labels, inputs, menus, and dock text use the interpolated active theme colors.
+- Property-panel cleanup recursively removes nested row layouts and their widgets, preventing stale values/labels after edits or deselection.
+- Editing a shared property sends one batch update for the selected same-type components and refreshes the panel once.
+- Mixed values show an empty field with a placeholder instead of retaining one component's old value.
+- Component value annotations were removed from the canvas; values remain editable in the properties panel. This removes the stray-looking default resistor annotation (1000 Ω) from below its symbol.
