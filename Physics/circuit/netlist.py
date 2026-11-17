@@ -43,11 +43,13 @@ def build_netlist(scene, tolerance=2.0):
         if terminal_method is None:
             continue
 
-        for pin_index, (local_x, local_y) in enumerate(terminal_method(), start=1):
+        pin_names = getattr(item, "terminal_names", lambda: [])()
+        for pin_index, (local_x, local_y) in enumerate(terminal_method()):
             point = item.mapToScene(QPointF(local_x, local_y))
+            pin_name = pin_names[pin_index] if pin_index < len(pin_names) else f"Uç {pin_index + 1}"
             nodes.append({
                 "kind": "component",
-                "label": f"{getattr(item, 'name', component_id)} {instance} · Uç {pin_index}",
+                "label": f"{getattr(item, 'name', component_id)} {instance} · {pin_name}",
                 "point": point,
             })
 
