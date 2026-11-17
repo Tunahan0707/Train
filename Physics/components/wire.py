@@ -12,7 +12,7 @@ class WireItem(QGraphicsPathItem):
         self.start_point = self.to_point(start)
         self.end_point = self.to_point(end)
         self.setFlag(QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable, True)
-        self.setPen(QPen(QColor(COLOR_COMPONENT), 8))
+        self.setPen(QPen(QColor(color("component")), 8))
         self.setZValue(-1)
         self.update_path()
 
@@ -40,8 +40,8 @@ class WireItem(QGraphicsPathItem):
         self.update_path()
 
     def paint(self, painter, option, widget=None):
-        color = COLOR_COMPONENT_SELECTED if self.isSelected() else COLOR_COMPONENT
-        pen = QPen(QColor(color), 2.5)
+        color_value = color("selected") if self.isSelected() else color("component")
+        pen = QPen(QColor(color_value), 2.5)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
