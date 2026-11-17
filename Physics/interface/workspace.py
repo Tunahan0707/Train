@@ -145,7 +145,7 @@ class Workspace(QGraphicsView):
 
     # Bileşen yerleştirme
     def start_placement(self, component_id):
-        supported = {"resistor", "capacitor", "inductor", "diode", "led", "voltage_source", "battery", "switch", "ground", "wire", "fuse", "potentiometer", "ac_source"}
+        supported = {"resistor", "capacitor", "inductor", "diode", "led", "voltage_source", "battery", "switch", "ground", "wire", "fuse", "potentiometer", "ac_source", "bjt", "mosfet"}
         if component_id not in supported:
             return
 
