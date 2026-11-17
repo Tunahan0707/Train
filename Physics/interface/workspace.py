@@ -336,21 +336,21 @@ class Workspace(QGraphicsView):
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
 
-        if not self.selecting or self.selection_path.isEmpty():
+        if not self.selecting and self.wire_start is None:
             return
 
         painter.save()
 
-        pen = QPen(
-            QColor(COLOR_COMPONENT_SELECTED),
-            1.5,
-            Qt.PenStyle.DotLine,
-        )
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-
-        painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawPath(self.selection_path)
+        if self.selecting and not self.selection_path.isEmpty():
+            pen = QPen(
+                QColor(COLOR_COMPONENT_SELECTED),
+                1.5,
+                Qt.PenStyle.DotLine,
+            )
+            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPath(self.selection_path)
 
         if self.wire_start is not None and self.wire_preview_end is not None:
             preview_pen = QPen(
