@@ -152,9 +152,11 @@ class ComponentLibrary(QWidget):
             button = ComponentButton(component_id, label, self.items_host)
             button.add_requested.connect(self._add_component)
             self.items_layout.addWidget(button)
+        self.items_layout.activate()
         self.items_host.adjustSize()
         content_size = self.items_layout.sizeHint()
         self.items_host.setFixedSize(max(1, content_size.width()), max(54, content_size.height()))
+        self.items_host.resize(self.items_host.sizeHint())
         self.items_host.updateGeometry()
         self.scroll.horizontalScrollBar().setValue(0)
 
