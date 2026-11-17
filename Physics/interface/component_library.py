@@ -7,6 +7,8 @@ COMPONENTS = [
         ("resistor", "Ω   Direnç"),
         ("capacitor", "║   Kondansatör"),
         ("inductor", "∿   Bobin"),
+        ("fuse", "▭   Sigorta"),
+        ("potentiometer", "↗   Potansiyometre"),
     ]),
     ("YARI İLETKENLER", [
         ("diode", "▷   Diyot"),
@@ -15,6 +17,7 @@ COMPONENTS = [
     ("GÜÇ KAYNAKLARI", [
         ("voltage_source", "＋   DC Kaynak"),
         ("battery", "▰   Pil"),
+        ("ac_source", "∿   AC Kaynak"),
     ]),
     ("KONTROL VE BAĞLANTI", [
         ("switch", "／   Anahtar"),
