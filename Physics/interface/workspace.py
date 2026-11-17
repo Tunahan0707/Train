@@ -44,6 +44,7 @@ from components.resistor import Resistor
 from components.basic import BasicComponent
 from components.wire import WireItem
 from theme import color
+from theme import color
 from core.history import History
 from core.commands import (
     AddItemCommand,
@@ -355,7 +356,7 @@ class Workspace(QGraphicsView):
         left = int(rect.left()) - (int(rect.left()) % GRID_SIZE)
         top = int(rect.top()) - (int(rect.top()) % GRID_SIZE)
 
-        painter.setPen(QPen(QColor(COLOR_GRID), 0))
+        painter.setPen(QPen(QColor(color("grid")), 0))
 
         x = left
         while x < rect.right():
@@ -378,7 +379,7 @@ class Workspace(QGraphicsView):
 
         if self.selecting and not self.selection_path.isEmpty():
             pen = QPen(
-                QColor(COLOR_COMPONENT_SELECTED),
+                QColor(color("selected")),
                 1.5,
                 Qt.PenStyle.DotLine,
             )
