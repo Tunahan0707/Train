@@ -351,6 +351,33 @@ class Workspace(QGraphicsView):
 
     def apply_theme(self, colors):
         self.setBackgroundBrush(QColor(colors["workspace"]))
+        # Canvas scrollbars are independent Qt widgets: explicitly theme
+        # both the navy track and the grey handle in both themes.
+        self.setStyleSheet(f"""
+            QGraphicsView {{ background-color: {colors["workspace"]}; border: none; }}
+            QScrollBar:vertical, QScrollBar:horizontal {{
+                background: {colors["panel"]}; border: none;
+            }}
+            QScrollBar:vertical {{ width: 13px; margin: 0; }}
+            QScrollBar:horizontal {{ height: 13px; margin: 0; }}
+            QScrollBar::handle:vertical, QScrollBar::handle:horizontal {{
+                background: {colors["muted"]};
+                border: 2px solid {colors["panel"]};
+                border-radius: 5px;
+                min-height: 28px; min-width: 28px;
+            }}
+            QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{
+                background: {colors["accent"]};
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+                width: 0; height: 0; border: none; background: transparent;
+            }}
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+                background: {colors["panel"]};
+            }}
+        """)
         self.delete_button.setStyleSheet(f"""
             QPushButton {{
                 background: {colors["danger"]};
