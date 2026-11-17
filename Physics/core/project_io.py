@@ -55,6 +55,9 @@ def load_circuit(scene, file_path):
         "battery": lambda: BasicComponent("battery"),
         "switch": lambda: BasicComponent("switch"),
         "ground": lambda: BasicComponent("ground"),
+        "fuse": lambda: BasicComponent("fuse"),
+        "potentiometer": lambda: BasicComponent("potentiometer"),
+        "ac_source": lambda: BasicComponent("ac_source"),
     }
 
     new_items = []
