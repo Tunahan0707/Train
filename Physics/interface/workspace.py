@@ -299,15 +299,18 @@ class Workspace(QGraphicsView):
         snapshots = self._capture_items(selected)
         if snapshots:
             self.copied_items = snapshots
+            self.paste_count = 0
 
     def paste_copied_items(self):
         snapshots = getattr(self, "copied_items", None)
         if not snapshots:
             return
-        offset = GRID_SIZE * 2
+        paste_count = getattr(self, "paste_count", 0) + 1
+        offset = GRID_SIZE * 2 * paste_count
         copies, positions = self._create_item_copies(snapshots, offset)
         if not copies:
             return
+        self.paste_count = paste_count
         self.circuit_scene.clearSelection()
         self.history.execute(AddItemsCommand(self.circuit_scene, copies, positions))
         for item in copies:
