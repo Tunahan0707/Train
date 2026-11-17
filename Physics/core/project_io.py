@@ -25,6 +25,7 @@ def save_circuit(scene, file_path):
                 "y": item.pos().y(),
                 "rotation": item.rotation(),
                 "value": getattr(item, "value", ""),
+                "closed": getattr(item, "closed", None),
             })
 
     data = {
@@ -79,6 +80,8 @@ def load_circuit(scene, file_path):
         item.setRotation(float(entry.get("rotation", 0)))
         if hasattr(item, "set_value"):
             item.set_value(entry.get("value", ""))
+        if getattr(item, "component_id", None) == "switch":
+            item.closed = bool(entry.get("closed", False))
         new_items.append(item)
 
     scene.clear()
