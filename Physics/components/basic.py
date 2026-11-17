@@ -44,14 +44,15 @@ class BasicComponent(QGraphicsItem):
         )
 
     def boundingRect(self):
-        return QRectF(-COMPONENT_WIDTH / 2, -32,
-                      COMPONENT_WIDTH, 82)
+        return QRectF(-COMPONENT_WIDTH / 2, -36,
+                      COMPONENT_WIDTH, 86)
 
     def terminal_names(self):
         names = {
             "ground": ["GND"],
             "bjt": ["Base", "Collector", "Emitter"],
             "mosfet": ["Gate", "Drain", "Source"],
+            "potentiometer": ["Uç 1", "Uç 2", "Sürgü"],
         }
         return names.get(self.component_id, ["Uç 1", "Uç 2"])
 
@@ -62,6 +63,8 @@ class BasicComponent(QGraphicsItem):
             return [(-COMPONENT_WIDTH / 2, 0), (COMPONENT_WIDTH / 2, -24), (COMPONENT_WIDTH / 2, 24)]
         if self.component_id == "mosfet":
             return [(-COMPONENT_WIDTH / 2, 0), (COMPONENT_WIDTH / 2, -24), (COMPONENT_WIDTH / 2, 24)]
+        if self.component_id == "potentiometer":
+            return [(-COMPONENT_WIDTH / 2, 0), (COMPONENT_WIDTH / 2, 0), (0, -32)]
         half = COMPONENT_WIDTH / 2
         return [(-half, 0), (half, 0)]
 
@@ -99,8 +102,9 @@ class BasicComponent(QGraphicsItem):
             path.addEllipse(QRectF(-12, -12, 24, 24)) if self.component_id in ("voltage_source", "ac_source") else None
             if self.component_id in ("voltage_source", "ac_source"):
                 if self.component_id == "voltage_source":
-                    path.moveTo(-5, 0); path.lineTo(5, 0)
-                    path.moveTo(0, -5); path.lineTo(0, 5)
+                    path.moveTo(-7, 0); path.lineTo(-1, 0)
+                    path.moveTo(-4, -3); path.lineTo(-4, 3)
+                    path.moveTo(3, 0); path.lineTo(8, 0)
                 else:
                     path.moveTo(-7, 0)
                     path.cubicTo(-4, -8, 0, -8, 3, 0)
