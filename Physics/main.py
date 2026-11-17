@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
         colors = {key: self.blend_color(LIGHT[key], DARK[key], amount) for key in DARK}
         set_current(colors)
         self.workspace.apply_theme(colors)
+        self.component_library.apply_theme(colors)
         self.setStyleSheet(f"""
             QMainWindow, QWidget#componentLibrary, QWidget#propertiesPanel {{
                 background: {colors["panel"]};
@@ -148,18 +149,10 @@ class MainWindow(QMainWindow):
             QPushButton#componentButton:hover {{
                 background: {colors["hover"]};
             }}
-            QScrollArea, QScrollArea QWidget {{
-                border: none;
-                background: {colors["panel_alt"]};
-                color: {colors["text"]};
-            }}
-            QScrollBar:horizontal, QScrollBar:vertical {{
-                height: 8px;
+            QScrollBar:vertical {{
+                width: 8px;
                 background: {colors["panel"]};
-            }}
-            QScrollBar::handle:horizontal {{
-                background: {colors["muted"]};
-                min-width: 25px;
+                border: none;
             }}
             QScrollBar:vertical {{ width: 8px; }}
             QScrollBar::handle:vertical {{
