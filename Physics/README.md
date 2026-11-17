@@ -11,22 +11,18 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Şu an kullanılabilenler
+## Kullanım
 
-- Direnç, kondansatör, bobin, sigorta, potansiyometre, diyot, LED, BJT, MOSFET, DC/AC kaynak, pil, anahtar ve GND sembollerini yerleştirme.
-- İletken çizme: Tel aracını seç, başlangıç noktasına ve bitiş noktasına tıkla. Tel uçları yakındaki bileşen uçlarına veya ızgaraya oturur.
-- Sol tıkla seçme ve taşıma; orta tuşla dikdörtgen çoklu seçim.
-- Shift + orta tuşla çalışma alanını kaydırma.
-- Shift + sağ tıkla nesne silme; Delete ile seçili nesneleri silme.
-- R ile seçili bileşenleri 90° döndürme.
-- Ctrl + D ile seçili bileşenleri çoğaltma.
+- Bileşenleri sol panelden çalışma alanına sürükleyip bırak.
+- İstenmeyen nesneleri çöp kutusuna sürükle.
+- Orta tuşla kutu seçimi, Shift + orta tuşla alanı kaydırma.
+- R ile döndürme, Ctrl + D ile çoğaltma.
 - Ctrl + Z / Ctrl + Y ile geri alma ve yineleme.
-- Fare tekerleğiyle yakınlaştırma; Ctrl + 0 ile yakınlaştırmayı sıfırlama.
-- F11 ile tam ekran.
-- Özellikler panelinden seçili bileşenin gösterilen değerini değiştirme.
+- Fare tekerleğiyle yakınlaştırma; Ctrl + 0 ile sıfırlama.
+- Üstteki anahtarla koyu/açık temayı değiştir.
+- Özellikler panelinden seçili bileşenin değerini düzenle.
 - Ctrl + N / Ctrl + O / Ctrl + S ile yeni devre, açma ve kaydetme.
-- Devre → Bağlantıları denetle ile uç noktaları ve T-bağlantılarını içeren temel netlist analizi.
-- Simülasyon → DC çalışma noktasını hesapla ile dirençler ve ideal DC kaynakları için temel doğrusal çözüm.
+- Devre menüsünden bağlantı analizi, Simülasyon menüsünden DC çözümü.
 
 ## Önemli sınır
 
