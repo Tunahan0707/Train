@@ -11,6 +11,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## Testler
+
+Temel sayısal yardımcıları standart kütüphane ile test et:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
 ## Kullanım
 
 - Alt çubuktaki kategori sekmesine basarak bileşen çekmecesini yukarı aç.
