@@ -1,63 +1,79 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QScrollArea
+    QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit,
+    QScrollArea, QApplication
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QMimeData, QPoint
+from PySide6.QtGui import QDrag
 
 
 COMPONENTS = [
-    ("PASİF BİLEŞENLER", [
-        ("resistor", "Ω   Direnç"),
-        ("capacitor", "║   Kondansatör"),
-        ("inductor", "∿   Bobin"),
-        ("fuse", "▭   Sigorta"),
-        ("potentiometer", "↗   Potansiyometre"),
+    ("PASİF", [
+        ("resistor", "Direnç"),
+        ("capacitor", "Kondansatör"),
+        ("inductor", "Bobin"),
+        ("fuse", "Sigorta"),
+        ("potentiometer", "Potansiyometre"),
     ]),
-    ("YARI İLETKENLER", [
-        ("diode", "▷   Diyot"),
-        ("led", "◈   LED"),
-        ("bjt", "◁   BJT Transistör"),
-        ("mosfet", "⊢   MOSFET"),
+    ("YARI İLETKEN", [
+        ("diode", "Diyot"),
+        ("led", "LED"),
+        ("bjt", "BJT"),
+        ("mosfet", "MOSFET"),
     ]),
-    ("GÜÇ KAYNAKLARI", [
-        ("voltage_source", "＋   DC Kaynak"),
-        ("ac_source", "∿   AC Kaynak"),
-        ("battery", "▰   Pil"),
+    ("KAYNAKLAR", [
+        ("voltage_source", "DC Kaynak"),
+        ("ac_source", "AC Kaynak"),
+        ("battery", "Pil"),
     ]),
-    ("KONTROL VE BAĞLANTI", [
-        ("switch", "／   Anahtar"),
-        ("ground", "⏚   Toprak (GND)"),
-        ("wire", "─   İletken / Tel"),
+    ("BAĞLANTI", [
+        ("switch", "Anahtar"),
+        ("ground", "Toprak"),
+        ("wire", "İletken"),
     ]),
 ]
 
 
-class ComponentLibrary(QWidget):
-    component_requested = Signal(str)
-    placement_cancelled = Signal()
+class ComponentButton(QPushButton):
+    def __init__(self, component_id, label, parent=None):
+        super().__init__(label, parent)
+        self.component_id = component_id
+        self.drag_start = QPoint()
+        self.setObjectName("componentButton")
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_start = event.position().toPoint()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
+            return
+        if (event.position().toPoint() - self.drag_start).manhattanLength() < QApplication.startDragDistance():
+            return
+
+        mime = QMimeData()
+        mime.setData("application/x-physics-component", self.component_id.encode("utf-8"))
+        drag = QDrag(self)
+        drag.setMimeData(mime)
+        drag.exec(Qt.DropAction.CopyAction)
+
+
+class ComponentLibrary(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("componentLibrary")
-        self.setMinimumWidth(210)
-        self.setMaximumWidth(290)
-        self.buttons = {}
+        self.setMinimumWidth(205)
+        self.setMaximumWidth(280)
         self.section_groups = []
 
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(12, 14, 12, 10)
-        outer.setSpacing(9)
-
-        title = QLabel("BİLEŞEN KÜTÜPHANESİ")
-        title.setObjectName("panelTitle")
-        outer.addWidget(title)
-
-        description = QLabel("Bileşen seç, ardından çalışma alanına tıklayarak yerleştir.")
-        description.setObjectName("panelDescription")
-        description.setWordWrap(True)
-        outer.addWidget(description)
+        outer.setContentsMargins(10, 10, 10, 10)
+        outer.setSpacing(8)
 
         self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("Bileşen ara...")
+        self.search_edit.setPlaceholderText("Ara")
+        self.search_edit.setObjectName("componentSearch")
         self.search_edit.textChanged.connect(self.filter_components)
         outer.addWidget(self.search_edit)
 
@@ -66,51 +82,24 @@ class ComponentLibrary(QWidget):
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         content = QWidget()
         layout = QVBoxLayout(content)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(8)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
 
         for section_name, components in COMPONENTS:
             section = QLabel(section_name)
             section.setObjectName("sectionTitle")
             layout.addWidget(section)
-            section_buttons = []
-            self.section_groups.append((section, section_buttons))
+            buttons = []
+            self.section_groups.append((section, buttons))
 
             for component_id, label in components:
-                button = QPushButton(label)
-                button.setObjectName("componentButton")
-                button.setCheckable(True)
-                button.setCursor(Qt.CursorShape.PointingHandCursor)
-                button.toggled.connect(
-                    lambda checked, cid=component_id: self.on_component_toggled(cid, checked)
-                )
-                self.buttons[component_id] = button
-                section_buttons.append(button)
+                button = ComponentButton(component_id, label)
+                buttons.append(button)
                 layout.addWidget(button)
 
         layout.addStretch()
         scroll.setWidget(content)
         outer.addWidget(scroll, 1)
-
-        hint = QLabel("ESC: iptal  •  R: döndür  •  Ctrl+D: çoğalt")
-        hint.setObjectName("panelHint")
-        outer.addWidget(hint)
-
-        self.setStyleSheet("""
-            QWidget#componentLibrary { background-color: #201d2b; color: #e8e3f2; }
-            QLabel#panelTitle { color: #c4b5fd; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
-            QLabel#panelDescription { color: #aaa3ba; font-size: 12px; }
-            QLabel#sectionTitle { color: #8e879f; font-size: 10px; font-weight: 700; margin-top: 10px; }
-            QPushButton#componentButton {
-                color: #e8e3f2; background-color: #302b3d; border: 1px solid #494158;
-                border-radius: 8px; padding: 10px; text-align: left; font-size: 13px;
-            }
-            QPushButton#componentButton:hover { background-color: #3b3450; border-color: #8b75c7; }
-            QPushButton#componentButton:checked { background-color: #493b68; border: 1px solid #a78bfa; color: white; }
-            QLineEdit { color:#e8e3f2; background:#302b3d; border:1px solid #494158; border-radius:7px; padding:8px; }
-            QLabel#panelHint { color: #827b91; font-size: 10px; }
-            QScrollArea { border: none; background: transparent; }
-        """)
 
     def filter_components(self, query):
         query = query.casefold().strip()
@@ -121,16 +110,3 @@ class ComponentLibrary(QWidget):
                 button.setVisible(visible)
                 visible_count += int(visible)
             section.setVisible(visible_count > 0)
-
-    def on_component_toggled(self, component_id, checked):
-        if checked:
-            self.set_active_component(component_id)
-            self.component_requested.emit(component_id)
-        else:
-            self.placement_cancelled.emit()
-
-    def set_active_component(self, component_id):
-        for key, button in self.buttons.items():
-            button.blockSignals(True)
-            button.setChecked(key == component_id)
-            button.blockSignals(False)
