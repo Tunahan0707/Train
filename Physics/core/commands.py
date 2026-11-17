@@ -110,3 +110,18 @@ class SetValueCommand:
 
     def redo(self):
         self.item.set_value(self.new_value)
+
+
+class SetNameCommand:
+    def __init__(self, item, old_name, new_name):
+        self.item = item
+        self.old_name = str(old_name)
+        self.new_name = str(new_name)
+
+    def undo(self):
+        self.item.name = self.old_name
+        self.item.update()
+
+    def redo(self):
+        self.item.name = self.new_name
+        self.item.update()
