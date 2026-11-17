@@ -3,6 +3,7 @@ import unittest
 from PySide6.QtCore import QPointF
 
 from simulation.dc_solver import solve_dc_operating_point
+from circuit.netlist import build_netlist
 
 
 class FakeComponent:
@@ -19,6 +20,14 @@ class FakeComponent:
 
     def mapToScene(self, point):
         return QPointF(point)
+
+
+class FakeWire:
+    component_id = "wire"
+
+    def __init__(self, start, end):
+        self.start_point = QPointF(*start)
+        self.end_point = QPointF(*end)
 
 
 class FakeScene:
@@ -38,6 +47,12 @@ class SimulationValidationTests(unittest.TestCase):
     def test_empty_scene_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "bileşen bulunamadı"):
             solve_dc_operating_point(FakeScene([]))
+
+    def test_wire_stub_does_not_hide_a_dangling_component_terminal(self):
+        capacitor = FakeComponent("capacitor", "C1")
+        wire = FakeWire((-40, 0), (-20, 0))
+        result = build_netlist(FakeScene([capacitor, wire]))
+        self.assertEqual(len(result["unconnected_terminals"]), 2)
 
 
 if __name__ == "__main__":
