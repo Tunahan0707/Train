@@ -47,6 +47,7 @@ from core.commands import (
     MoveItemsCommand,
     RotateItemsCommand,
     SetValueCommand,
+    SetNameCommand,
 )
 
 
@@ -226,6 +227,26 @@ class Workspace(QGraphicsView):
             self.history.execute(SetValueCommand(item, old_value, str(new_value)))
             changed = True
 
+        if changed:
+            self.history_changed.emit()
+
+    def set_component_name(self, items, new_name):
+        if not isinstance(items, (list, tuple, set)):
+            items = [items]
+        name = str(new_name).strip()
+        if not name:
+            return
+        changed = False
+        for item in items:
+            if item is None or item.scene() != self.circuit_scene:
+                continue
+            if getattr(item, "component_id", None) in (None, "wire"):
+                continue
+            old_name = str(getattr(item, "name", item.component_id))
+            if old_name == name:
+                continue
+            self.history.execute(SetNameCommand(item, old_name, name))
+            changed = True
         if changed:
             self.history_changed.emit()
 
