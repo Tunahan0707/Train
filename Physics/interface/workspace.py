@@ -30,6 +30,8 @@ from settings import (
     SHORTCUT_UNDO,
     SHORTCUT_REDO,
     SHORTCUT_ROTATE,
+    SHORTCUT_DUPLICATE,
+    SHORTCUT_RESET_ZOOM,
     GRID_SNAP_ENABLED,
     MOUSE_SELECTION_BUTTON,
     MOUSE_PAN_BUTTON,
@@ -115,6 +117,8 @@ class Workspace(QGraphicsView):
             (SHORTCUT_UNDO, self.undo),
             (SHORTCUT_REDO, self.redo),
             (SHORTCUT_ROTATE, self.rotate_selected_items),
+            (SHORTCUT_DUPLICATE, self.duplicate_selected_items),
+            (SHORTCUT_RESET_ZOOM, self.reset_zoom),
         ]
 
         self.shortcuts = []
@@ -176,6 +180,33 @@ class Workspace(QGraphicsView):
             round(position.x() / GRID_SIZE) * GRID_SIZE,
             round(position.y() / GRID_SIZE) * GRID_SIZE,
         )
+
+    def reset_zoom(self):
+        self.resetTransform()
+        self.centerOn(0, 0)
+
+    def duplicate_selected_items(self):
+        originals = list(self.circuit_scene.selectedItems())
+        if not originals:
+            return
+        self.circuit_scene.clearSelection()
+        for original in originals:
+            component_id = getattr(original, "component_id", None)
+            if component_id == "resistor":
+                duplicate = Resistor()
+            elif component_id:
+                duplicate = BasicComponent(component_id)
+            else:
+                continue
+            if hasattr(duplicate, "set_value"):
+                duplicate.set_value(getattr(original, "value", ""))
+            duplicate.setRotation(original.rotation())
+            position = original.pos()
+            offset = GRID_SIZE * 2
+            target = type(position)(position.x() + offset, position.y() + offset)
+            self.history.execute(AddItemCommand(self.circuit_scene, duplicate, target))
+            duplicate.setSelected(True)
+        self.viewport().update()
 
     def rotate_selected_items(self):
         items = self.circuit_scene.selectedItems()
