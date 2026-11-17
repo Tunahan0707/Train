@@ -82,7 +82,7 @@ class BasicComponent(QGraphicsItem):
             path.lineTo(w, 0)
         elif self.component_id in ("voltage_source", "battery", "ac_source"):
             path.moveTo(-18, 0); path.lineTo(-12, 0)
-            path.addEllipse(QRectF(-12, -12, 24, 24)) if self.component_id == "voltage_source" else None
+            path.addEllipse(QRectF(-12, -12, 24, 24)) if self.component_id in ("voltage_source", "ac_source") else None
             if self.component_id in ("voltage_source", "ac_source"):
                 if self.component_id == "voltage_source":
                     path.moveTo(-5, 0); path.lineTo(5, 0)
