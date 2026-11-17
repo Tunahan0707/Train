@@ -61,7 +61,6 @@ class MainWindow(QMainWindow):
         toolbar.setObjectName("themeToolbar")
         toolbar.setFloatable(False)
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, toolbar)
-        toolbar.addSeparator()
         self.theme_switch = ThemeSwitch(dark=True)
         toolbar.addWidget(self.theme_switch)
         self.theme_switch.progress_changed.connect(self.apply_theme_progress)
