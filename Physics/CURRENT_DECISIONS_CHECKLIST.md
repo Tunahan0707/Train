@@ -137,7 +137,7 @@ These are examples of intended modeling detail, not a finalized parameter schema
 - [ ] Dark and light themes.
 - [ ] Customizable workspace.
 - [ ] Drag-and-drop component library.
-- [ ] Component search and categories.
+- [x] Component search and categories.
 - [x] Keyboard shortcuts.
 - [x] Customizable panels.
 - [ ] Animated electrical-flow indicators.
