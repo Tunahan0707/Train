@@ -4,6 +4,7 @@ from PySide6.QtCore import Signal, Qt
 
 class PropertiesPanel(QWidget):
     value_change_requested = Signal(object, str)
+    name_change_requested = Signal(object, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -37,10 +38,10 @@ class PropertiesPanel(QWidget):
                 grouped.setdefault(component_id, []).append(item)
 
         for index, (component_id, group_items) in enumerate(grouped.items()):
-            name = getattr(group_items[0], "name", component_id)
-            heading = QLabel(name)
+            heading = QLabel(getattr(group_items[0], "name", component_id))
             heading.setObjectName("propertyGroupTitle")
             self.root.addWidget(heading)
+            self._add_name_row(group_items)
 
             if all(hasattr(item, "set_value") for item in group_items):
                 self._add_value_row(group_items)
@@ -59,29 +60,38 @@ class PropertiesPanel(QWidget):
                 separator.setFrameShadow(QFrame.Shadow.Plain)
                 separator.setObjectName("propertySeparator")
                 self.root.addWidget(separator)
-
         self.root.addStretch(1)
+
+    def _add_name_row(self, items):
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Ad:"))
+        edit = QLineEdit()
+        edit.setFrame(False)
+        edit.setObjectName("inlinePropertyValue")
+        edit.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        names = {str(getattr(item, "name", getattr(item, "component_id", ""))) for item in items}
+        if len(names) == 1:
+            edit.setText(next(iter(names)))
+        else:
+            edit.setPlaceholderText("Farklı adlar")
+        edit.editingFinished.connect(lambda selected=tuple(items), field=edit: self._apply_name(selected, field))
+        row.addWidget(edit, 1)
+        self.root.addLayout(row)
 
     def _add_value_row(self, items):
         row = QHBoxLayout()
-        label = QLabel("Değer:")
+        row.addWidget(QLabel("Değer:"))
         edit = QLineEdit()
         edit.setFrame(False)
         edit.setClearButtonEnabled(False)
         edit.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit.setObjectName("inlinePropertyValue")
-
         values = {str(getattr(item, "value", "")) for item in items}
         if len(values) == 1:
             edit.setText(next(iter(values)))
         else:
-            edit.clear()
             edit.setPlaceholderText("Farklı değerler")
-
-        edit.editingFinished.connect(
-            lambda selected=tuple(items), field=edit: self._apply(selected, field)
-        )
-        row.addWidget(label)
+        edit.editingFinished.connect(lambda selected=tuple(items), field=edit: self._apply_value(selected, field))
         row.addWidget(edit, 1)
         self.root.addLayout(row)
 
@@ -93,11 +103,15 @@ class PropertiesPanel(QWidget):
         row.addWidget(value, 1)
         self.root.addLayout(row)
 
-    def _apply(self, items, field):
+    def _apply_name(self, items, field):
+        name = field.text().strip()
+        if name:
+            self.name_change_requested.emit(list(items), name)
+
+    def _apply_value(self, items, field):
         value = field.text().strip()
-        if not value:
-            return
-        self.value_change_requested.emit(list(items), value)
+        if value:
+            self.value_change_requested.emit(list(items), value)
 
     def set_item(self, item):
         self.set_items([item] if item is not None else [])
