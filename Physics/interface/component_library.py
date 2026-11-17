@@ -19,6 +19,7 @@ COMPONENTS = [
     ("KONTROL VE BAĞLANTI", [
         ("switch", "／   Anahtar"),
         ("ground", "⏚   Toprak (GND)"),
+        ("wire", "─   İletken / Tel"),
     ]),
 ]
 
