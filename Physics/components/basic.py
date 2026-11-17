@@ -40,9 +40,11 @@ class BasicComponent(QGraphicsItem):
 
     def boundingRect(self):
         return QRectF(-COMPONENT_WIDTH / 2, -32,
-                      COMPONENT_WIDTH, 60)
+                      COMPONENT_WIDTH, 82)
 
     def terminal_positions(self):
+        if self.component_id == "ground":
+            return [(0, -COMPONENT_HEIGHT / 2)]
         half = COMPONENT_WIDTH / 2
         return [(-half, 0), (half, 0)]
 
@@ -61,8 +63,9 @@ class BasicComponent(QGraphicsItem):
 
         w, h = COMPONENT_WIDTH / 2, COMPONENT_HEIGHT / 2
         path = QPainterPath()
-        path.moveTo(-w, 0)
-        path.lineTo(-18, 0)
+        if self.component_id != "ground":
+            path.moveTo(-w, 0)
+            path.lineTo(-18, 0)
 
         if self.component_id == "capacitor":
             path.moveTo(-8, -h); path.lineTo(-8, h)
