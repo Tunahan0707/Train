@@ -55,9 +55,11 @@
 - [ ] Delete and edit connections.
 - [x] Move and rotate components.
 - [ ] Copy and paste components or selections.
+- [x] Duplicate selected components or selections.
 - [x] Zoom in/out and pan around the workspace.
 - [x] Support selection, multi-selection, and deletion.
-- [x] Save, open, and duplicate circuits.
+- [x] Save and open circuits.
+- [ ] Duplicate complete circuits.
 
 ## 5. Reusable Custom Components
 
@@ -124,7 +126,7 @@ These are examples of intended modeling detail, not a finalized parameter schema
 ## 11. Project and File Management
 
 - [ ] Support multiple circuits within one project.
-- [ ] Save projects, open them, and use Save As.
+- [x] Save projects, open them, and use Save As.
 - [ ] Import and export circuits.
 - [ ] Allow the component library to be extended.
 - [ ] Provide autosave and recovery after a crash.
@@ -165,7 +167,7 @@ These topics are deferred for now and are not part of the current agreed scope.
 
 ## Implementation Notes
 
-The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their electrical models or simulation behavior are implemented yet. Wire connectivity, numerical simulation, measurement tools, and physical component models remain unimplemented.
+The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their electrical models or simulation behavior are implemented yet. Electrical wire connectivity/netlist generation, numerical simulation, measurement tools, and physical component models remain unimplemented.
 
 Grid snapping, rotation, grouped duplication, JSON-based project save/load, a component properties panel, and visual orthogonal wire drawing with endpoint snapping are implemented in the current editor prototype. The wires are not yet part of an electrical netlist: visual contact does not currently mean the simulator recognizes an electrical connection.
 
