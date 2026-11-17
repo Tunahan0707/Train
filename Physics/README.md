@@ -33,8 +33,14 @@ python -m unittest discover -s tests -v
 - Sağdaki özellikler paneli seçili bileşenlerin ortak özelliklerini düzenler; farklı türler ayrı bölümlerde gösterilir.
 - Alt çubuktaki Menü üzerinden devre oluşturma, açma, kaydetme, bağlantı analizi ve DC çözümüne ulaş.
 
-## Önemli sınır
+## Mevcut teknik kapsam
 
-Şu anki bileşenler şematik çizim nesneleridir. Tel uçları ve T-bağlantıları üzerinden temel elektriksel düğüm/netlist analizi yapılabilir. İki telin yalnızca çapraz kesişmesi bağlantı sayılmaz. Bu netlist henüz devre simülasyonunda kullanılmıyor. DC çözümleyici yalnızca direnç ve ideal DC kaynaklarını çözer. Diyot, LED, transistör, kondansatör, bobin, anahtar ve AC kaynak modelleri henüz çözülmez. Gerçek bileşen modelleri ve hasar fiziği henüz uygulanmadı.
+Editörde direnç, kondansatör, bobin, diyot, LED, BJT, MOSFET, sigorta, potansiyometre, DC/AC kaynak, pil, anahtar, GND ve kablo sembolleri bulunur. Ancak sembolün bulunması, fiziksel modelinin tamamlandığı anlamına gelmez.
+
+Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Kabloların uçlarını ve köşelerini etkileşimli düzenleme henüz yoktur.
+
+DC çalışma noktası çözümü şu anda direnç, ideal DC gerilim kaynağı, pil ve ideal kapalı anahtar ile sınırlıdır. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, yarı iletkenlerin doğrusal olmayan modelleri, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
+
+Bir proje şu anda tek devre sahnesi içerir. Çoklu adlandırılmış devreler ve hiyerarşik özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
 
 Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
