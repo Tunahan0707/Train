@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
                 border-right: 1px solid {colors["border"]};
                 padding: 7px 13px;
             }}
+            QPushButton#paletteMenuButton::menu-indicator {{ image: none; width: 0px; }}
             QPushButton#paletteTab:hover, QPushButton#paletteMenuButton:hover {{
                 background: {colors["hover"]};
             }}
@@ -140,11 +141,12 @@ class MainWindow(QMainWindow):
                 border-bottom: 2px solid {colors["accent"]};
             }}
             QPushButton#componentButton {{
-                background: transparent;
+                background: {colors["panel"]};
                 color: {colors["text"]};
                 border: 1px solid {colors["border"]};
+                border-radius: 0px;
                 padding: 7px 12px;
-                min-width: 75px;
+                min-width: 0px;
             }}
             QPushButton#componentButton:hover {{
                 background: {colors["hover"]};
