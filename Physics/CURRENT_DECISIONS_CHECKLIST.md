@@ -167,6 +167,8 @@ These topics are deferred for now and are not part of the current agreed scope.
 
 ## Implementation Notes
 
+The DC numeric foundation validates engineering-notation values, rejects non-finite inputs and malformed linear systems, and has standard-library unit tests for suffix parsing and Gaussian elimination. These tests do not yet replace end-to-end circuit simulation tests.
+
 The current prototype includes schematic symbols and basic editing for the checked components above. Their displayed values are editable, but this does **not** mean their full physical models are implemented. A basic endpoint/T-junction netlist analyzer and a linear DC operating-point solver for resistors with ideal DC voltage sources are implemented. Nonlinear/transient simulation, most component models, and measurement tools remain unimplemented.
 
 Grid snapping, rotation, grouped duplication, JSON-based project save/load, a component properties panel, and visual orthogonal wire drawing with endpoint snapping are implemented in the current editor prototype. The wires are not yet part of an electrical netlist: visual contact does not currently mean the simulator recognizes an electrical connection.
