@@ -191,7 +191,7 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 - Properties are shown in the right panel as inline values without boxed input fields.
 - Multi-selection groups matching component types so one value edit applies to all selected components; different types get separate property sections.
 - Theme switch includes sun/moon indicators and the interface text follows the active theme.
-- Selected components can be dragged onto the trash target.
+- Selected components can be dragged onto the trash target; holding Shift changes the target to a broom icon, and Shift-click clears all circuit elements.
 - Fullscreen control removed.
 - Navy dark/light themes with an animated sliding switch.
 - Interface explanatory copy removed; component labels retained.
@@ -209,7 +209,7 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 
 ## Recent functional fixes
 - Component palette entries are restored as bordered, filled tiles rather than bare text labels.
-- The component drawer uses a horizontal scroll viewport sized to its contents; entries remain inside the available viewport and can be reached by scrolling.
+- The component drawer uses a horizontal scroll viewport sized to its contents; component entries are hollow, sharp-cornered, text-sized tiles with a compact height, minimum width, and right-side text elision for long labels.
 - The canvas (workspace) scrollbars now have explicit theme styling: navy tracks in dark mode, pale grey tracks in light mode, and muted grey handles in both.
 - The schematic switch toggles open/closed on click without treating a drag as a toggle. Its state is shown in the properties panel, saved in project files, and copied when duplicated.
 - Closed ideal switches join their two terminals in the netlist and are treated as closed connections by the linear DC solver. Open switches remain electrically disconnected and are reported as unsupported by the current DC solver.
