@@ -21,6 +21,7 @@ from settings import (
 
 from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
+from interface.properties_panel import PropertiesPanel
 
 
 class MainWindow(QMainWindow):
@@ -53,6 +54,16 @@ class MainWindow(QMainWindow):
             Qt.DockWidgetArea.LeftDockWidgetArea,
             self.component_dock,
         )
+
+        self.properties_panel = PropertiesPanel()
+        self.properties_dock = QDockWidget("Özellikler", self)
+        self.properties_dock.setObjectName("propertiesDock")
+        self.properties_dock.setWidget(self.properties_panel)
+        self.properties_dock.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.properties_dock)
+        self.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
 
         self.component_library.component_requested.connect(
             self.workspace.start_placement
@@ -88,6 +99,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self.fullscreen_action)
         view_menu.addSeparator()
         view_menu.addAction(self.component_dock.toggleViewAction())
+        view_menu.addAction(self.properties_dock.toggleViewAction())
 
         # Durum çubuğu
         self.statusBar().showMessage(
@@ -146,11 +158,15 @@ class MainWindow(QMainWindow):
             }}
         """)
 
+    def update_properties(self):
+        selected = self.workspace.circuit_scene.selectedItems()
+        self.properties_panel.set_item(selected[0] if len(selected) == 1 else None)
+
     def on_placement_changed(self, component_id):
-        if component_id == "resistor":
-            self.component_library.set_active_component("resistor")
+        if component_id:
+            self.component_library.set_active_component(component_id)
             self.statusBar().showMessage(
-                "Direnç yerleştirme modu: çalışma alanına tıkla. ESC ile çık."
+                f"{component_id} yerleştirme modu: çalışma alanına tıkla. ESC ile çık."
             )
         else:
             self.component_library.set_active_component("")
