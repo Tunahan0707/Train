@@ -71,6 +71,8 @@ class ComponentLibrary(QWidget):
         self.expanded = False
         self.active_category = None
         self.shift_add_count = 0
+        self.component_buttons = []
+        self.current_colors = None
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 5, 8, 5)
@@ -150,18 +152,23 @@ class ComponentLibrary(QWidget):
             widget = item.widget()
             if widget is not None:
                 widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
+        self.component_buttons.clear()
 
         for component_id, label in dict(COMPONENTS)[category]:
             button = ComponentButton(component_id, label, self.items_host)
             button.add_requested.connect(self._add_component)
             self.items_layout.addWidget(button)
+            self.component_buttons.append(button)
+            if self.current_colors is not None:
+                self._style_component_button(button, self.current_colors)
 
         self.items_layout.activate()
         QTimer.singleShot(0, self._fit_items_host)
 
     def _fit_items_host(self):
-        buttons = self.items_host.findChildren(ComponentButton)
+        buttons = self.component_buttons
         margins = self.items_layout.contentsMargins()
         spacing = self.items_layout.spacing()
         width = margins.left() + margins.right()
@@ -225,20 +232,25 @@ class ComponentLibrary(QWidget):
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
             "QPushButton#componentButton { background-color: transparent; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 34px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
-        for button in self.items_host.findChildren(ComponentButton):
-            button.setStyleSheet(
-                "QPushButton {"
-                "background-color: transparent;"
-                "color: " + colors["text"] + ";"
-                "border: 1px solid " + colors["border"] + ";"
-                "border-radius: 0px;"
-                "padding: 7px 12px;"
-                "min-width: 0px;"
-                "min-height: 34px;"
-                "}"
-                "QPushButton:hover {"
-                "background-color: " + colors["hover"] + ";"
-                "border-color: " + colors["accent"] + ";"
-                "}"
-            )
-            button.updateGeometry()
+        self.current_colors = colors
+        for button in self.component_buttons:
+            self._style_component_button(button, colors)
+
+    @staticmethod
+    def _style_component_button(button, colors):
+        button.setStyleSheet(
+            "QPushButton {"
+            "background-color: transparent;"
+            "color: " + colors["text"] + ";"
+            "border: 1px solid " + colors["border"] + ";"
+            "border-radius: 0px;"
+            "padding: 7px 12px;"
+            "min-width: 0px;"
+            "min-height: 34px;"
+            "}"
+            "QPushButton:hover {"
+            "background-color: transparent;"
+            "border-color: " + colors["accent"] + ";"
+            "}"
+        )
+        button.updateGeometry()
