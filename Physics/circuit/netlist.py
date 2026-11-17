@@ -145,7 +145,9 @@ def build_netlist(scene, tolerance=2.0):
                 "terminals": terminals,
                 "wire_endpoints": wire_count,
             })
-            if len(terminals) == 1 and wire_count == 0:
+            if len(terminals) == 1:
+                # A wire stub does not make a terminal electrically complete;
+                # the net still has only one component terminal.
                 unconnected.append(terminals[0])
 
     return {
