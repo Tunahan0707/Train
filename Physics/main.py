@@ -1,64 +1,44 @@
 import sys
 
 from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QDockWidget,
-    QToolBar,
-    QFileDialog,
-    QMessageBox,
+    QApplication, QMainWindow, QDockWidget, QToolBar,
+    QFileDialog, QMessageBox,
 )
-from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtCore import Qt, QEvent, QSignalBlocker
+from PySide6.QtGui import QAction, QColor
+from PySide6.QtCore import Qt
 
 from settings import (
-    WINDOW_HEIGHT,
-    WINDOW_HEIGHT_MIN,
-    WINDOW_TITLE,
-    WINDOW_WIDTH,
-    WINDOW_WIDTH_MIN,
-    COLOR_WINDOW_BACKGROUND,
-    SHORTCUT_FULLSCREEN,
+    WINDOW_HEIGHT, WINDOW_HEIGHT_MIN, WINDOW_TITLE,
+    WINDOW_WIDTH, WINDOW_WIDTH_MIN,
 )
-
 from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
+from interface.theme_switch import ThemeSwitch
 from core.project_io import save_circuit, load_circuit
 from circuit.netlist import format_netlist_report
 from simulation.dc_solver import format_dc_report
+from theme import DARK, LIGHT, set_current
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle(WINDOW_TITLE)
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN)
 
-        # Ana çalışma alanı
         self.workspace = Workspace()
         self.setCentralWidget(self.workspace)
 
-        # Bileşen kütüphanesi
         self.component_library = ComponentLibrary()
         self.component_dock = QDockWidget("Bileşenler", self)
         self.component_dock.setObjectName("componentDock")
         self.component_dock.setWidget(self.component_library)
         self.component_dock.setAllowedAreas(
-            Qt.DockWidgetArea.LeftDockWidgetArea
-            | Qt.DockWidgetArea.RightDockWidgetArea
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
         )
-        self.component_dock.setFeatures(
-            QDockWidget.DockWidgetFeature.DockWidgetMovable
-            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
-            | QDockWidget.DockWidgetFeature.DockWidgetClosable
-        )
-        self.addDockWidget(
-            Qt.DockWidgetArea.LeftDockWidgetArea,
-            self.component_dock,
-        )
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.component_dock)
 
         self.properties_panel = PropertiesPanel()
         self.properties_dock = QDockWidget("Özellikler", self)
@@ -68,146 +48,157 @@ class MainWindow(QMainWindow):
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
         )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.properties_dock)
+
         self.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
         self.workspace.history_changed.connect(self.update_properties)
         self.properties_panel.value_change_requested.connect(self.workspace.set_component_value)
 
-        self.component_library.component_requested.connect(
-            self.workspace.start_placement
-        )
-        self.component_library.placement_cancelled.connect(
-            self.workspace.cancel_placement
-        )
-        self.workspace.placement_changed.connect(
-            self.on_placement_changed
-        )
-
         self.current_file = None
+        self.build_menus()
 
-        # Dosya menüsü
+        toolbar = QToolBar("Tema", self)
+        toolbar.setMovable(False)
+        toolbar.setObjectName("themeToolbar")
+        toolbar.setFloatable(False)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, toolbar)
+        toolbar.addSeparator()
+        self.theme_switch = ThemeSwitch(dark=True)
+        toolbar.addWidget(self.theme_switch)
+        self.theme_switch.progress_changed.connect(self.apply_theme_progress)
+        self.apply_theme_progress(1.0)
+
+    def build_menus(self):
         file_menu = self.menuBar().addMenu("Dosya")
-        new_action = QAction("Yeni devre", self)
-        new_action.setShortcut("Ctrl+N")
-        new_action.triggered.connect(self.new_circuit)
-        file_menu.addAction(new_action)
-        open_action = QAction("Aç...", self)
-        open_action.setShortcut("Ctrl+O")
-        open_action.triggered.connect(self.open_circuit)
-        file_menu.addAction(open_action)
-        save_action = QAction("Kaydet", self)
-        save_action.setShortcut("Ctrl+S")
-        save_action.triggered.connect(self.save_circuit)
-        file_menu.addAction(save_action)
-        save_as_action = QAction("Farklı kaydet...", self)
-        save_as_action.triggered.connect(self.save_circuit_as)
-        file_menu.addAction(save_as_action)
+        actions = [
+            ("Yeni devre", "Ctrl+N", self.new_circuit),
+            ("Aç...", "Ctrl+O", self.open_circuit),
+            ("Kaydet", "Ctrl+S", self.save_circuit),
+            ("Farklı kaydet...", None, self.save_circuit_as),
+        ]
+        for label, shortcut, callback in actions:
+            action = QAction(label, self)
+            if shortcut:
+                action.setShortcut(shortcut)
+            action.triggered.connect(callback)
+            file_menu.addAction(action)
 
         circuit_menu = self.menuBar().addMenu("Devre")
-        analyze_action = QAction("Bağlantıları denetle", self)
-        analyze_action.triggered.connect(self.check_connections)
-        circuit_menu.addAction(analyze_action)
+        analyze = QAction("Bağlantıları denetle", self)
+        analyze.triggered.connect(self.check_connections)
+        circuit_menu.addAction(analyze)
 
         simulation_menu = self.menuBar().addMenu("Simülasyon")
-        dc_action = QAction("DC çalışma noktasını hesapla", self)
-        dc_action.triggered.connect(self.run_dc_simulation)
-        simulation_menu.addAction(dc_action)
+        solve = QAction("DC çalışma noktası", self)
+        solve.triggered.connect(self.run_dc_simulation)
+        simulation_menu.addAction(solve)
 
-        # Üst araç çubuğu
-        toolbar = QToolBar("Ana araç çubuğu", self)
-        toolbar.setMovable(False)
-        toolbar.setObjectName("mainToolbar")
-        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, toolbar)
-
-        self.fullscreen_action = QAction("Tam ekran", self)
-        self.fullscreen_action.setCheckable(True)
-        self.fullscreen_action.setShortcut(
-            QKeySequence(SHORTCUT_FULLSCREEN)
-        )
-        self.fullscreen_action.setShortcutContext(
-            Qt.ShortcutContext.ApplicationShortcut
-        )
-        self.fullscreen_action.toggled.connect(
-            self.set_fullscreen
-        )
-        toolbar.addAction(self.fullscreen_action)
-
-        # Görünüm menüsü
         view_menu = self.menuBar().addMenu("Görünüm")
-        view_menu.addAction(self.fullscreen_action)
-        view_menu.addSeparator()
         view_menu.addAction(self.component_dock.toggleViewAction())
         view_menu.addAction(self.properties_dock.toggleViewAction())
 
-        # Durum çubuğu
-        self.statusBar().showMessage(
-            "Hazır  |  Orta tuş: seçim  |  Shift + orta tuş: kaydırma"
-        )
+    @staticmethod
+    def blend_color(first, second, amount):
+        a, b = QColor(first), QColor(second)
+        return QColor(
+            round(a.red() + (b.red() - a.red()) * amount),
+            round(a.green() + (b.green() - a.green()) * amount),
+            round(a.blue() + (b.blue() - a.blue()) * amount),
+        ).name()
+
+    def apply_theme_progress(self, progress):
+        amount = max(0.0, min(1.0, progress))
+        colors = {
+            key: self.blend_color(LIGHT[key], DARK[key], amount)
+            for key in DARK
+        }
+        set_current(colors)
+        self.workspace.apply_theme(colors)
 
         self.setStyleSheet(f"""
-            QMainWindow {{
-                background-color: {COLOR_WINDOW_BACKGROUND};
+            QMainWindow, QWidget#componentLibrary, QWidget#propertiesPanel {{
+                background: {colors["panel"]};
+                color: {colors["text"]};
             }}
             QMenuBar {{
-                background-color: #201d2b;
-                color: #e8e3f2;
-                padding: 4px;
+                background: {colors["window"]};
+                color: {colors["text"]};
+                padding: 3px 5px;
             }}
-            QMenuBar::item:selected {{
-                background-color: #3b3450;
+            QMenuBar::item:selected, QMenu::item:selected {{
+                background: {colors["hover"]};
             }}
             QMenu {{
-                background-color: #252230;
-                color: #e8e3f2;
-                border: 1px solid #494158;
+                background: {colors["panel"]};
+                color: {colors["text"]};
+                border: 1px solid {colors["border"]};
+                padding: 4px;
             }}
-            QMenu::item:selected {{
-                background-color: #493b68;
-            }}
-            QToolBar#mainToolbar {{
-                background-color: #201d2b;
+            QToolBar#themeToolbar {{
+                background: {colors["window"]};
                 border: none;
-                spacing: 6px;
-                padding: 5px;
-            }}
-            QToolBar#mainToolbar QToolButton {{
-                color: #e8e3f2;
-                background-color: #302b3d;
-                border: 1px solid #494158;
-                border-radius: 6px;
-                padding: 7px 12px;
-            }}
-            QToolBar#mainToolbar QToolButton:hover {{
-                background-color: #493b68;
+                spacing: 8px;
+                padding: 2px 10px;
             }}
             QDockWidget {{
-                color: #e8e3f2;
-                titlebar-close-icon: none;
-                titlebar-normal-icon: none;
+                color: {colors["text"]};
+                font-size: 12px;
             }}
             QDockWidget::title {{
-                background-color: #292535;
-                padding: 8px;
-                border-bottom: 1px solid #393344;
+                background: {colors["window"]};
+                padding: 7px 9px;
+                border-bottom: 1px solid {colors["border"]};
             }}
-            QStatusBar {{
-                background-color: #201d2b;
-                color: #aaa3ba;
+            QLineEdit#componentSearch, QLineEdit {{
+                background: {colors["panel_alt"]};
+                color: {colors["text"]};
+                border: 1px solid {colors["border"]};
+                border-radius: 7px;
+                padding: 7px 9px;
+                selection-background-color: {colors["accent"]};
+            }}
+            QLabel#sectionTitle {{
+                color: {colors["muted"]};
+                font-size: 10px;
+                font-weight: 600;
+                padding: 8px 2px 3px 2px;
+            }}
+            QPushButton#componentButton {{
+                background: transparent;
+                color: {colors["text"]};
+                border: 1px solid transparent;
+                border-radius: 6px;
+                padding: 8px 10px;
+                text-align: left;
+            }}
+            QPushButton#componentButton:hover {{
+                background: {colors["hover"]};
+                border-color: {colors["border"]};
+            }}
+            QScrollArea {{ border: none; background: transparent; }}
+            QToolTip {{
+                background: {colors["panel_alt"]};
+                color: {colors["text"]};
+                border: 1px solid {colors["border"]};
+                padding: 4px;
             }}
         """)
 
     def check_connections(self):
-        report = format_netlist_report(self.workspace.circuit_scene)
-        QMessageBox.information(self, "Bağlantı analizi", report)
+        QMessageBox.information(
+            self, "Bağlantı analizi",
+            format_netlist_report(self.workspace.circuit_scene),
+        )
 
     def run_dc_simulation(self):
         try:
-            report = format_dc_report(self.workspace.circuit_scene)
-            QMessageBox.information(self, "DC çalışma noktası", report)
+            QMessageBox.information(
+                self, "DC çalışma noktası",
+                format_dc_report(self.workspace.circuit_scene),
+            )
         except (ValueError, ZeroDivisionError) as error:
             QMessageBox.warning(self, "DC çözümü yapılamadı", str(error))
 
     def new_circuit(self):
-        self.workspace.cancel_placement()
         self.workspace.circuit_scene.clear()
         self.workspace.history.undo_stack.clear()
         self.workspace.history.redo_stack.clear()
@@ -222,7 +213,6 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
         try:
-            self.workspace.cancel_placement()
             load_circuit(self.workspace.circuit_scene, file_path)
             self.workspace.history.undo_stack.clear()
             self.workspace.history.redo_stack.clear()
@@ -260,58 +250,16 @@ class MainWindow(QMainWindow):
     def update_properties(self):
         selected = self.workspace.circuit_scene.selectedItems()
         item = selected[0] if len(selected) == 1 else None
-        self.properties_panel.set_item(item if getattr(item, "component_id", None) != "wire" else None)
-
-    def on_placement_changed(self, component_id):
-        if component_id:
-            self.component_library.set_active_component(component_id)
-            labels = {
-                "resistor": "Direnç", "capacitor": "Kondansatör",
-                "inductor": "Bobin", "fuse": "Sigorta",
-                "potentiometer": "Potansiyometre", "diode": "Diyot",
-                "led": "LED", "bjt": "BJT", "mosfet": "MOSFET",
-                "voltage_source": "DC kaynak", "ac_source": "AC kaynak",
-                "battery": "Pil", "switch": "Anahtar",
-                "ground": "Toprak", "wire": "Tel çizme",
-            }
-            instruction = (
-                "Başlangıç ve bitiş noktalarına tıkla."
-                if component_id == "wire"
-                else "Çalışma alanına tıklayarak yerleştir."
-            )
-            self.statusBar().showMessage(
-                f"{labels.get(component_id, component_id)} modu: {instruction} ESC ile çık."
-            )
-        else:
-            self.component_library.set_active_component("")
-            self.statusBar().showMessage(
-                "Hazır  |  Orta tuş: seçim  |  Shift + orta tuş: kaydırma"
-            )
-
-    def set_fullscreen(self, enabled):
-        if enabled:
-            self.showFullScreen()
-        else:
-            self.showNormal()
-
-    def changeEvent(self, event):
-        super().changeEvent(event)
-
-        if event.type() == QEvent.Type.WindowStateChange:
-            is_fullscreen = self.isFullScreen()
-            if self.fullscreen_action.isChecked() != is_fullscreen:
-                blocker = QSignalBlocker(self.fullscreen_action)
-                self.fullscreen_action.setChecked(is_fullscreen)
-                del blocker
+        self.properties_panel.set_item(
+            item if getattr(item, "component_id", None) != "wire" else None
+        )
 
 
 def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
-
     window = MainWindow()
     window.show()
-
     sys.exit(app.exec())
 
 
