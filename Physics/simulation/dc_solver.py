@@ -143,6 +143,12 @@ def solve_dc_operating_point(scene):
             if len(pins) != 2:
                 raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
 
+    # Validate stored reactive values even though DC steady-state stamps do not use their magnitude.
+    for item in inductors + capacitors:
+        reactive_value = parse_engineering_value(getattr(item, "value", ""))
+        if reactive_value <= 0:
+            raise ValueError(f"{_component_label(item)} değeri sıfırdan büyük olmalı.")
+
     # Ideal DC steady state: capacitors are open circuits, inductors are zero-volt branches.
     branches = [(item, parse_engineering_value(getattr(item, "value", ""))) for item in sources]
     branches.extend((item, 0.0) for item in inductors)
