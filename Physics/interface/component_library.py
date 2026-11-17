@@ -6,9 +6,6 @@ from PySide6.QtCore import Qt, Signal, QMimeData, QPoint
 from PySide6.QtGui import QDrag, QAction
 from PySide6.QtWidgets import QApplication
 
-from settings import GRID_SIZE
-
-
 COMPONENTS = [
     ("Pasif", [("resistor", "Direnç"), ("capacitor", "Kondansatör"), ("inductor", "Bobin"), ("fuse", "Sigorta"), ("potentiometer", "Potansiyometre")]),
     ("Yarı iletken", [("diode", "Diyot"), ("led", "LED"), ("bjt", "BJT"), ("mosfet", "MOSFET")]),
@@ -74,6 +71,7 @@ class ComponentLibrary(QWidget):
         root.setSpacing(5)
 
         self.drawer = QWidget()
+        self.drawer.setObjectName("componentDrawer")
         drawer_layout = QHBoxLayout(self.drawer)
         drawer_layout.setContentsMargins(0, 0, 0, 0)
         drawer_layout.setSpacing(7)
@@ -83,6 +81,7 @@ class ComponentLibrary(QWidget):
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.items_host = QWidget()
+        self.items_host.setObjectName("componentItemsHost")
         self.items_layout = QHBoxLayout(self.items_host)
         self.items_layout.setContentsMargins(2, 2, 2, 2)
         self.items_layout.setSpacing(7)
