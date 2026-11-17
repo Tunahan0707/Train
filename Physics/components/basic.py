@@ -39,8 +39,8 @@ class BasicComponent(QGraphicsItem):
         )
 
     def boundingRect(self):
-        return QRectF(-COMPONENT_WIDTH / 2, -COMPONENT_HEIGHT / 2,
-                      COMPONENT_WIDTH, COMPONENT_HEIGHT)
+        return QRectF(-COMPONENT_WIDTH / 2, -32,
+                      COMPONENT_WIDTH, 60)
 
     def terminal_positions(self):
         half = COMPONENT_WIDTH / 2
