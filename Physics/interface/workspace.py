@@ -50,11 +50,13 @@ from core.commands import (
     DeleteItemsCommand,
     MoveItemsCommand,
     RotateItemsCommand,
+    SetValueCommand,
 )
 
 
 class Workspace(QGraphicsView):
     placement_changed = Signal(str)
+    history_changed = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -137,10 +139,12 @@ class Workspace(QGraphicsView):
 
     def undo(self):
         self.history.undo()
+        self.history_changed.emit()
         self.viewport().update()
 
     def redo(self):
         self.history.redo()
+        self.history_changed.emit()
         self.viewport().update()
 
     # Bileşen yerleştirme
@@ -224,6 +228,17 @@ class Workspace(QGraphicsView):
         self.circuit_scene.clearSelection()
         wire.setSelected(True)
         self.viewport().update()
+
+    def set_component_value(self, item, new_value):
+        if item is None or item.scene() != self.circuit_scene:
+            return
+        if not hasattr(item, "set_value"):
+            return
+        old_value = getattr(item, "value", "")
+        if str(old_value) == str(new_value):
+            return
+        self.history.execute(SetValueCommand(item, old_value, str(new_value)))
+        self.history_changed.emit()
 
     def snap_position(self, position):
         return type(position)(
