@@ -97,3 +97,16 @@ class AddItemsCommand:
     def undo(self):
         for item in self.items:
             self.scene.removeItem(item)
+
+
+class SetValueCommand:
+    def __init__(self, item, old_value, new_value):
+        self.item = item
+        self.old_value = old_value
+        self.new_value = new_value
+
+    def undo(self):
+        self.item.set_value(self.old_value)
+
+    def redo(self):
+        self.item.set_value(self.new_value)
