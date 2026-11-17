@@ -26,12 +26,12 @@
 - [ ] MOSFET
 
 ### Protection and adjustable components
-- [ ] Fuse
-- [ ] Potentiometer
+- [x] Fuse
+- [x] Potentiometer
 
 ### Power sources
 - [x] DC voltage source
-- [ ] AC voltage source
+- [x] AC voltage source
 - [x] Battery
 
 ### Control and connectivity
