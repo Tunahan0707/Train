@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "Bağlantı analizi", report)
 
     def new_circuit(self):
+        self.workspace.cancel_placement()
         self.workspace.circuit_scene.clear()
         self.workspace.history.undo_stack.clear()
         self.workspace.history.redo_stack.clear()
@@ -208,13 +209,14 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
         try:
+            self.workspace.cancel_placement()
             load_circuit(self.workspace.circuit_scene, file_path)
             self.workspace.history.undo_stack.clear()
             self.workspace.history.redo_stack.clear()
             self.current_file = file_path
             self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
             self.update_properties()
-        except (OSError, ValueError, KeyError, TypeError) as error:
+        except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError) as error:
             QMessageBox.critical(self, "Devre açılamadı", str(error))
 
     def save_circuit(self):
@@ -234,8 +236,12 @@ class MainWindow(QMainWindow):
             return
         if not file_path.lower().endswith(".physics"):
             file_path += ".physics"
+        try:
+            save_circuit(self.workspace.circuit_scene, file_path)
+        except OSError as error:
+            QMessageBox.critical(self, "Kaydedilemedi", str(error))
+            return
         self.current_file = file_path
-        self.save_circuit()
         self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
 
     def update_properties(self):
