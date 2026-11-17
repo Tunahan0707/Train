@@ -588,11 +588,12 @@ class Workspace(QGraphicsView):
         if event.button() == Qt.MouseButton.LeftButton:
             super().mouseReleaseEvent(event)
 
-            if GRID_SNAP_ENABLED:
-                for item in self.circuit_scene.selectedItems():
-                    item.setPos(self.snap_position(item.pos()))
-
             old_positions = self.drag_start_positions
+            if GRID_SNAP_ENABLED:
+                for item, old_position in old_positions.items():
+                    if item.scene() == self.circuit_scene and item.pos() != old_position:
+                        item.setPos(self.snap_position(item.pos()))
+
             new_positions = {
                 item: item.pos()
                 for item in old_positions
