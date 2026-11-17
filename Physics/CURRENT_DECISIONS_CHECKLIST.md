@@ -180,7 +180,15 @@ Grid snapping, rotation, grouped duplication, JSON-based project save/load, a co
 
 ## Recent interface changes
 
-- Component placement now uses drag and drop from the library.
+- The component side dock has been replaced with a bottom category bar and an upward-expanding, horizontally scrollable component drawer.
+- The bottom bar starts with the Menu button, followed by component category tabs.
+- Components can be dragged into the workspace or inserted at the viewport center by clicking.
+- Holding Shift while clicking inserts vertically aligned components and keeps the stack selected.
+- The category drawer closes after ordinary click insertion or drag-and-drop; Shift insertion keeps it open.
+- The canvas grid rendering has been removed; grid snapping remains enabled.
+- Properties are shown in the right panel as inline values without boxed input fields.
+- Multi-selection groups matching component types so one value edit applies to all selected components; different types get separate property sections.
+- Theme switch includes sun/moon indicators and the interface text follows the active theme.
 - Selected components can be dragged onto the trash target.
 - Fullscreen control removed.
 - Navy dark/light themes with an animated sliding switch.
