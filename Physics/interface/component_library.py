@@ -35,7 +35,9 @@ class ComponentButton(QPushButton):
 
     def _update_button_size(self):
         metrics = self.fontMetrics()
-        width = max(64, metrics.horizontalAdvance(self.full_label) + 24)
+        # Width is recalculated from the complete label after the active
+        # stylesheet has been applied, so long names get their own space.
+        width = max(64, metrics.horizontalAdvance(self.full_label) + 28)
         height = max(32, metrics.height() + 12)
         self.setFixedSize(width, height)
 
@@ -262,4 +264,7 @@ class ComponentLibrary(QWidget):
             "border-color: " + colors["accent"] + ";"
             "}"
         )
+        # QSS changes the button's style metrics; recalculate its fixed size
+        # afterwards to prevent clipped labels and overlapping palette items.
+        button._update_button_size()
         button.updateGeometry()
