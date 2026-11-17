@@ -81,3 +81,19 @@ class RotateItemsCommand:
     def redo(self):
         for item, rotation in self.new_rotations.items():
             item.setRotation(rotation)
+
+
+class AddItemsCommand:
+    def __init__(self, scene, items, positions):
+        self.scene = scene
+        self.items = list(items)
+        self.positions = dict(positions)
+
+    def redo(self):
+        for item in self.items:
+            self.scene.addItem(item)
+            item.setPos(self.positions[item])
+
+    def undo(self):
+        for item in self.items:
+            self.scene.removeItem(item)
