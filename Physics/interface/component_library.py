@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QScrollArea, QMenu, QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal, QMimeData, QPoint
+from PySide6.QtCore import Qt, Signal, QMimeData, QPoint, QTimer
 from PySide6.QtGui import QDrag, QAction
 from PySide6.QtWidgets import QApplication
 
@@ -26,6 +26,8 @@ class ComponentButton(QPushButton):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setMinimumWidth(0)
+        self.setMinimumHeight(34)
+        self.adjustSize()
         self.clicked.connect(self._clicked)
 
     def _clicked(self):
@@ -143,22 +145,25 @@ class ComponentLibrary(QWidget):
         while self.items_layout.count():
             item = self.items_layout.takeAt(0)
             widget = item.widget()
-            if widget:
+            if widget is not None:
                 widget.hide()
-                widget.setParent(None)
                 widget.deleteLater()
-        components = dict(COMPONENTS)[category]
-        for component_id, label in components:
+
+        for component_id, label in dict(COMPONENTS)[category]:
             button = ComponentButton(component_id, label, self.items_host)
             button.add_requested.connect(self._add_component)
             self.items_layout.addWidget(button)
+
+        self.items_layout.addStretch(1)
         self.items_layout.activate()
+        QTimer.singleShot(0, self._fit_items_host)
+
+    def _fit_items_host(self):
         self.items_host.adjustSize()
-        content_size = self.items_layout.sizeHint()
-        self.items_host.setFixedSize(max(1, content_size.width()), max(54, content_size.height()))
-        self.items_host.resize(self.items_host.sizeHint())
-        self.items_host.updateGeometry()
+        hint = self.items_layout.sizeHint()
+        self.items_host.setFixedSize(max(1, hint.width()), max(54, hint.height()))
         self.scroll.horizontalScrollBar().setValue(0)
+        self.items_host.updateGeometry()
 
     def _add_component(self, component_id, shift):
         self.add_requested.emit(component_id, shift)
@@ -212,5 +217,5 @@ class ComponentLibrary(QWidget):
             "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
             "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
-            "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 30px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
+            "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 0px; padding: 7px 12px; min-width: 0px; min-height: 34px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
