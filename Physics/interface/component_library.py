@@ -77,14 +77,15 @@ class ComponentLibrary(QWidget):
         drawer_layout.setSpacing(7)
         self.scroll = QScrollArea()
         self.scroll.setObjectName("componentScrollArea")
-        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidgetResizable(False)
         self.scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.items_host = QWidget()
         self.items_host.setObjectName("componentItemsHost")
+        self.items_host.setMinimumHeight(54)
         self.items_layout = QHBoxLayout(self.items_host)
-        self.items_layout.setContentsMargins(2, 2, 2, 2)
+        self.items_layout.setContentsMargins(5, 4, 5, 4)
         self.items_layout.setSpacing(7)
         self.scroll.setWidget(self.items_host)
         self.scroll.viewport().setObjectName("componentScrollViewport")
@@ -148,6 +149,8 @@ class ComponentLibrary(QWidget):
             button.add_requested.connect(self._add_component)
             self.items_layout.addWidget(button)
         self.items_layout.addStretch(1)
+        self.items_host.adjustSize()
+        self.items_host.setFixedHeight(max(54, self.items_host.sizeHint().height()))
 
     def _add_component(self, component_id, shift):
         self.add_requested.emit(component_id, shift)
@@ -201,4 +204,5 @@ class ComponentLibrary(QWidget):
             "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
             "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
             "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
+            "QPushButton#componentButton { background-color: " + colors["panel"] + "; color: " + colors["text"] + "; border: 1px solid " + colors["border"] + "; border-radius: 6px; padding: 8px 14px; min-width: 82px; min-height: 30px; }" "QPushButton#componentButton:hover { background-color: " + colors["hover"] + "; border-color: " + colors["accent"] + "; }"
         )
