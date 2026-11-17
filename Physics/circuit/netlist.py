@@ -51,6 +51,8 @@ def build_netlist(scene, tolerance=2.0):
                 "kind": "component",
                 "label": f"{getattr(item, 'name', component_id)} {instance} · {pin_name}",
                 "point": point,
+                "item": item,
+                "pin_index": pin_index,
             })
 
     parent = list(range(len(nodes)))
@@ -107,11 +109,21 @@ def build_netlist(scene, tolerance=2.0):
 
     nets = []
     unconnected = []
-    for group in groups.values():
+    component_nodes = {}
+    ground_nodes = []
+    for net_id, group in enumerate(groups.values()):
         terminals = [node["label"] for node in group if node["kind"] == "component"]
         wire_count = sum(node["kind"] == "wire" for node in group)
+        for node in group:
+            if node["kind"] != "component":
+                continue
+            item = node["item"]
+            component_nodes.setdefault(item, {})[node["pin_index"]] = net_id
+            if getattr(item, "component_id", None) == "ground":
+                ground_nodes.append(net_id)
         if terminals:
             nets.append({
+                "id": net_id,
                 "terminals": terminals,
                 "wire_endpoints": wire_count,
             })
@@ -120,6 +132,11 @@ def build_netlist(scene, tolerance=2.0):
 
     return {
         "nets": nets,
+        "component_nodes": {
+            item: [pins[index] for index in sorted(pins)]
+            for item, pins in component_nodes.items()
+        },
+        "ground_nodes": sorted(set(ground_nodes)),
         "unconnected_terminals": unconnected,
         "component_terminal_count": sum(node["kind"] == "component" for node in nodes),
         "wire_endpoint_count": sum(node["kind"] == "wire" for node in nodes),
