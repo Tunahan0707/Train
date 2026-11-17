@@ -26,6 +26,7 @@ from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
 from core.project_io import save_circuit, load_circuit
 from circuit.netlist import format_netlist_report
+from simulation.dc_solver import format_dc_report
 
 
 class MainWindow(QMainWindow):
@@ -105,6 +106,11 @@ class MainWindow(QMainWindow):
         analyze_action = QAction("Bağlantıları denetle", self)
         analyze_action.triggered.connect(self.check_connections)
         circuit_menu.addAction(analyze_action)
+
+        simulation_menu = self.menuBar().addMenu("Simülasyon")
+        dc_action = QAction("DC çalışma noktasını hesapla", self)
+        dc_action.triggered.connect(self.run_dc_simulation)
+        simulation_menu.addAction(dc_action)
 
         # Üst araç çubuğu
         toolbar = QToolBar("Ana araç çubuğu", self)
@@ -192,6 +198,13 @@ class MainWindow(QMainWindow):
     def check_connections(self):
         report = format_netlist_report(self.workspace.circuit_scene)
         QMessageBox.information(self, "Bağlantı analizi", report)
+
+    def run_dc_simulation(self):
+        try:
+            report = format_dc_report(self.workspace.circuit_scene)
+            QMessageBox.information(self, "DC çalışma noktası", report)
+        except (ValueError, ZeroDivisionError) as error:
+            QMessageBox.warning(self, "DC çözümü yapılamadı", str(error))
 
     def new_circuit(self):
         self.workspace.cancel_placement()
