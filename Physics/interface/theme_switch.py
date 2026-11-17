@@ -60,20 +60,24 @@ class ThemeSwitch(QWidget):
         painter.setBrush(track)
         painter.drawRoundedRect(1, 3, 60, 28, 14, 14)
 
-        # Güneş ve ay göstergeleri
-        painter.setPen(QPen(QColor("#a78b45"), 1.4))
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawEllipse(9, 13, 8, 8)
-        painter.drawLine(13, 9, 13, 11)
-        painter.drawLine(13, 23, 13, 25)
-        painter.drawLine(5, 17, 7, 17)
-        painter.drawLine(19, 17, 21, 17)
-
-        painter.setPen(QPen(QColor("#91a6c8"), 1.5))
-        painter.drawArc(43, 11, 11, 12, 35 * 16, 285 * 16)
-
         x = 4 + 28 * t
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(knob)
         painter.drawEllipse(round(x), 6, 22, 22)
+
+        # Aktif temanın simgesi hareketli düğmenin üzerinde kalır.
+        icon_color = QColor("#52677f")
+        painter.setPen(QPen(icon_color, 1.35))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        cx = round(x) + 11
+        if t < 0.5:
+            painter.drawEllipse(cx - 4, 13, 8, 8)
+            painter.drawLine(cx, 9, cx, 11)
+            painter.drawLine(cx, 23, cx, 25)
+            painter.drawLine(cx - 8, 17, cx - 6, 17)
+            painter.drawLine(cx + 6, 17, cx + 8, 17)
+            painter.drawLine(cx - 6, 11, cx - 5, 12)
+            painter.drawLine(cx + 5, 22, cx + 6, 23)
+        else:
+            painter.drawArc(cx - 5, 11, 11, 12, 35 * 16, 285 * 16)
         painter.end()
