@@ -162,6 +162,8 @@ class Workspace(QGraphicsView):
             return
 
         self.placement_component = None
+        self.wire_start = None
+        self.wire_preview_end = None
         self.unsetCursor()
         self.placement_changed.emit("")
 
