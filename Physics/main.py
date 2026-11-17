@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
 
-from settings import WINDOW_HEIGHT, WINDOW_HEIGHT_MIN, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_WIDTH_MIN, GRID_SIZE
+from settings import WINDOW_HEIGHT, WINDOW_HEIGHT_MIN, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_WIDTH_MIN
 from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
@@ -25,7 +25,6 @@ class MainWindow(QMainWindow):
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN)
         self.current_file = None
-        self.shift_stack_count = 0
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -65,11 +64,9 @@ class MainWindow(QMainWindow):
 
     def add_component_from_palette(self, component_id, shift):
         if shift:
-            index = self.shift_stack_count
+            index = self.component_library.shift_add_count
             self.workspace.add_component(component_id, True, index)
-            self.shift_stack_count += 1
         else:
-            self.shift_stack_count = 0
             self.workspace.add_component(component_id, False, 0)
 
     def handle_palette_menu(self, action):
