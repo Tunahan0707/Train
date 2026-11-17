@@ -236,8 +236,22 @@ class MainWindow(QMainWindow):
     def on_placement_changed(self, component_id):
         if component_id:
             self.component_library.set_active_component(component_id)
+            labels = {
+                "resistor": "Direnç", "capacitor": "Kondansatör",
+                "inductor": "Bobin", "fuse": "Sigorta",
+                "potentiometer": "Potansiyometre", "diode": "Diyot",
+                "led": "LED", "bjt": "BJT", "mosfet": "MOSFET",
+                "voltage_source": "DC kaynak", "ac_source": "AC kaynak",
+                "battery": "Pil", "switch": "Anahtar",
+                "ground": "Toprak", "wire": "Tel çizme",
+            }
+            instruction = (
+                "Başlangıç ve bitiş noktalarına tıkla."
+                if component_id == "wire"
+                else "Çalışma alanına tıklayarak yerleştir."
+            )
             self.statusBar().showMessage(
-                f"{component_id} yerleştirme modu: çalışma alanına tıkla. ESC ile çık."
+                f"{labels.get(component_id, component_id)} modu: {instruction} ESC ile çık."
             )
         else:
             self.component_library.set_active_component("")
