@@ -218,6 +218,7 @@ class Workspace(QGraphicsView):
         )
         for item in duplicates:
             item.setSelected(True)
+        self.history_changed.emit()
         self.viewport().update()
 
     def rotate_selected_items(self):
@@ -229,6 +230,7 @@ class Workspace(QGraphicsView):
             return
         rotations = {item: item.rotation() for item in items}
         self.history.execute(RotateItemsCommand(rotations))
+        self.history_changed.emit()
         self.viewport().update()
 
     # Silme
@@ -257,6 +259,7 @@ class Workspace(QGraphicsView):
 
         command = DeleteItemsCommand(self.circuit_scene, [item])
         self.history.execute(command)
+        self.history_changed.emit()
 
     # Çöp kutusu konumu
     def update_delete_button_position(self):
