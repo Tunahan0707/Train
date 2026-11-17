@@ -66,7 +66,8 @@ class MainWindow(QMainWindow):
     def add_component_from_palette(self, component_id, shift):
         if shift:
             index = self.component_library.shift_add_count
-            self.workspace.add_component(component_id, True, index)
+            if self.workspace.add_component(component_id, True, index):
+                self.component_library.shift_add_count += 1
         else:
             self.workspace.add_component(component_id, False, 0)
 
