@@ -22,8 +22,8 @@
 ### Semiconductors
 - [x] Diode
 - [x] LED
-- [ ] BJT transistor
-- [ ] MOSFET
+- [x] BJT transistor
+- [x] MOSFET
 
 ### Protection and adjustable components
 - [x] Fuse
