@@ -76,6 +76,7 @@ class ComponentLibrary(QWidget):
         drawer_layout.setContentsMargins(0, 0, 0, 0)
         drawer_layout.setSpacing(7)
         self.scroll = QScrollArea()
+        self.scroll.setObjectName("componentScrollArea")
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -86,6 +87,9 @@ class ComponentLibrary(QWidget):
         self.items_layout.setContentsMargins(2, 2, 2, 2)
         self.items_layout.setSpacing(7)
         self.scroll.setWidget(self.items_host)
+        self.scroll.viewport().setObjectName("componentScrollViewport")
+        for surface in (self.drawer, self.scroll, self.scroll.viewport(), self.items_host):
+            surface.setAutoFillBackground(True)
         drawer_layout.addWidget(self.scroll)
         root.addWidget(self.drawer, 1)
 
@@ -168,3 +172,24 @@ class ComponentLibrary(QWidget):
 
     def reset_shift_stack(self):
         self.shift_add_count = 0
+
+    def apply_theme(self, colors):
+        from PySide6.QtGui import QColor, QPalette
+
+        surface = QColor(colors["panel_alt"])
+        for widget in (self.drawer, self.scroll, self.scroll.viewport(), self.items_host):
+            palette = widget.palette()
+            palette.setColor(QPalette.ColorRole.Window, surface)
+            palette.setColor(QPalette.ColorRole.Base, surface)
+            widget.setPalette(palette)
+            widget.setAutoFillBackground(True)
+
+        self.setStyleSheet(
+            "QWidget#componentLibrary { background-color: " + colors["panel"] + "; }"
+            "QWidget#componentDrawer, QScrollArea#componentScrollArea, "
+            "QWidget#componentScrollViewport, QWidget#componentItemsHost { "
+            "background-color: " + colors["panel_alt"] + "; color: " + colors["text"] + "; border: none; }"
+            "QScrollArea#componentScrollArea::viewport { background-color: " + colors["panel_alt"] + "; border: none; }"
+            "QScrollBar:horizontal { height: 8px; background: " + colors["panel"] + "; border: none; }"
+            "QScrollBar::handle:horizontal { background: " + colors["muted"] + "; min-width: 25px; border-radius: 4px; }"
+        )
