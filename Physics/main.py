@@ -25,6 +25,7 @@ from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
 from core.project_io import save_circuit, load_circuit
+from circuit.netlist import format_netlist_report
 
 
 class MainWindow(QMainWindow):
@@ -99,6 +100,11 @@ class MainWindow(QMainWindow):
         save_as_action = QAction("Farklı kaydet...", self)
         save_as_action.triggered.connect(self.save_circuit_as)
         file_menu.addAction(save_as_action)
+
+        circuit_menu = self.menuBar().addMenu("Devre")
+        analyze_action = QAction("Bağlantıları denetle", self)
+        analyze_action.triggered.connect(self.check_connections)
+        circuit_menu.addAction(analyze_action)
 
         # Üst araç çubuğu
         toolbar = QToolBar("Ana araç çubuğu", self)
@@ -182,6 +188,10 @@ class MainWindow(QMainWindow):
                 color: #aaa3ba;
             }}
         """)
+
+    def check_connections(self):
+        report = format_netlist_report(self.workspace.circuit_scene)
+        QMessageBox.information(self, "Bağlantı analizi", report)
 
     def new_circuit(self):
         self.workspace.circuit_scene.clear()
