@@ -50,13 +50,13 @@
 
 ## 4. Circuit Editing Tools
 
-- [ ] Select and place components.
+- [x] Select and place components.
 - [ ] Draw wires and create connections.
 - [ ] Delete and edit connections.
 - [ ] Move and rotate components.
 - [ ] Copy and paste components or selections.
-- [ ] Zoom in/out and pan around the workspace.
-- [ ] Support selection, multi-selection, and deletion.
+- [x] Zoom in/out and pan around the workspace.
+- [x] Support selection, multi-selection, and deletion.
 - [ ] Save, open, and duplicate circuits.
 
 ## 5. Reusable Custom Components
@@ -136,8 +136,8 @@ These are examples of intended modeling detail, not a finalized parameter schema
 - [ ] Customizable workspace.
 - [ ] Drag-and-drop component library.
 - [ ] Component search and categories.
-- [ ] Keyboard shortcuts.
-- [ ] Customizable panels.
+- [x] Keyboard shortcuts.
+- [x] Customizable panels.
 - [ ] Animated electrical-flow indicators.
 - [ ] Color changes that communicate circuit/component state.
 - [ ] Zoomable detailed component views.
