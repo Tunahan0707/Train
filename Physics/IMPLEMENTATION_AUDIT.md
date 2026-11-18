@@ -18,7 +18,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 ## Important limitations found
 
 ### Electrical models
-- Most component symbols are not backed by electrical equations.
+- Every current palette component except the AC source has some DC interpretation, but several are deliberately simplified approximations rather than complete device models.
 - The current DC solver does not model capacitor/inductor transient response or AC sources. Fuse behavior is a fixed-resistance approximation; potentiometers are modeled as a three-terminal resistive divider. BJT/MOSFET behavior is only an idealized voltage-controlled switch approximation, not a transistor device model. Diode/LED behavior is an approximate piecewise-linear DC model, not a full semiconductor model.
 - It has no component tolerance, voltage/current/power ratings, thermal model, internal resistance, current limiting, battery state, or failure model.
 - It has no time-domain integrator, nonlinear Newton iteration, convergence controls, or event handling.
@@ -28,7 +28,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - A two-click orthogonal wire tool now draws between snapped component terminals or existing wire geometry. Whole wires can be moved. Individual endpoint/bend handles and explicit junction objects are still absent.
 - Wire endpoints and bends cannot yet be interactively selected and edited.
 - There is no explicit junction object or topology-aware wire editing.
-- The current connectivity analyzer is geometric; it needs dedicated tests for terminal snapping, wire-to-wire contact, T-junctions, crossings, rotations, and near-miss tolerances.
+- The current connectivity analyzer is geometric. Tests now cover moved wires, terminal snapping, T-junctions and non-connected crossings; rotated pins, near-miss tolerances and broader wire-to-wire cases still need coverage.
 - There is no electrical highlight/selection of a whole net.
 
 ### Circuit and project model
