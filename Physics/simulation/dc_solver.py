@@ -19,7 +19,11 @@ SUFFIXES = {
 
 
 def parse_engineering_value(value):
-    text = str(value).strip().replace("Ω", "").replace("V", "").replace(" ", "")
+    text = str(value).strip().replace("Ω", "").replace(" ", "")
+    for unit in ("Hz", "V", "A", "W", "F", "H"):
+        if text.endswith(unit):
+            text = text[:-len(unit)]
+            break
     multiplier = 1.0
     for suffix in sorted(SUFFIXES, key=len, reverse=True):
         if text.endswith(suffix):
@@ -145,7 +149,8 @@ def solve_dc_operating_point(scene):
         raw = str(getattr(item, "value", "")).strip()
         resistance = parse_engineering_value(raw)
         unit = str(getattr(item, "unit", ""))
-        has_suffix = any(raw.endswith(suffix) for suffix in SUFFIXES)
+        normalized_raw = raw.replace("Ω", "").replace("V", "").replace("A", "").replace("W", "").replace("F", "").replace("H", "").replace("Hz", "").replace(" ", "")
+        has_suffix = any(normalized_raw.endswith(suffix) for suffix in SUFFIXES)
         if not has_suffix:
             if unit.startswith("k"):
                 resistance *= 1e3
