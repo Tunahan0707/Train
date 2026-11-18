@@ -81,7 +81,7 @@ def solve_dc_operating_point(scene):
 
     supported = {
         "resistor", "voltage_source", "battery", "switch", "ground",
-        "capacitor", "inductor", "diode", "led", "fuse", "potentiometer",
+        "capacitor", "inductor", "diode", "led", "fuse", "potentiometer", "bjt", "mosfet",
     }
     unsupported = [
         f"{_component_label(item)} ({getattr(item, 'component_id', 'unknown')})"
@@ -116,10 +116,10 @@ def solve_dc_operating_point(scene):
     unknown_nodes = [node for node in net_ids if node not in ground_nodes]
     node_index = {node: index for index, node in enumerate(unknown_nodes)}
 
-    resistors, fuses, potentiometers, sources, inductors, capacitors, diodes = [], [], [], [], [], [], []
+    resistors, fuses, potentiometers, sources, inductors, capacitors, diodes, transistors = [], [], [], [], [], [], [], []
     for item, pins in component_nodes.items():
         component_id = getattr(item, "component_id", "")
-        expected_pins = 1 if component_id == "ground" else (3 if component_id == "potentiometer" else 2)
+        expected_pins = 1 if component_id == "ground" else (3 if component_id in ("potentiometer", "bjt", "mosfet") else 2)
         if len(pins) != expected_pins:
             raise ValueError(f"{_component_label(item)} {expected_pins} uçlu olmalı.")
         if component_id == "resistor":
@@ -136,6 +136,8 @@ def solve_dc_operating_point(scene):
             capacitors.append(item)
         elif component_id in ("diode", "led"):
             diodes.append(item)
+        elif component_id in ("bjt", "mosfet"):
+            transistors.append(item)
 
     def component_resistance(item):
         raw = str(getattr(item, "value", "")).strip()
@@ -173,17 +175,26 @@ def solve_dc_operating_point(scene):
         for item in diodes
     }
     active_diodes = set()
+    active_transistors = set()
+    transistor_models = {
+        item: (0.7, 0.1) if getattr(item, "component_id", "") == "bjt" else (2.0, 0.05)
+        for item in transistors
+    }
     solution = []
     branch_currents = {}
 
     # Active-set solution for piecewise-linear diode/LED models.
     # Off: open circuit. On: fixed forward drop plus a small series resistance.
-    for _iteration in range(max(8, len(diodes) * 4 + 4)):
+    for _iteration in range(max(8, (len(diodes) + len(transistors)) * 4 + 4)):
         branches = [(item, source_voltages[item], 0.0, "source") for item in sources]
         branches.extend((item, 0.0, 0.0, "inductor") for item in inductors)
         branches.extend(
             (item, diode_models[item][0], diode_models[item][1], "diode")
             for item in diodes if item in active_diodes
+        )
+        branches.extend(
+            (item, 0.0, transistor_models[item][1], "transistor")
+            for item in transistors if item in active_transistors
         )
 
         size = len(unknown_nodes) + len(branches)
@@ -248,6 +259,19 @@ def solve_dc_operating_point(scene):
                 changed = True
             elif item in active_diodes and branch_currents.get(item, 0.0) < -1e-10:
                 active_diodes.remove(item)
+                changed = True
+        for item in transistors:
+            pins = component_nodes[item]
+            if getattr(item, "component_id", "") == "bjt":
+                control_voltage = node_voltages[pins[0]] - node_voltages[pins[2]]
+            else:
+                control_voltage = node_voltages[pins[0]] - node_voltages[pins[2]]
+            threshold, _on_resistance = transistor_models[item]
+            if item not in active_transistors and control_voltage > threshold:
+                active_transistors.add(item)
+                changed = True
+            elif item in active_transistors and control_voltage < threshold - 1e-6:
+                active_transistors.remove(item)
                 changed = True
         if not changed:
             break
@@ -343,6 +367,22 @@ def solve_dc_operating_point(scene):
             "conducting": item in active_diodes,
         })
 
+    transistor_results = []
+    for item in transistors:
+        pins = component_nodes[item]
+        control_voltage = node_voltages[pins[0]] - node_voltages[pins[2]]
+        output_voltage = node_voltages[pins[1]] - node_voltages[pins[2]]
+        current = branch_currents.get(item, 0.0)
+        transistor_results.append({
+            "id": getattr(item, "instance_id", None),
+            "name": _component_label(item),
+            "type": getattr(item, "component_id", ""),
+            "control_voltage": control_voltage,
+            "voltage": output_voltage,
+            "current": current,
+            "conducting": item in active_transistors,
+        })
+
     component_measurements = {}
     for item in resistor_results:
         component_measurements[item["id"]] = {
@@ -375,6 +415,13 @@ def solve_dc_operating_point(scene):
         component_measurements[item["id"]] = {
             "Gerilim": f'{item["voltage"]:.6g} V', "Akım": "0 A (DC kararlı hâl)",
         }
+    for item in transistor_results:
+        component_measurements[item["id"]] = {
+            "Kontrol gerilimi": f'{item["control_voltage"]:.6g} V',
+            "Çıkış gerilimi": f'{item["voltage"]:.6g} V',
+            "Çıkış akımı": f'{item["current"]:.6g} A',
+            "Durum": "İletimde" if item["conducting"] else "Kesimde",
+        }
     for item in diode_results:
         component_measurements[item["id"]] = {
             "Gerilim": f'{item["voltage"]:.6g} V', "Akım": f'{item["current"]:.6g} A',
@@ -391,6 +438,7 @@ def solve_dc_operating_point(scene):
         "inductors": inductor_results,
         "capacitors": capacitor_results,
         "diodes": diode_results,
+        "transistors": transistor_results,
         "unsupported": [],
         "automatic_ground": automatic_ground,
         "net_count": len(net_ids),
@@ -424,6 +472,11 @@ def format_dc_report(scene=None, result=None):
         lines.extend(["", "POTANSİYOMETRELER (üç uçlu direnç bölücü)"])
         for item in result["potentiometers"]:
             lines.append(f"  {item['name']}: {item['voltage']:.6g} V uçlar arası, sürgü {item['wiper_voltage']:.6g} V")
+    if result["transistors"]:
+        lines.extend(["", "TRANSİSTÖRLER (basitleştirilmiş anahtar modeli)"])
+        for item in result["transistors"]:
+            state = "İletimde" if item["conducting"] else "Kesimde"
+            lines.append(f"  {item['name']}: kontrol {item['control_voltage']:.6g} V, çıkış {item['voltage']:.6g} V, {item['current']:.6g} A ({state})")
     if result["diodes"]:
         lines.extend(["", "DİYOTLAR / LED (parçalı doğrusal model)"])
         for item in result["diodes"]:
@@ -447,9 +500,9 @@ def format_dc_report(scene=None, result=None):
 
     lines.extend([
         "",
-        "Model kapsamı: direnç, sabit dirençli sigorta, üç uçlu potansiyometre, ideal DC kaynak/pil/anahtar, ideal kondansatör/bobin ve parçalı doğrusal diyot/LED.",
-        "DC kararlı hâlde kondansatör açık devre, bobin kısa devre kabul edilir; geçici rejim hesaplanmaz. Diyot/LED sabit eşik gerilimi ve seri direnç yaklaşımıyla modellenir.",
-        "BJT, MOSFET ve AC kaynak için çözüm üretilmez.",
+        "Model kapsamı: direnç, sabit dirençli sigorta, üç uçlu potansiyometre, ideal DC kaynak/pil/anahtar, ideal kondansatör/bobin, parçalı doğrusal diyot/LED ve basitleştirilmiş BJT/MOSFET anahtar modeli.",
+        "DC kararlı hâlde kondansatör açık devre, bobin kısa devre kabul edilir; geçici rejim hesaplanmaz. Diyot/LED sabit eşik ve seri direnç; BJT/MOSFET ise kontrol gerilimine bağlı ideal anahtar yaklaşımıyla modellenir.",
+        "AC kaynak için çözüm üretilmez.",
         "GND yoksa bir düğüm geçici referans olarak seçilir.",
         "Kaynak akımının pozitif yönü, kaynağın sol (+) ucundan sağ (-) ucuna doğrudur.",
     ])
