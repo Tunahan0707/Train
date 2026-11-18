@@ -51,6 +51,7 @@ from core.commands import (
     SetValueCommand,
     SetNameCommand,
     SetWiperPositionCommand,
+    SetSwitchStateCommand,
 )
 
 
@@ -170,6 +171,8 @@ class Workspace(QGraphicsView):
         self.selection_start_scene = None
         self.selection_path = QPainterPath()
         self.drag_start_positions = {}
+        self.pressed_switch_item = None
+        self.pressed_switch_old_state = None
         self.wire_mode = False
         self.wire_start = None
         self.wire_preview_end = None
@@ -813,6 +816,15 @@ class Workspace(QGraphicsView):
 
         # Normal nesne seçimi ve taşıma başlangıcı
         if event.button() == Qt.MouseButton.LeftButton:
+            target = self.itemAt(event.position().toPoint())
+            while target is not None and target.parentItem() is not None:
+                target = target.parentItem()
+            if getattr(target, "component_id", None) == "switch":
+                self.pressed_switch_item = target
+                self.pressed_switch_old_state = bool(getattr(target, "closed", False))
+            else:
+                self.pressed_switch_item = None
+                self.pressed_switch_old_state = None
             super().mousePressEvent(event)
 
             self.drag_start_positions = {
@@ -904,8 +916,17 @@ class Workspace(QGraphicsView):
 
         if event.button() == Qt.MouseButton.LeftButton:
             super().mouseReleaseEvent(event)
-            if any(getattr(item, "component_id", None) == "switch" for item in self.circuit_scene.selectedItems()):
+            if (self.pressed_switch_item is not None
+                    and self.pressed_switch_item.scene() == self.circuit_scene
+                    and bool(getattr(self.pressed_switch_item, "closed", False)) != self.pressed_switch_old_state):
+                self.history.execute(SetSwitchStateCommand(
+                    self.pressed_switch_item,
+                    self.pressed_switch_old_state,
+                    self.pressed_switch_item.closed,
+                ))
                 self.history_changed.emit()
+            self.pressed_switch_item = None
+            self.pressed_switch_old_state = None
 
             viewport_point = event.position().toPoint()
             widget_point = self.mapFromGlobal(self.viewport().mapToGlobal(viewport_point))
