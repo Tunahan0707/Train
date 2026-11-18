@@ -50,6 +50,7 @@ from core.commands import (
     RotateItemsCommand,
     SetValueCommand,
     SetNameCommand,
+    SetWiperPositionCommand,
 )
 
 
@@ -252,6 +253,29 @@ class Workspace(QGraphicsView):
             if old_name == name:
                 continue
             self.history.execute(SetNameCommand(item, old_name, name))
+            changed = True
+        if changed:
+            self.history_changed.emit()
+
+    def set_component_wiper_position(self, items, new_value):
+        if not isinstance(items, (list, tuple, set)):
+            items = [items]
+        try:
+            position = float(str(new_value).replace(",", "."))
+        except ValueError:
+            return
+        if not 0.0 < position < 1.0:
+            return
+        changed = False
+        for item in items:
+            if item is None or item.scene() != self.circuit_scene:
+                continue
+            if getattr(item, "component_id", None) != "potentiometer":
+                continue
+            old = float(getattr(item, "wiper_position", 0.5))
+            if abs(old - position) < 1e-12:
+                continue
+            self.history.execute(SetWiperPositionCommand(item, old, position))
             changed = True
         if changed:
             self.history_changed.emit()
