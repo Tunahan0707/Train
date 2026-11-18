@@ -28,6 +28,10 @@ class FakeWire:
     def __init__(self, start, end):
         self.start_point = QPointF(*start)
         self.end_point = QPointF(*end)
+        self.position = QPointF(0, 0)
+
+    def mapToScene(self, point):
+        return QPointF(point.x() + self.position.x(), point.y() + self.position.y())
 
 
 class FakeScene:
