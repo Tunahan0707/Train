@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         self.tabs.setTabsClosable(True)
         self.tabs.currentChanged.connect(self.activate_circuit_tab)
         self.tabs.tabCloseRequested.connect(self.close_circuit_tab)
+        self.tabs.tabBar().tabMoved.connect(self.mark_dirty)
         self.add_tab_button = QToolButton()
         self.add_tab_button.setText("+")
         self.add_tab_button.setToolTip("Yeni devre ekle")
