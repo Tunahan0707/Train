@@ -167,48 +167,145 @@ class Factorial:
         return a
 
 class Roots:
-    
-    @staticmethod
-    def sqrt(x, eps=1e-15):
 
+    @staticmethod
+    def _is_finite(x):
+        return x == x and x != float("inf") and x != float("-inf")
+
+    @staticmethod
+    def _validate_eps(eps):
+        if not isinstance(eps, (int, float)) or not Roots._is_finite(eps) or eps <= 0:
+            raise ValueError("eps pozitif ve sonlu bir sayı olmalıdır!")
+
+    @staticmethod
+    def _real_root(x, n, eps):
+        if not Roots._is_finite(x):
+            raise ValueError("x sonlu bir sayı olmalıdır!")
+
+        if x < 0:
+            if n % 2 == 0:
+                raise ValueError("Negatif sayıların çift dereceli gerçek kökü yoktur!")
+            return -Roots._real_root(-x, n, eps)
+
+        if x == 0 or n == 1:
+            return x
+
+        # Ondalık ölçekleme, başlangıç tahminini sayının büyüklüğüne yaklaştırır.
+        m = float(x)
+        exponent = 0
+        while m >= 10:
+            m /= 10
+            exponent += 1
+        while m < 1:
+            m *= 10
+            exponent -= 1
+
+        y = 10 ** (exponent / n)
+        if y == 0:
+            y = 1.0
+
+        for _ in range(10000):
+            denominator = y ** (n - 1)
+            if denominator == 0:
+                y = (y + 1.0) / 2
+                continue
+
+            next_y = ((n - 1) * y + m * (10 ** (exponent % n)) / denominator) / n
+            # Ölçeklenmiş Newton adımı doğrudan x üzerinde daha kararlı yürütülür.
+            scaled_x = float(x)
+            next_y = ((n - 1) * y + scaled_x / denominator) / n
+
+            if abs(next_y - y) <= eps * max(abs(next_y), 1.0):
+                return next_y
+            y = next_y
+
+        raise ArithmeticError("Kök hesabı yakınsamadı!")
+
+    @staticmethod
+    def sqrt_old(x, eps=1e-15):
+        """Önceki karekök algoritmasının math modülüne bağımlı olmayan sürümü."""
         if isinstance(x, DualNumber):
-            root = Roots.sqrt(x.real, eps)
+            root = Roots.sqrt_old(x.real, eps)
             if root == 0:
                 raise ValueError("sqrt fonksiyonunun bu noktadaki DualNumber türevi tanımsızdır!")
             return DualNumber(root, x.dual / (2 * root))
-    
+
         if not isinstance(x, (int, float)):
             raise TypeError("x sayısal olmalıdır!")
-    
         if x < 0:
             raise ValueError("Negatif sayıların gerçek karekökü yoktur!")
-    
         if x == 0:
             return 0
-    
-        if not math.isfinite(x):
+        if not Roots._is_finite(x):
             raise ValueError("x sonlu bir sayı olmalıdır!")
-    
-        if eps <= 0:
-            raise ValueError("eps pozitif olmalıdır!")
-    
-        m, e = math.frexp(x)
-    
+        Roots._validate_eps(eps)
+
+        # frexp/ldexp eşdeğeri ikili ölçekleme.
+        m = float(x)
+        e = 0
+        while m >= 1:
+            m /= 2
+            e += 1
+        while m < 0.5:
+            m *= 2
+            e -= 1
+
         if e % 2 != 0:
             m *= 2
             e -= 1
-    
+
         ans = 1.0
-    
         while True:
             next_ans = (ans + m / ans) / 2
-    
             if abs(next_ans - ans) <= eps * abs(next_ans):
                 break
-            
             ans = next_ans
-    
-        return math.ldexp(next_ans, e // 2)
+
+        return next_ans * (2 ** (e // 2))
+
+    @staticmethod
+    def root(x, n, eps=1e-15):
+        if not isinstance(n, int) or isinstance(n, bool) or n < 1:
+            raise ValueError("Kök derecesi pozitif bir tam sayı olmalıdır!")
+        Roots._validate_eps(eps)
+
+        if n == 1:
+            return x
+
+        if isinstance(x, DualNumber):
+            real_root = Roots._real_root(x.real, n, eps)
+            if real_root == 0:
+                if x.dual == 0:
+                    return DualNumber(0, 0)
+                raise ValueError("Bu noktadaki DualNumber kök türevi tanımsızdır!")
+            return DualNumber(real_root, x.dual / (n * (real_root ** (n - 1))))
+
+        if isinstance(x, ComplexNumber):
+            if x.real == 0 and x.complex == 0:
+                return ComplexNumber(0, 0)
+            magnitude = abs(x)
+            angle = x.arg() / n
+            y = ComplexNumber(
+                magnitude ** (1 / n) * Trigonometry.cos(angle),
+                magnitude ** (1 / n) * Trigonometry.sin(angle),
+            )
+            for _ in range(100):
+                denominator = y ** (n - 1)
+                if denominator.real == 0 and denominator.complex == 0:
+                    raise ArithmeticError("Kök hesabı sırasında sıfıra bölme oluştu!")
+                next_y = ((n - 1) * y + x / denominator) / n
+                if abs(next_y - y) <= eps * max(abs(next_y), 1.0):
+                    return next_y
+                y = next_y
+            raise ArithmeticError("Karmaşık kök hesabı yakınsamadı!")
+
+        if not isinstance(x, (int, float)):
+            raise TypeError("x int, float, DualNumber veya ComplexNumber olmalıdır!")
+        return Roots._real_root(x, n, eps)
+
+    @staticmethod
+    def sqrt(x, eps=1e-15):
+        return Roots.root(x, 2, eps)
 
 
 class Functs:
