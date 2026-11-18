@@ -37,11 +37,11 @@ python -m unittest discover -s tests -v
 
 Editörde direnç, kondansatör, bobin, diyot, LED, BJT, MOSFET, sigorta, potansiyometre, DC/AC kaynak, pil, anahtar, GND ve kablo sembolleri bulunur. Ancak sembolün bulunması, fiziksel modelinin tamamlandığı anlamına gelmez.
 
-Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Kabloların uçlarını ve köşelerini etkileşimli düzenleme henüz yoktur.
+Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Kablolar seçilip bütün olarak taşınabilir; uç ve köşe düzenleme ile doğrudan uçtan uca kablo çizimi henüz yoktur.
 
-DC çalışma noktası çözümü şu anda direnç, ideal DC gerilim kaynağı, pil ve ideal kapalı anahtar ile sınırlıdır. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, yarı iletkenlerin doğrusal olmayan modelleri, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
+DC çalışma noktası çözümü direnç, ideal DC gerilim kaynağı, pil, ideal kapalı anahtar, ideal kondansatör (açık devre) ve ideal bobin (kısa devre) modellerini kapsar. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, yarı iletkenlerin doğrusal olmayan modelleri, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
 
-Bir proje şu anda tek devre sahnesi içerir. Çoklu adlandırılmış devreler ve hiyerarşik özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
+Bir proje şu anda tek devre sahnesi içerir; bu devre adlandırılıp yeniden adlandırılabilir. Çoklu devre sekmeleri ve hiyerarşik özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
 
 Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 
@@ -51,3 +51,7 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 - Component names are editable in the properties panel and saved in project format v2; version 1 projects remain readable.
 - DC steady-state analysis includes ideal capacitors (open circuit) and ideal inductors (short circuit). This does not provide charging/discharging curves or transient waveforms.
 - Unsupported component models are still rejected rather than silently omitted.
+
+- Kablolar bütün olarak taşınabilir ve konumları kaydedilir.
+- Bileşen adları özellikler panelinden, devre adı Menü üzerinden düzenlenebilir.
+- Proje biçimi v2'dir; v1 dosyaları da açılabilir.
