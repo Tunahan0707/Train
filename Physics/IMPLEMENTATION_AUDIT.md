@@ -11,7 +11,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - Movable orthogonal wire graphics and a geometric netlist builder. Wire endpoints, component terminals, ground references and contacts to wire segments can be grouped. A crossing without endpoint contact is not a junction.
 - Multi-circuit project tabs with add, rename, reorder and close operations; project format stores multiple named circuit scenes, active circuit ID, and stable circuit/component IDs. Legacy single-circuit formats v1-v3 are importable.
 - Inline component value and instance-name editing; new components receive unique reference labels (R1, C1, V1, etc.), labels/values are drawn on the canvas, and rename operations participate in undo/redo.
-- Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches, ideal capacitors (open circuit) and ideal inductors (zero-volt branch).
+- Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches, ideal capacitors (open circuit), ideal inductors (zero-volt branch), and piecewise-linear diodes/LEDs (fixed forward drop plus series resistance).
 - Engineering suffix parsing and Gaussian elimination unit tests.
 - Clipboard copy/paste and duplicate operations are present in the workspace code.
 
@@ -19,7 +19,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 
 ### Electrical models
 - Most component symbols are not backed by electrical equations.
-- The current DC solver does not model capacitor/inductor transient response, AC sources, diodes, LEDs, BJTs, MOSFETs, fuses or potentiometers.
+- The current DC solver does not model capacitor/inductor transient response, AC sources, BJTs, MOSFETs, fuses or potentiometers. Diode/LED behavior is an approximate piecewise-linear DC model, not a full semiconductor model.
 - It has no component tolerance, voltage/current/power ratings, thermal model, internal resistance, current limiting, battery state, or failure model.
 - It has no time-domain integrator, nonlinear Newton iteration, convergence controls, or event handling.
 - A solver result must never be shown as a complete circuit result when unsupported devices are present. The DC solver was changed to reject unsupported devices rather than silently omit them.
@@ -136,3 +136,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - This is multi-document organization, not yet hierarchical custom circuit components with external ports.
 
 - Wire-tool preview, Escape cancellation, snapping to nearby component terminals/wire segments, and undoable wire creation are implemented.
+
+- Diode and LED DC operating points use an active-set piecewise-linear approximation: off = open circuit; on = fixed forward drop with series resistance. Reverse breakdown, temperature dependence, leakage, capacitance and detailed device curves are not modeled.
