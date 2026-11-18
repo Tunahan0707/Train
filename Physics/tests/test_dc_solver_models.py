@@ -10,6 +10,8 @@ class Component:
         self.instance_id = f"id-{component_id}-{name}"
         self.name = name
         self.value = value
+        self.unit = "Ω"
+        self.wiper_position = 0.5
 
 
 class DCSolverModelTests(unittest.TestCase):
@@ -85,6 +87,36 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertFalse(result["diodes"][0]["conducting"])
         self.assertAlmostEqual(result["diodes"][0]["current"], 0.0)
         self.assertAlmostEqual(result["resistors"][0]["current"], 0.0, places=9)
+
+    def test_fuse_uses_its_configured_series_resistance(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        fuse = Component("fuse", "F1", "0.1")
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], fuse: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertAlmostEqual(result["fuses"][0]["current"], 5 / 1000.1, places=9)
+
+    def test_potentiometer_wiper_divides_voltage(self):
+        source = Component("voltage_source", "V1", "10")
+        potentiometer = Component("potentiometer", "RV1", "10")
+        potentiometer.unit = "kΩ"
+        potentiometer.wiper_position = 0.25
+        topology = {
+            "component_nodes": {source: [2, 0], potentiometer: [2, 0, 1]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        measured = result["potentiometers"][0]
+        self.assertAlmostEqual(measured["wiper_voltage"], 7.5, places=8)
+        self.assertAlmostEqual(measured["first_current"], 0.001, places=8)
+        self.assertAlmostEqual(measured["second_current"], 0.001, places=8)
 
     def test_non_positive_reactive_value_is_rejected(self):
         capacitor = Component("capacitor", "C1", "0")
