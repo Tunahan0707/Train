@@ -328,7 +328,7 @@ def solve_dc_operating_point(scene):
             "first_current": first_voltage / first_resistance,
             "second_current": second_voltage / second_resistance,
             "wiper_position": position,
-            "power": (node_voltages[first] - node_voltages[second]) * ((first_voltage / first_resistance)),
+            "power": first_voltage * (first_voltage / first_resistance) + second_voltage * (second_voltage / second_resistance),
         })
 
     source_results = []
