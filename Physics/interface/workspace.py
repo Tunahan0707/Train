@@ -416,8 +416,8 @@ class Workspace(QGraphicsView):
             component_id = snapshot["component_id"]
             if component_id == "wire":
                 item = WireItem(
-                    QPointF(snapshot["start"].x() + offset, snapshot["start"].y() + offset),
-                    QPointF(snapshot["end"].x() + offset, snapshot["end"].y() + offset),
+                    QPointF(snapshot["start"]),
+                    QPointF(snapshot["end"]),
                 )
                 position = QPointF(snapshot.get("position", QPointF(0, 0)).x() + offset,
                                   snapshot.get("position", QPointF(0, 0)).y() + offset)
