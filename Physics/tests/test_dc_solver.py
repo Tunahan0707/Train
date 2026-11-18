@@ -5,7 +5,7 @@ from simulation.dc_solver import gaussian_solve, parse_engineering_value
 
 class EngineeringValueTests(unittest.TestCase):
     def test_metric_suffixes(self):
-        cases = {"1000 Ω": 1000.0, "4.7kΩ": 4700.0, "2.2uF": 2.2e-6, "3m": 3e-3, "1meg": 1e6}
+        cases = {"1000 Ω": 1000.0, "4.7kΩ": 4700.0, "2.2uF": 2.2e-6, "10mH": 0.01, "1kHz": 1000.0, "100mA": 0.1, "3m": 3e-3, "1meg": 1e6}
         for source, expected in cases.items():
             with self.subTest(source=source):
                 self.assertAlmostEqual(parse_engineering_value(source), expected)
