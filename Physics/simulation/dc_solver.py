@@ -372,6 +372,21 @@ def solve_dc_operating_point(scene):
             "conducting": item in active_diodes,
         })
 
+    switch_results = []
+    for item in switches:
+        pins = component_nodes[item]
+        closed = bool(getattr(item, "closed", False))
+        voltage = node_voltages[pins[0]] - node_voltages[pins[1]]
+        current = branch_currents.get(item, 0.0)
+        switch_results.append({
+            "id": getattr(item, "instance_id", None),
+            "name": _component_label(item),
+            "closed": closed,
+            "voltage": voltage,
+            "current": current,
+            "power": voltage * current,
+        })
+
     transistor_results = []
     for item in transistors:
         pins = component_nodes[item]
