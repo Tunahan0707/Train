@@ -38,6 +38,8 @@ class ProjectIOTests(unittest.TestCase):
             load_circuit(loaded, path)
 
         by_type = {item.component_id: item for item in loaded.items()}
+        self.assertEqual(by_type["resistor"].instance_id, resistor.instance_id)
+        self.assertEqual(by_type["capacitor"].instance_id, capacitor.instance_id)
         self.assertEqual(by_type["resistor"].name, "R_LOAD")
         self.assertEqual(by_type["resistor"].value, "4.7k")
         self.assertEqual(by_type["capacitor"].name, "C_FILTER")
