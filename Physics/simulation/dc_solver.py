@@ -149,7 +149,11 @@ def solve_dc_operating_point(scene):
         raw = str(getattr(item, "value", "")).strip()
         resistance = parse_engineering_value(raw)
         unit = str(getattr(item, "unit", ""))
-        normalized_raw = raw.replace("Ω", "").replace("V", "").replace("A", "").replace("W", "").replace("F", "").replace("H", "").replace("Hz", "").replace(" ", "")
+        normalized_raw = raw.strip().replace("Ω", "").replace(" ", "")
+        for unit_suffix in ("Hz", "V", "A", "W", "F", "H"):
+            if normalized_raw.endswith(unit_suffix):
+                normalized_raw = normalized_raw[:-len(unit_suffix)]
+                break
         has_suffix = any(normalized_raw.endswith(suffix) for suffix in SUFFIXES)
         if not has_suffix:
             if unit.startswith("k"):
