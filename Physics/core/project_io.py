@@ -6,7 +6,7 @@ from components.basic import BasicComponent
 from components.wire import WireItem
 
 
-def save_circuit(scene, file_path):
+def save_circuit(scene, file_path, circuit_name=None):
     components = []
     for item in scene.items():
         component_id = getattr(item, "component_id", None)
@@ -34,7 +34,7 @@ def save_circuit(scene, file_path):
     data = {
         "format": "physics-circuit",
         "version": 2,
-        "circuit": {"name": Path(file_path).stem or "Devre"},
+        "circuit": {"name": str(circuit_name or Path(file_path).stem or "Devre")},
         "components": components,
     }
     Path(file_path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -99,3 +99,4 @@ def load_circuit(scene, file_path):
     for item in new_items:
         scene.addItem(item)
     scene.clearSelection()
+    return str(data.get("circuit", {}).get("name", Path(file_path).stem or "Devre"))
