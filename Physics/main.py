@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
+        self.simulation_results.pop(page.circuit_id, None)
         if self.tabs.count() == 1:
             page.workspace.circuit_scene.clear()
             page.workspace.history.undo_stack.clear()
@@ -299,6 +300,9 @@ class MainWindow(QMainWindow):
             self.update_properties()
             QMessageBox.information(self, "DC çalışma noktası", format_dc_report(result=result))
         except (ValueError, ZeroDivisionError) as error:
+            if self.tabs.currentWidget() is not None:
+                self.simulation_results.pop(self.tabs.currentWidget().circuit_id, None)
+                self.update_properties()
             QMessageBox.warning(self, "DC çözümü yapılamadı", str(error))
 
     def open_circuit(self):
