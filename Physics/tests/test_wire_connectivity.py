@@ -51,6 +51,19 @@ class WireConnectivityTests(unittest.TestCase):
         self.assertEqual(result["component_nodes"][first][0], result["component_nodes"][second][0])
         self.assertEqual(result["unconnected_terminals"], [])
 
+    def test_copying_moved_wire_applies_offset_once(self):
+        workspace = Workspace()
+        wire = WireItem((0, 0), (40, 0))
+        wire.setPos(30, 70)
+        workspace.circuit_scene.addItem(wire)
+        snapshots = workspace._capture_items([wire])
+        copies, positions = workspace._create_item_copies(snapshots, 40)
+        copied_wire = copies[0]
+        copied_wire.setPos(positions[copied_wire])
+        self.assertEqual(copied_wire.start_point, QPointF(0, 0))
+        self.assertEqual(copied_wire.scene_start_point(), QPointF(70, 110))
+        workspace.deleteLater()
+
     def test_wire_tool_snaps_to_component_terminals(self):
         workspace = Workspace()
         resistor = Resistor()
