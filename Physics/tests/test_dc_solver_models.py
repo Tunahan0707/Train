@@ -12,6 +12,7 @@ class Component:
         self.value = value
         self.unit = "Ω"
         self.wiper_position = 0.5
+        self.closed = False
 
 
 class DCSolverModelTests(unittest.TestCase):
@@ -147,6 +148,36 @@ class DCSolverModelTests(unittest.TestCase):
         measured = result["transistors"][0]
         self.assertFalse(measured["conducting"])
         self.assertAlmostEqual(measured["current"], 0.0)
+
+    def test_closed_switch_reports_series_current(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        switch = Component("switch", "SW1", "")
+        switch.closed = True
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], switch: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertAlmostEqual(result["switches"][0]["current"], 0.005, places=9)
+        self.assertAlmostEqual(result["switches"][0]["voltage"], 0.0, places=9)
+
+    def test_open_switch_blocks_current_and_reports_voltage(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        switch = Component("switch", "SW1", "")
+        switch.closed = False
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], switch: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertAlmostEqual(result["switches"][0]["current"], 0.0, places=9)
+        self.assertAlmostEqual(result["switches"][0]["voltage"], 5.0, places=9)
 
     def test_non_positive_reactive_value_is_rejected(self):
         capacitor = Component("capacitor", "C1", "0")
