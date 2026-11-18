@@ -8,10 +8,10 @@ This document distinguishes existing prototype behavior from verified engineerin
 
 - PySide6 schematic editor with selection, multi-selection, placement, drag/drop, rotation, duplication, undo/redo, zoom and pan.
 - Symbol definitions for resistor, capacitor, inductor, diode, LED, BJT, MOSFET, fuse, potentiometer, DC source, AC source, battery, switch, ground and wire.
-- Basic orthogonal wire graphics and a geometric netlist builder. Wire endpoints, component terminals, ground references and contacts to wire segments can be grouped. A crossing without endpoint contact is not a junction.
-- JSON project save/load for one schematic scene.
-- Basic inline value editing and a properties panel.
-- Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries and ideal closed switches.
+- Movable orthogonal wire graphics and a geometric netlist builder. Wire endpoints, component terminals, ground references and contacts to wire segments can be grouped. A crossing without endpoint contact is not a junction.
+- JSON project save/load for one named schematic scene (format v2, with v1 compatibility).
+- Inline component value and instance-name editing; rename operations participate in undo/redo.
+- Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches, ideal capacitors (open circuit) and ideal inductors (zero-volt branch).
 - Engineering suffix parsing and Gaussian elimination unit tests.
 - Clipboard copy/paste and duplicate operations are present in the workspace code.
 
@@ -25,7 +25,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - A solver result must never be shown as a complete circuit result when unsupported devices are present. The DC solver was changed to reject unsupported devices rather than silently omit them.
 
 ### Connectivity and editing
-- Wire graphics are fixed orthogonal paths, not interactive terminal-to-terminal routes.
+- Wires can now be selected and moved as whole objects, but their endpoints and bends cannot yet be edited interactively; there is no terminal-to-terminal wire drawing tool.
 - Wire endpoints and bends cannot yet be interactively selected and edited.
 - There is no explicit junction object or topology-aware wire editing.
 - The current connectivity analyzer is geometric; it needs dedicated tests for terminal snapping, wire-to-wire contact, T-junctions, crossings, rotations, and near-miss tolerances.
@@ -35,8 +35,8 @@ This document distinguishes existing prototype behavior from verified engineerin
 - A project currently contains one circuit scene.
 - There are no multiple named circuits/tabs within a project.
 - There is no reusable hierarchical subcircuit definition, port declaration, custom-component library entry, or nested circuit editor.
-- There is no renameable circuit identity separate from the file path/window title.
-- There is no versioned project migration beyond the current single format version.
+- A single circuit can be named and renamed; the name is persisted separately from the file path. Multiple named circuits within one project remain unavailable.
+- Version 2 project files are supported, with a compatibility loader for version 1.
 
 ### Measurement and analysis
 - No ammeter, voltmeter, multimeter, oscilloscope or logic analyzer is implemented.
@@ -46,7 +46,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - No simulation timeline, pause/resume/step/speed controls, or result history exists.
 
 ### Reliability and validation
-- Automated tests cover engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, and a dangling-wire case.
+- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named project persistence, v1 compatibility, reactive DC models, and moved-wire connectivity. They have not yet been executed in this remote editing session.
 - There are still no tests for full netlist topology, circuit persistence, component behavior, source polarity, Ohm's law, KCL/KVL, nonlinear convergence, or transient accuracy.
 - GUI interaction has not been verified automatically.
 - No crash recovery/autosave or project backup/version history exists.
@@ -117,3 +117,10 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - Project format version 2 persists component names and still reads version 1 files. Loading rejects unknown component types before replacing the current scene.
 - DC steady-state analysis now models ideal capacitors as open circuits and ideal inductors as zero-volt branches (short circuits), reporting capacitor voltage and inductor current. This is not transient analysis.
 - Added tests for named component persistence, legacy file loading, safe rejection of unknown component types, and ideal reactive DC behavior. These tests have been authored but not executed in this remote editing session.
+
+
+### Latest editing and project increments
+
+- Whole-wire movement now works through normal graphics-item selection and movement; wire position is included in project persistence and clipboard duplication. Netlist geometry is evaluated in scene coordinates after movement.
+- A circuit can be renamed from the palette menu. Its name is stored in the project document and restored on load.
+- The properties panel now edits component instance names and the workspace records these changes in undo/redo history.
