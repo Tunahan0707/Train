@@ -44,7 +44,7 @@ class FakeScene:
 
 class SimulationValidationTests(unittest.TestCase):
     def test_unsupported_component_is_not_silently_ignored(self):
-        capacitor = FakeComponent("capacitor", "Kondansatör C1")
+        capacitor = FakeComponent("mosfet", "MOSFET M1")
         with self.assertRaisesRegex(ValueError, "fiziksel modeli henüz uygulanmadı"):
             solve_dc_operating_point(FakeScene([capacitor]))
 
