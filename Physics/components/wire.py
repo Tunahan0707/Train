@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QGraphicsPathItem
+from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsItem
 from PySide6.QtGui import QPainterPath, QPen, QColor
 from PySide6.QtCore import Qt, QPointF
 
@@ -12,9 +12,9 @@ class WireItem(QGraphicsPathItem):
         self.start_point = self.to_point(start)
         self.end_point = self.to_point(end)
         self.setFlags(
-            QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable
-            | QGraphicsPathItem.GraphicsItemFlag.ItemIsMovable
-            | QGraphicsPathItem.GraphicsItemFlag.ItemSendsGeometryChanges
+            QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
+            | QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+            | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
         self.setPen(QPen(QColor(color("component")), 8))
         self.setZValue(-1)
