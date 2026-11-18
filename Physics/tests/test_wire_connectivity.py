@@ -8,6 +8,8 @@ from PySide6.QtWidgets import QApplication, QGraphicsScene
 
 from circuit.netlist import build_netlist
 from components.wire import WireItem
+from components.resistor import Resistor
+from interface.workspace import Workspace
 
 
 class PinComponent:
@@ -48,6 +50,22 @@ class WireConnectivityTests(unittest.TestCase):
         result = build_netlist(SceneAdapter())
         self.assertEqual(result["component_nodes"][first][0], result["component_nodes"][second][0])
         self.assertEqual(result["unconnected_terminals"], [])
+
+    def test_wire_tool_snaps_to_component_terminals(self):
+        workspace = Workspace()
+        resistor = Resistor()
+        workspace.circuit_scene.addItem(resistor)
+        snapped = workspace._snap_wire_point(QPointF(-35, 0))
+        self.assertEqual(snapped, QPointF(-40, 0))
+        workspace.deleteLater()
+
+    def test_selecting_wire_tool_enters_drawing_mode_instead_of_adding_stub(self):
+        workspace = Workspace()
+        self.assertTrue(workspace.add_component("wire"))
+        self.assertTrue(workspace.wire_mode)
+        self.assertEqual(workspace.circuit_scene.items(), [])
+        workspace.cancel_wire_mode()
+        workspace.deleteLater()
 
     def test_wire_remains_at_origin_by_default(self):
         wire = WireItem((10, 20), (40, 20))
