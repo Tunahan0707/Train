@@ -176,6 +176,7 @@ class MainWindow(QMainWindow):
     def handle_palette_menu(self, action):
         actions = {
             "new": self.new_circuit,
+            "duplicate": self.duplicate_circuit,
             "rename": self.rename_circuit,
             "open": self.open_circuit,
             "save": self.save_circuit,
@@ -276,6 +277,16 @@ class MainWindow(QMainWindow):
     def new_circuit(self):
         name = f"Devre {self.tabs.count() + 1}"
         self._add_circuit_tab(name, select=True)
+
+    def duplicate_circuit(self):
+        source = self.tabs.currentWidget()
+        if source is None:
+            return
+        snapshots = source.workspace._capture_items(source.workspace.circuit_scene.items())
+        copies, positions = source.workspace._create_item_copies(snapshots, 40)
+        for item, position in positions.items():
+            item.setPos(position)
+        self._add_circuit_tab(f"{source.circuit_name} kopya", items=copies, select=True)
 
     def _collect_circuits(self):
         return [
