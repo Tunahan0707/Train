@@ -17,6 +17,8 @@ def save_circuit(scene, file_path):
                 "type": "wire",
                 "start": [item.start_point.x(), item.start_point.y()],
                 "end": [item.end_point.x(), item.end_point.y()],
+                "x": item.pos().x(),
+                "y": item.pos().y(),
             })
         else:
             components.append({
@@ -77,6 +79,7 @@ def load_circuit(scene, file_path):
             if len(start) != 2 or len(end) != 2:
                 raise ValueError("Kablo koordinatları geçersiz.")
             item = WireItem((float(start[0]), float(start[1])), (float(end[0]), float(end[1])))
+            item.setPos(float(entry.get("x", 0)), float(entry.get("y", 0)))
             new_items.append(item)
             continue
         if component_type not in constructors:
