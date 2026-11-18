@@ -16,27 +16,36 @@
 
 ### Passive components
 - [x] Resistor symbol and basic value field
-- [ ] Resistor electrical model, ratings, tolerance and thermal behavior
+- [x] Ideal resistor DC model and V/I/P calculation
+- [ ] Ratings, tolerance and thermal behavior
 - [x] Capacitor symbol and basic value field
-- [ ] Capacitor DC/transient model, ESR, leakage and voltage limits
+- [x] Ideal capacitor DC steady-state open-circuit model
+- [ ] Transient charging/discharging, ESR, leakage and voltage limits
 - [x] Inductor symbol and basic value field
-- [ ] Inductor DC/transient model, winding resistance and saturation
+- [x] Ideal inductor DC steady-state short-circuit model
+- [ ] Transient response, winding resistance and saturation
 
 ### Semiconductors
 - [x] Diode symbol
-- [ ] Diode nonlinear electrical model and reverse breakdown
+- [x] Approximate piecewise-linear DC forward/reverse model
+- [ ] Full device curves, reverse breakdown and temperature dependence
 - [x] LED symbol
-- [ ] LED electrical/light-output model and ratings
+- [x] Approximate piecewise-linear DC conduction model
+- [ ] Optical output, full device curves and ratings
 - [x] BJT symbol
-- [ ] BJT nonlinear model and operating regions
+- [x] Simplified threshold-controlled DC switch approximation
+- [ ] BJT base current, gain and operating-region model
 - [x] MOSFET symbol
-- [ ] MOSFET nonlinear model and operating regions
+- [x] Simplified gate-threshold-controlled DC switch approximation
+- [ ] MOSFET transfer/output curves, body diode and operating-region model
 
 ### Protection and adjustable components
 - [x] Fuse symbol
-- [ ] Fuse current/time and failure model
+- [x] Fixed-resistance DC fuse approximation
+- [ ] Fuse current/time, thermal and failure model
 - [x] Potentiometer symbol
-- [ ] Potentiometer three-terminal resistance model and wiper control
+- [x] Three-terminal resistance divider with editable wiper ratio
+- [ ] Wiper contact resistance and non-ideal behavior
 
 ### Power sources
 - [x] DC voltage source symbol
@@ -66,7 +75,7 @@
 
 - [x] Select and place components.
 - [x] Draw schematic wires and infer basic terminal/wire-segment connectivity.
-- [ ] Route wires interactively between selected terminals.
+- [x] Draw orthogonal wires by clicking start and end points with terminal/wire snapping.
 - [ ] Select, move, reshape, split, join and delete wires.
 - [ ] Add and edit explicit junction points.
 - [ ] Validate dangling, shorted and ambiguous connections.
@@ -132,9 +141,9 @@ These are examples of intended modeling detail, not a finalized parameter schema
 
 ## 10. Analysis and Debugging
 
-- [ ] Inspect voltage at circuit connections.
-- [ ] Inspect current through components.
-- [ ] Monitor power and temperature.
+- [ ] Probe voltage at arbitrary circuit connections.
+- [x] Inspect calculated voltage/current/power for supported components after DC solve.
+- [ ] Monitor temperature.
 - [ ] Detect conditions such as short circuits, overcurrent, and reverse connection where applicable.
 - [ ] Identify damaged components and explain the cause of damage.
 - [ ] Preserve simulation history for later inspection.
@@ -142,7 +151,7 @@ These are examples of intended modeling detail, not a finalized parameter schema
 
 ## 11. Project and File Management
 
-- [ ] Support multiple circuits within one project.
+- [x] Support multiple named circuits within one project.
 - [x] Save projects, open them, and use Save As.
 - [ ] Import and export circuits.
 - [ ] Allow the component library to be extended.
@@ -223,7 +232,7 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - Property-panel cleanup recursively removes nested row layouts and their widgets, preventing stale values/labels after edits or deselection.
 - Editing a shared property sends one batch update for the selected same-type components and refreshes the panel once.
 - Mixed values show an empty field with a placeholder instead of retaining one component's old value.
-- Component value annotations were removed from the canvas; values remain editable in the properties panel. This removes the stray-looking default resistor annotation (1000 Ω) from below its symbol.
+- Component reference names and values are now rendered beneath symbols; both names and values remain editable in the properties panel.
 
 
 ## Recent functional fixes
@@ -281,3 +290,11 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 
 - [x] Simplified DC on/off switch approximations for NPN BJT and N-channel MOSFET.
 - [ ] Full BJT/MOSFET device models, gain/transfer curves and parasitics.
+
+
+## Newly implemented DC scope
+
+- [x] Per-component DC operating-point measurements are visible in the properties panel after a successful solve.
+- [x] Circuit edits invalidate old DC measurements.
+- [x] Fuse and potentiometer DC approximations are included.
+- [x] Approximate diode/LED and transistor switch states are included in DC analysis.
