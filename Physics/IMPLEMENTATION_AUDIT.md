@@ -57,7 +57,7 @@ The following sequence is deliberate. Later systems depend on earlier ones; addi
 
 ### Phase A — circuit data model and topology
 - [x] Introduce a project document containing multiple independently named circuits.
-- [x] Add, rename, reorder, close and switch-active-circuit operations. Circuit duplication remains pending.
+- [x] Add, rename, reorder, close and switch-active-circuit operations. Complete circuit duplication is implemented with fresh component identities.
 - [x] Give every component a stable instance ID and a user-editable reference/name.
 - Project-level versioned persistence and migration from legacy single-circuit formats are implemented; topology remains scene-derived.
 - Model terminals, wires, junctions and nets explicitly.
@@ -130,7 +130,7 @@ A checklist item is complete only when its underlying behavior exists, persists 
 
 ### Multi-circuit project increment
 
-- A project now holds multiple named circuit tabs. Tabs can be added, renamed, reordered, and closed; the active circuit is restored on load.
+- A project now holds multiple named circuit tabs. Tabs can be added, duplicated, renamed, reordered, and closed; the active circuit is restored on load.
 - Saving writes a project document containing all tabs. Opening legacy single-circuit .physics files imports them as a one-tab project.
 - Each circuit and component has a stable UUID. The project loader validates duplicate circuit/component IDs before replacing the active project.
 - This is multi-document organization, not yet hierarchical custom circuit components with external ports.
