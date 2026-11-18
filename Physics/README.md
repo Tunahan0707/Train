@@ -39,7 +39,7 @@ Editörde direnç, kondansatör, bobin, diyot, LED, BJT, MOSFET, sigorta, potans
 
 Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Bağlantı kategorisinden İletken aracını seç; ilk tıklamayla başlangıcı, ikinci tıklamayla bitişi belirle. Araç bileşen uçlarına ve mevcut kablo segmentlerine yakındaki noktaları yakalar. Kablolar ayrıca seçilip bütün olarak taşınabilir; uç/köşe tutamaçları henüz yoktur.
 
-DC çalışma noktası çözümü direnç, ideal DC gerilim kaynağı, pil, ideal kapalı anahtar, ideal kondansatör (açık devre) ve ideal bobin (kısa devre) modellerini kapsar. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, yarı iletkenlerin doğrusal olmayan modelleri, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
+DC çalışma noktası çözümü direnç, ideal DC gerilim kaynağı, pil, ideal kapalı anahtar, ideal kondansatör (açık devre) ve ideal bobin (kısa devre) modellerini kapsar. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, BJT/MOSFET modelleri ve yarı iletkenlerin ayrıntılı doğrusal olmayan fiziği, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
 
 Bir proje birden fazla devre sekmesi içerebilir. Sekmeler eklenebilir, yeniden adlandırılabilir, sıralanabilir ve kapatılabilir. Eski tek devre dosyaları tek sekmeli projeye aktarılır. Hiyerarşik, yeniden kullanılabilir özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
 
@@ -62,3 +62,5 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 - Kaydetme işlemi açık projedeki bütün devre sekmelerini birlikte kaydeder.
 
 - İletken çiziminden Escape ile çıkılır; kablo oluşturma Ctrl+Z ile geri alınabilir.
+
+- Diyot/LED DC çözümü basitleştirilmiş parçalı doğrusal modeldir (eşik gerilimi + seri direnç); gerçek üretici modeli veya sıcaklık etkisi değildir.
