@@ -155,7 +155,7 @@ def solve_dc_operating_point(scene):
             raise ValueError(f"{_component_label(item)} direnci sıfırdan büyük olmalı.")
     for item in potentiometers:
         position = float(getattr(item, "wiper_position", 0.5))
-        if not 0.0 < position < 1.0:
+        if not 0.0 <= position <= 1.0:
             raise ValueError(f"{_component_label(item)} sürgü konumu 0 ile 1 arasında olmalı.")
     for item in inductors + capacitors:
         if parse_engineering_value(getattr(item, "value", "")) <= 0:
@@ -209,8 +209,9 @@ def solve_dc_operating_point(scene):
             pins = component_nodes[item]
             total_resistance = component_resistance(item)
             position = float(getattr(item, "wiper_position", 0.5))
-            stamp_conductance(pins[0], pins[2], 1.0 / (total_resistance * position))
-            stamp_conductance(pins[2], pins[1], 1.0 / (total_resistance * (1.0 - position)))
+            effective_position = min(1.0 - 1e-9, max(1e-9, position))
+            stamp_conductance(pins[0], pins[2], 1.0 / (total_resistance * effective_position))
+            stamp_conductance(pins[2], pins[1], 1.0 / (total_resistance * (1.0 - effective_position)))
 
         branch_index_by_item = {}
         for branch_index, (item, branch_voltage, series_resistance, branch_kind) in enumerate(branches):
@@ -286,8 +287,9 @@ def solve_dc_operating_point(scene):
         first, second, wiper = component_nodes[item]
         total_resistance = component_resistance(item)
         position = float(getattr(item, "wiper_position", 0.5))
-        first_resistance = total_resistance * position
-        second_resistance = total_resistance * (1.0 - position)
+        effective_position = min(1.0 - 1e-9, max(1e-9, position))
+        first_resistance = total_resistance * effective_position
+        second_resistance = total_resistance * (1.0 - effective_position)
         first_voltage = node_voltages[first] - node_voltages[wiper]
         second_voltage = node_voltages[wiper] - node_voltages[second]
         potentiometer_results.append({
