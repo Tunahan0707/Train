@@ -81,3 +81,14 @@ class Resistor(QGraphicsItem):
 
         painter.drawPath(path)
 
+        painter.setPen(QPen(color_value))
+        font = painter.font()
+        font.setPixelSize(9)
+        painter.setFont(font)
+        bounds = self.boundingRect()
+        name = painter.fontMetrics().elidedText(str(self.name), Qt.TextElideMode.ElideRight, int(bounds.width() - 4))
+        painter.drawText(QRectF(bounds.left(), RESISTOR_HEIGHT / 2 + 2, bounds.width(), 13), Qt.AlignmentFlag.AlignHCenter, name)
+        value_text = f"{self.value} {self.unit}".strip()
+        value_text = painter.fontMetrics().elidedText(value_text, Qt.TextElideMode.ElideRight, int(bounds.width() - 4))
+        painter.drawText(QRectF(bounds.left(), RESISTOR_HEIGHT / 2 + 14, bounds.width(), 13), Qt.AlignmentFlag.AlignHCenter, value_text)
+
