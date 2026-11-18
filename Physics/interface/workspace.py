@@ -273,17 +273,25 @@ class Workspace(QGraphicsView):
         if prefix is None:
             return
         if counts is None:
-            index = sum(1 for existing in self.circuit_scene.items()
-                        if getattr(existing, "component_id", None) == component_id)
+            used_names = {
+                str(getattr(existing, "name", ""))
+                for existing in self.circuit_scene.items()
+                if getattr(existing, "component_id", None) == component_id
+            }
         else:
             if component_id not in counts:
-                counts[component_id] = sum(
-                    1 for existing in self.circuit_scene.items()
+                counts[component_id] = {
+                    str(getattr(existing, "name", ""))
+                    for existing in self.circuit_scene.items()
                     if getattr(existing, "component_id", None) == component_id
-                )
-            index = counts[component_id]
-            counts[component_id] += 1
-        item.name = f"{prefix}{index + 1}"
+                }
+            used_names = counts[component_id]
+        index = 1
+        while f"{prefix}{index}" in used_names:
+            index += 1
+        item.name = f"{prefix}{index}"
+        if counts is not None:
+            used_names.add(item.name)
 
     def _capture_items(self, items):
         snapshots = []
