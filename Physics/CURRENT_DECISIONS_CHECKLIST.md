@@ -233,3 +233,14 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - The schematic switch toggles open/closed on click without treating a drag as a toggle. Its state is shown in the properties panel, saved in project files, and copied when duplicated.
 - Closed ideal switches join their two terminals in the netlist. The current linear DC solver treats the closed ideal switch as a short and lets an open switch remain disconnected.
 - The DC solver now refuses to produce a partial result when unsupported component types are present or a component terminal is reported disconnected.
+
+
+## Implemented since the previous audit
+
+- [x] Edit component instance names from the properties panel.
+- [x] Undo/redo component renaming.
+- [x] Persist component names in project file version 2 while retaining version 1 loading.
+- [x] Reject unknown component types before clearing/replacing the active scene.
+- [x] Ideal capacitor and inductor DC steady-state behavior.
+- [ ] Circuit document naming, multiple circuit documents, and reusable hierarchical circuit definitions.
+- [ ] Transient simulation and nonlinear semiconductor models.
