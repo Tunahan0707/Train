@@ -16,7 +16,7 @@ from interface.properties_panel import PropertiesPanel
 from interface.theme_switch import ThemeSwitch
 from core.project_io import save_project, load_project
 from circuit.netlist import format_netlist_report
-from simulation.dc_solver import format_dc_report
+from simulation.dc_solver import format_dc_report, solve_dc_operating_point
 from theme import DARK, LIGHT, set_current
 
 
@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
         self.component_library = None
         self.circuit_name = "Devre 1"
         self.current_theme_colors = None
+        self.simulation_results = {}
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -90,6 +91,7 @@ class MainWindow(QMainWindow):
             page.workspace.circuit_scene.addItem(item)
 
         page.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
+        page.workspace.history_changed.connect(lambda circuit_id=page.circuit_id: self.invalidate_simulation(circuit_id))
         page.workspace.history_changed.connect(self.update_properties)
         page.component_library.add_requested.connect(
             lambda component_id, shift, workspace=page.workspace, library=page.component_library:
@@ -279,6 +281,9 @@ class MainWindow(QMainWindow):
             for index in range(self.tabs.count())
         ]
 
+    def invalidate_simulation(self, circuit_id):
+        self.simulation_results.pop(circuit_id, None)
+
     def check_connections(self):
         if self.workspace is None:
             return
@@ -288,7 +293,11 @@ class MainWindow(QMainWindow):
         if self.workspace is None:
             return
         try:
-            QMessageBox.information(self, "DC çalışma noktası", format_dc_report(self.workspace.circuit_scene))
+            page = self.tabs.currentWidget()
+            result = solve_dc_operating_point(self.workspace.circuit_scene)
+            self.simulation_results[page.circuit_id] = result
+            self.update_properties()
+            QMessageBox.information(self, "DC çalışma noktası", format_dc_report(result=result))
         except (ValueError, ZeroDivisionError) as error:
             QMessageBox.warning(self, "DC çözümü yapılamadı", str(error))
 
@@ -304,6 +313,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Proje açılamadı", str(error))
             return
 
+        self.simulation_results.clear()
         while self.tabs.count():
             page = self.tabs.widget(0)
             self.tabs.removeTab(0)
@@ -349,7 +359,9 @@ class MainWindow(QMainWindow):
         if self.workspace is None:
             self.properties_panel.clear_rows()
             return
-        self.properties_panel.set_items(self.workspace.circuit_scene.selectedItems())
+        page = self.tabs.currentWidget()
+        result = self.simulation_results.get(page.circuit_id) if page is not None else None
+        self.properties_panel.set_items(self.workspace.circuit_scene.selectedItems(), result)
 
 
 def main():
