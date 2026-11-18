@@ -38,6 +38,8 @@ coth = hyp.coth
 
 # Diğerleri
 sqrt = Roots.sqrt
+sqrt_old = Roots.sqrt_old
+root = Roots.root
 exp = Functs.exp
 ln = Log.ln
 fib = Functs.Fibonacci
