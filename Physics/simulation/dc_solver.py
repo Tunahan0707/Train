@@ -328,6 +328,7 @@ def solve_dc_operating_point(scene):
             "first_current": first_voltage / first_resistance,
             "second_current": second_voltage / second_resistance,
             "wiper_position": position,
+            "power": (node_voltages[first] - node_voltages[second]) * ((first_voltage / first_resistance)),
         })
 
     source_results = []
@@ -384,6 +385,7 @@ def solve_dc_operating_point(scene):
             "control_voltage": control_voltage,
             "voltage": output_voltage,
             "current": current,
+            "power": output_voltage * current,
             "conducting": item in active_transistors,
         })
 
@@ -393,6 +395,7 @@ def solve_dc_operating_point(scene):
             "Durum": "Kapalı" if item["closed"] else "Açık",
             "Gerilim": f'{item["voltage"]:.6g} V',
             "Akım": f'{item["current"]:.6g} A',
+            "Güç": f'{item["power"]:.6g} W',
         }
     for item in resistor_results:
         component_measurements[item["id"]] = {
@@ -410,6 +413,7 @@ def solve_dc_operating_point(scene):
             "Uçlar arası gerilim": f'{item["voltage"]:.6g} V',
             "Sürgü gerilimi": f'{item["wiper_voltage"]:.6g} V',
             "Sürgü konumu": f'{item["wiper_position"]:.3f}',
+            "Güç": f'{item["power"]:.6g} W',
         }
     for item in source_results:
         component_measurements[item["id"]] = {
@@ -430,6 +434,7 @@ def solve_dc_operating_point(scene):
             "Kontrol gerilimi": f'{item["control_voltage"]:.6g} V',
             "Çıkış gerilimi": f'{item["voltage"]:.6g} V',
             "Çıkış akımı": f'{item["current"]:.6g} A',
+            "Güç": f'{item["power"]:.6g} W',
             "Durum": "İletimde" if item["conducting"] else "Kesimde",
         }
     for item in diode_results:
