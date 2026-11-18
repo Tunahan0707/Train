@@ -3,17 +3,17 @@
 class Trigonometry:
 
     @staticmethod
-    def _reduce(x):
+    def _reduce(x, eps=1e-15):
         if not isinstance(x, (int, float)):
             return x
-        pi = Functs.Pi()
+        pi = Functs.Pi(eps)
         return (x + pi) % (2*pi) - pi
 
     @staticmethod
     def sin(x, eps=1e-15):
         if isinstance(x, DualNumber):
             return DualNumber(Trigonometry.sin(x.real, eps), x.dual * Trigonometry.cos(x.real, eps))
-        x = Trigonometry._reduce(x)
+        x = Trigonometry._reduce(x, eps)
         term = x
         ans = term
         n = 0
@@ -33,7 +33,7 @@ class Trigonometry:
     def cos(x, eps=1e-15):
         if isinstance(x, DualNumber):
             return DualNumber(Trigonometry.cos(x.real, eps), -1 * x.dual * Trigonometry.sin(x.real, eps))
-        x = Trigonometry._reduce(x)
+        x = Trigonometry._reduce(x, eps)
         term = 1.0
         ans = term
         n = 0
@@ -230,11 +230,11 @@ class Roots:
             raise TypeError("x sayısal olmalıdır!")
         if x < 0:
             raise ValueError("Negatif sayıların gerçek karekökü yoktur!")
-        if x == 0:
-            return 0
         if not Roots._is_finite(x):
             raise ValueError("x sonlu bir sayı olmalıdır!")
         Roots._validate_eps(eps)
+        if x == 0:
+            return 0
 
         # frexp/ldexp eşdeğeri ikili ölçekleme.
         m = float(x)
