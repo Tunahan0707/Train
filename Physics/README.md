@@ -1,8 +1,8 @@
 # Physics
 
-Python ve PySide6 ile geliştirilen devre çizim ve simülasyon projesi.
+Python ve PySide6 ile geliştirilen devre çizim ve DC çalışma noktası simülasyon uygulaması.
 
-## Çalıştırma
+## Kurulum ve çalıştırma
 
 ```powershell
 python -m venv .venv
@@ -13,63 +13,49 @@ python main.py
 
 ## Testler
 
-Temel sayısal yardımcıları standart kütüphane ile test et:
-
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
+Testler Qt gerektiren dosyalarda `QT_QPA_PLATFORM=offscreen` kullanır. Bu test paketi henüz bu geliştirme oturumunda çalıştırılmadı; ilk yerel çalıştırmada çıkan hatalar ayrıca düzeltilmeli.
+
 ## Kullanım
 
-- Alt çubuktaki kategori sekmesine basarak bileşen çekmecesini yukarı aç.
-- Bileşenleri çalışma alanına sürükle veya tek tıklamayla ekranın ortasına ekle.
-- Shift basılıyken bileşen düğmesine tıklayarak aynı hizada alt alta yeni bileşenler ekle; eklenenler birlikte seçili kalır.
-- Normal ekleme ve sürükle-bırak sonrasında kategori çekmecesi kapanır.
-- Orta tuşla kutu seçimi, Shift + orta tuşla alanı kaydırma.
-- R ile döndürme, Ctrl + D ile çoğaltma.
-- Ctrl + Z / Ctrl + Y ile geri alma ve yineleme.
-- Fare tekerleğiyle yakınlaştırma; Ctrl + 0 ile sıfırlama.
-- Üstteki güneş/ay göstergeli anahtarla koyu/açık temayı değiştir.
-- Sağdaki özellikler paneli seçili bileşenlerin ortak özelliklerini düzenler; farklı türler ayrı bölümlerde gösterilir.
-- Alt çubuktaki Menü üzerinden devre oluşturma, açma, kaydetme, bağlantı analizi ve DC çözümüne ulaş.
+- Alt çubuktaki kategori sekmelerinden bileşen çekmecesini aç; bileşeni sürükle veya tıklayarak ekle.
+- Bileşenler otomatik R1, C1, V1 gibi referans adları alır. Ad ve değer sembolün altında görünür; sağdaki panelden düzenlenebilir.
+- Shift + orta tuş kutu seçimi; orta tuş alanı kaydırma.
+- R döndürür, Ctrl+D çoğaltır, Ctrl+Z / Ctrl+Y geri alır / yineler.
+- Fare tekerleği yakınlaştırır; Ctrl+0 görünümü sıfırlar.
+- Bağlantı kategorisinden İletken aracını seç. İlk tıklama başlangıç, ikinci tıklama bitiş noktasıdır. Uçlara ve mevcut kablo segmentlerine yakalama yapılır. Escape aracı iptal eder.
+- Kablolar seçilip bütün olarak taşınabilir; tek tek uç/köşe düzenleme henüz yoktur.
+- Üstteki **+** yeni devre sekmesi açar. Menüden devreyi yeniden adlandırabilir veya çoğaltabilirsin. Sekmeler taşınabilir ve kapatılabilir.
+- Kaydetme tüm devre sekmelerini tek `.physics` proje dosyasına yazar. Eski tek devre dosyaları da içe aktarılır.
+- Menüden Bağlantı Analizi ve DC Çözümü çalıştırılır. Çözümden sonra bir bileşeni seçerek sağ panelde hesaplanan değerleri inceleyebilirsin. Elektriksel düzenleme yapılınca eski ölçümler geçersiz kılınır.
 
-## Mevcut teknik kapsam
+## Mevcut DC model kapsamı
 
-Editörde direnç, kondansatör, bobin, diyot, LED, BJT, MOSFET, sigorta, potansiyometre, DC/AC kaynak, pil, anahtar, GND ve kablo sembolleri bulunur. Ancak sembolün bulunması, fiziksel modelinin tamamlandığı anlamına gelmez.
+| Bileşen | DC yaklaşımı | Sınırlama |
+|---|---|---|
+| Direnç | Ohmik direnç; V/I/P | Tolerans, ısıl davranış ve güç sınırı yok |
+| Kondansatör | Kararlı DC'de açık devre | Şarj/deşarj geçici rejimi yok |
+| Bobin | Kararlı DC'de ideal kısa devre | Geçici rejim, sargı direnci ve doyum yok |
+| Diyot / LED | Sabit ileri eşik + seri direnç, kesim/iletim durumu | Üretici eğrisi, ters kırılma ve sıcaklık yok |
+| BJT / N-MOSFET | Eşik kontrollü basit anahtar yaklaşımı | Gerçek kazanç/transfer eğrileri ve parazitler yok |
+| Sigorta | Girilen sabit direnç | Akım-zaman, ısınma ve atma davranışı yok |
+| Potansiyometre | Üç uçlu direnç bölücü; sürgü oranı düzenlenebilir | Temas direnci ve tolerans yok |
+| Anahtar | Açık devre / ideal sıfır voltlu kapalı dal | Temas direnci ve anahtarlama dinamiği yok |
+| DC kaynak / pil | İdeal gerilim kaynağı | İç direnç, akım sınırlama ve pil kapasitesi yok |
+| AC kaynak | Henüz desteklenmiyor | Dalga biçimi ve geçici rejim çözümü yok |
 
-Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Bağlantı kategorisinden İletken aracını seç; ilk tıklamayla başlangıcı, ikinci tıklamayla bitişi belirle. Araç bileşen uçlarına ve mevcut kablo segmentlerine yakındaki noktaları yakalar. Kablolar ayrıca seçilip bütün olarak taşınabilir; uç/köşe tutamaçları henüz yoktur.
+Desteklenmeyen bileşen varsa çözücü sessizce yok saymak yerine analizi durdurur. Diyot ve transistor yaklaşımları eğitim amaçlı basitleştirilmiş modellerdir; gerçek üretici modelleri değildir.
 
-DC çalışma noktası çözümü direnç, ideal DC gerilim kaynağı, pil, ideal kapalı anahtar, ideal kondansatör (açık devre) ve ideal bobin (kısa devre) modellerini kapsar. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, BJT/MOSFET modelleri ve yarı iletkenlerin ayrıntılı doğrusal olmayan fiziği, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
+## Henüz tamamlanmayan büyük işler
 
-Bir proje birden fazla devre sekmesi içerebilir. Sekmeler eklenebilir, yeniden adlandırılabilir, sıralanabilir ve kapatılabilir. Eski tek devre dosyaları tek sekmeli projeye aktarılır. Hiyerarşik, yeniden kullanılabilir özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
+- RLC geçici rejim ve AC dalga biçimi simülasyonu.
+- Tam BJT/MOSFET modelleri; kaynak iç direnci ve pil davranışı.
+- Uç/köşe tutamaçları, junction nesneleri ve daha kapsamlı topoloji düzenleme.
+- Hiyerarşik özel devre bileşenleri: port tanımlama, başka devreye yerleştirme ve iç devreyi açıp düzenleme.
+- Voltmetre/ampermetre/multimetre/oscilloscope gibi ayrı ölçü aletleri; şu anda DC çözücünün hesapladığı bileşen değerleri gösterilir.
+- Isıl hasar, sigorta atması, aşırı akım/gerilim tanıları, simülasyon zaman çizelgesi ve otomatik kurtarma.
 
-Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
-
-
-### Current incremental capabilities
-
-- Component names are editable in the properties panel and saved in project format v2; version 1 projects remain readable.
-- DC steady-state analysis includes ideal capacitors (open circuit) and ideal inductors (short circuit). This does not provide charging/discharging curves or transient waveforms.
-- Unsupported component models are still rejected rather than silently omitted.
-
-- Kablolar bütün olarak taşınabilir ve konumları kaydedilir.
-- Bileşen adları özellikler panelinden, devre adı Menü üzerinden düzenlenebilir.
-- Proje biçimi v2'dir; v1 dosyaları da açılabilir.
-- Yeni eklenen bileşenler otomatik R1/C1/V1 gibi referans adları alır; ad ve değer sembolün altında gösterilir.
-- Proje biçimi v3; bileşenlerin kararlı kimlikleri ve devre adı kaydedilir. v1/v2 dosyaları geriye dönük açılır.
-
-- Üstteki sekme çubuğundaki **+** ile yeni devre oluştur; sekme adına Menü → Devreyi yeniden adlandır ile ad ver.
-- Kaydetme işlemi açık projedeki bütün devre sekmelerini birlikte kaydeder.
-
-- İletken çiziminden Escape ile çıkılır; kablo oluşturma Ctrl+Z ile geri alınabilir.
-
-- Diyot/LED DC çözümü basitleştirilmiş parçalı doğrusal modeldir (eşik gerilimi + seri direnç); gerçek üretici modeli veya sıcaklık etkisi değildir.
-
-- DC çözümünden sonra bir bileşeni seçerek sağdaki özellikler panelinde o bileşenin hesaplanan gerilim, akım ve güç değerlerini görebilirsin. Devre değiştiğinde eski ölçüm otomatik geçersiz kılınır.
-
-- Sigorta DC modelinde girilen sabit dirençle hesaplanır; atma/ısınma davranışı henüz yoktur.
-- Potansiyometrenin toplam direncini ve özellikler panelindeki sürgü oranını (0–1) düzenleyebilirsin; DC çözümü üç uçlu gerilim bölücüyü hesaplar.
-
-- BJT ve N-kanal MOSFET şu an yalnızca eşik gerilimine bağlı basit anahtar yaklaşımıyla çözülür. Bu, gerçek transistor kazanç/eğri modeli değildir; BJT baz akımı ve MOSFET gövde diyodu hesaba katılmaz.
-
-- Menü → Devreyi çoğalt ile etkin devrenin tüm bileşenlerini, kablolarını, değerlerini ve anahtar durumlarını yeni bir sekmeye kopyala.
+Ayrıntılı teknik durum, test kapsamı ve aşamalı geliştirme planı: `IMPLEMENTATION_AUDIT.md`.
