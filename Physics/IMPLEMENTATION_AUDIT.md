@@ -11,7 +11,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - Movable orthogonal wire graphics and a geometric netlist builder. Wire endpoints, component terminals, ground references and contacts to wire segments can be grouped. A crossing without endpoint contact is not a junction.
 - Multi-circuit project tabs with add, rename, reorder and close operations; project format stores multiple named circuit scenes, active circuit ID, and stable circuit/component IDs. Legacy single-circuit formats v1-v3 are importable.
 - Inline component value and instance-name editing; new components receive unique reference labels (R1, C1, V1, etc.), labels/values are drawn on the canvas, and rename operations participate in undo/redo.
-- Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches, ideal capacitors (open circuit), ideal inductors (zero-volt branch), fixed-resistance fuses, three-terminal potentiometers, and piecewise-linear diodes/LEDs (fixed forward drop plus series resistance).
+- Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches (zero-volt MNA branches with measurable current), ideal capacitors (open circuit), ideal inductors (zero-volt branch), fixed-resistance fuses, three-terminal potentiometers, and piecewise-linear diodes/LEDs (fixed forward drop plus series resistance).
 - Engineering suffix parsing and Gaussian elimination unit tests.
 - Clipboard copy/paste and duplicate operations are present in the workspace code.
 
@@ -145,3 +145,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - Potentiometers are solved as two resistive sections with an editable 0–1 wiper ratio, persisted in project files and included in undo/redo.
 
 - BJT (NPN) and N-channel MOSFET symbols now have DC on/off switching approximations: BJT threshold 0.7 V, MOSFET gate threshold 2.0 V; conducting output path uses a small fixed resistance. Base/gate current, gain curves, saturation physics, body diode, capacitance and temperature are not modeled.
+
+- Closed switches are now stamped as explicit zero-volt MNA branches instead of merging their terminals in the netlist, so current through a closed switch and voltage across an open switch can be reported.
