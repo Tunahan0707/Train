@@ -1,3 +1,5 @@
+import uuid
+
 from PySide6.QtWidgets import QGraphicsItem, QApplication
 from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QPainterPath
 from PySide6.QtCore import QRectF, Qt
@@ -38,6 +40,7 @@ class BasicComponent(QGraphicsItem):
         if component_id not in self.DEFINITIONS:
             raise ValueError(f"Bilinmeyen bileşen: {component_id}")
         self.component_id = component_id
+        self.instance_id = str(uuid.uuid4())
         self.name, self.value, self.unit = self.DEFINITIONS[component_id]
         self.closed = False if component_id == "switch" else None
         self._press_scene_pos = None
