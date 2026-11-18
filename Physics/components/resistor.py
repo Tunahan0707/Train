@@ -1,4 +1,6 @@
 
+import uuid
+
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtGui import QPainter, QPen, QColor, QPainterPath
 from PySide6.QtCore import QRectF, Qt
@@ -18,6 +20,7 @@ class Resistor(QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.component_id = "resistor"
+        self.instance_id = str(uuid.uuid4())
         self.name = "Direnç"
         self.value = "1000"
         self.unit = "Ω"
