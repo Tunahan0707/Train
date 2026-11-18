@@ -238,7 +238,7 @@ def solve_dc_operating_point(scene):
         voltage = node_voltages[pins[0]] - node_voltages[pins[1]]
         current = voltage / resistance
         resistor_results.append({
-            "name": _component_label(item), "resistance": resistance,
+            "id": getattr(item, "instance_id", None), "name": _component_label(item), "resistance": resistance,
             "current": current, "voltage": voltage,
             "power": current * current * resistance,
         })
@@ -248,12 +248,13 @@ def solve_dc_operating_point(scene):
         current = branch_currents[item]
         voltage = source_voltages[item]
         source_results.append({
-            "name": _component_label(item), "voltage": voltage,
+            "id": getattr(item, "instance_id", None), "name": _component_label(item), "voltage": voltage,
             "current": current, "power_absorbed": voltage * current,
             "power_delivered": -voltage * current,
         })
 
     inductor_results = [{
+        "id": getattr(item, "instance_id", None),
         "name": _component_label(item),
         "inductance": parse_engineering_value(getattr(item, "value", "")),
         "voltage": node_voltages[component_nodes[item][0]] - node_voltages[component_nodes[item][1]],
@@ -262,6 +263,7 @@ def solve_dc_operating_point(scene):
     } for item in inductors]
 
     capacitor_results = [{
+        "id": getattr(item, "instance_id", None),
         "name": _component_label(item),
         "current": 0.0,
         "voltage": node_voltages[component_nodes[item][0]] - node_voltages[component_nodes[item][1]],
@@ -273,6 +275,7 @@ def solve_dc_operating_point(scene):
         voltage = node_voltages[anode] - node_voltages[cathode]
         current = branch_currents.get(item, 0.0)
         diode_results.append({
+            "id": getattr(item, "instance_id", None),
             "name": _component_label(item),
             "type": getattr(item, "component_id", "diode"),
             "voltage": voltage,
@@ -281,8 +284,36 @@ def solve_dc_operating_point(scene):
             "conducting": item in active_diodes,
         })
 
+    component_measurements = {}
+    for item in resistor_results:
+        component_measurements[item["id"]] = {
+            "Gerilim": f'{item["voltage"]:.6g} V',
+            "Akım": f'{item["current"]:.6g} A',
+            "Güç": f'{item["power"]:.6g} W',
+        }
+    for item in source_results:
+        component_measurements[item["id"]] = {
+            "Gerilim": f'{item["voltage"]:.6g} V',
+            "Akım": f'{item["current"]:.6g} A',
+            "Devreye verilen güç": f'{item["power_delivered"]:.6g} W',
+        }
+    for item in inductor_results:
+        component_measurements[item["id"]] = {
+            "Gerilim": f'{item["voltage"]:.6g} V', "Akım": f'{item["current"]:.6g} A',
+        }
+    for item in capacitor_results:
+        component_measurements[item["id"]] = {
+            "Gerilim": f'{item["voltage"]:.6g} V', "Akım": "0 A (DC kararlı hâl)",
+        }
+    for item in diode_results:
+        component_measurements[item["id"]] = {
+            "Gerilim": f'{item["voltage"]:.6g} V', "Akım": f'{item["current"]:.6g} A',
+            "Durum": "İletimde" if item["conducting"] else "Kesimde",
+        }
+
     return {
         "node_voltages": node_voltages,
+        "component_measurements": component_measurements,
         "resistors": resistor_results,
         "sources": source_results,
         "inductors": inductor_results,
@@ -294,8 +325,8 @@ def solve_dc_operating_point(scene):
     }
 
 
-def format_dc_report(scene):
-    result = solve_dc_operating_point(scene)
+def format_dc_report(scene=None, result=None):
+    result = result if result is not None else solve_dc_operating_point(scene)
     lines = [
         "DC ÇALIŞMA NOKTASI",
         f"Elektriksel düğüm: {result['net_count']}",
