@@ -267,3 +267,6 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Snap wire endpoints to component terminals and existing wire segments.
 - [x] Preview and Escape cancellation for wire drawing.
 - [ ] Individual wire endpoint/bend handles and explicit junction editing.
+
+- [x] Basic piecewise-linear DC diode and LED conduction models.
+- [ ] Detailed Shockley/device-curve semiconductor models, temperature and reverse breakdown.
