@@ -47,7 +47,7 @@ class Resistor(QGraphicsItem):
             -RESISTOR_WIDTH / 2,
             -RESISTOR_HEIGHT / 2 - 5,
             RESISTOR_WIDTH,
-            RESISTOR_HEIGHT + 30,
+            RESISTOR_HEIGHT + 34,
         )
 
     def paint(self, painter, option, widget=None):
