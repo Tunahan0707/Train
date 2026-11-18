@@ -109,3 +109,11 @@ The following sequence is deliberate. Later systems depend on earlier ones; addi
 ## Completion rule
 
 A checklist item is complete only when its underlying behavior exists, persists correctly where relevant, has automated tests at the appropriate level, and is reachable from the UI. A symbol or placeholder control alone does not qualify.
+
+
+## Recent implementation increments
+
+- Component names can now be edited in the properties panel; rename operations participate in undo/redo.
+- Project format version 2 persists component names and still reads version 1 files. Loading rejects unknown component types before replacing the current scene.
+- DC steady-state analysis now models ideal capacitors as open circuits and ideal inductors as zero-volt branches (short circuits), reporting capacitor voltage and inductor current. This is not transient analysis.
+- Added tests for named component persistence, legacy file loading, safe rejection of unknown component types, and ideal reactive DC behavior. These tests have been authored but not executed in this remote editing session.
