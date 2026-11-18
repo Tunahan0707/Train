@@ -2,7 +2,7 @@ import sys
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QDockWidget, QToolBar, QWidget,
-    QVBoxLayout, QFileDialog, QMessageBox,
+    QVBoxLayout, QFileDialog, QMessageBox, QInputDialog,
 )
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
@@ -26,6 +26,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN)
         self.menuBar().hide()
         self.current_file = None
+        self.circuit_name = "Yeni devre"
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow):
     def handle_palette_menu(self, action):
         actions = {
             "new": self.new_circuit,
+            "rename": self.rename_circuit,
             "open": self.open_circuit,
             "save": self.save_circuit,
             "save_as": self.save_circuit_as,
@@ -199,6 +201,18 @@ class MainWindow(QMainWindow):
             }}
         """)
 
+    def rename_circuit(self):
+        name, accepted = QInputDialog.getText(self, "Devreyi yeniden adlandır", "Devre adı:", text=self.circuit_name)
+        name = name.strip()
+        if not accepted or not name:
+            return
+        self.circuit_name = name
+        self._update_window_title()
+
+    def _update_window_title(self):
+        suffix = f" — {self.current_file}" if self.current_file else ""
+        self.setWindowTitle(f"{WINDOW_TITLE} · {self.circuit_name}{suffix}")
+
     def check_connections(self):
         QMessageBox.information(self, "Bağlantı analizi", format_netlist_report(self.workspace.circuit_scene))
 
@@ -213,7 +227,8 @@ class MainWindow(QMainWindow):
         self.workspace.history.undo_stack.clear()
         self.workspace.history.redo_stack.clear()
         self.current_file = None
-        self.setWindowTitle(WINDOW_TITLE)
+        self.circuit_name = "Yeni devre"
+        self._update_window_title()
         self.update_properties()
 
     def open_circuit(self):
@@ -221,11 +236,11 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
         try:
-            load_circuit(self.workspace.circuit_scene, file_path)
+            self.circuit_name = load_circuit(self.workspace.circuit_scene, file_path)
             self.workspace.history.undo_stack.clear()
             self.workspace.history.redo_stack.clear()
             self.current_file = file_path
-            self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
+            self._update_window_title()
             self.update_properties()
         except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError) as error:
             QMessageBox.critical(self, "Devre açılamadı", str(error))
@@ -235,7 +250,7 @@ class MainWindow(QMainWindow):
             self.save_circuit_as()
             return
         try:
-            save_circuit(self.workspace.circuit_scene, self.current_file)
+            save_circuit(self.workspace.circuit_scene, self.current_file, self.circuit_name)
         except OSError as error:
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
 
@@ -246,12 +261,12 @@ class MainWindow(QMainWindow):
         if not file_path.lower().endswith(".physics"):
             file_path += ".physics"
         try:
-            save_circuit(self.workspace.circuit_scene, file_path)
+            save_circuit(self.workspace.circuit_scene, file_path, self.circuit_name)
         except OSError as error:
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
             return
         self.current_file = file_path
-        self.setWindowTitle(f"{WINDOW_TITLE} — {file_path}")
+        self._update_window_title()
 
     def update_properties(self):
         self.properties_panel.set_items(self.workspace.circuit_scene.selectedItems())
