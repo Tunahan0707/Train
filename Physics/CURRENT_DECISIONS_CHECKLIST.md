@@ -262,3 +262,8 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Add, rename, reorder and close circuit tabs.
 - [x] Save/load all circuit tabs and restore the active tab.
 - [ ] Reusable hierarchical custom circuit definitions with explicit external ports.
+
+- [x] Two-click orthogonal wire drawing tool.
+- [x] Snap wire endpoints to component terminals and existing wire segments.
+- [x] Preview and Escape cancellation for wire drawing.
+- [ ] Individual wire endpoint/bend handles and explicit junction editing.
