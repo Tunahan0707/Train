@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
             page.workspace.circuit_scene.addItem(item)
 
         page.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
-        page.workspace.history_changed.connect(lambda circuit_id=page.circuit_id: self.invalidate_simulation(circuit_id))
+        page.workspace.history_changed.connect(lambda page=page: self.invalidate_simulation(page.circuit_id))
         page.workspace.history_changed.connect(self.mark_dirty)
         page.workspace.history_changed.connect(self.update_properties)
         page.component_library.add_requested.connect(
