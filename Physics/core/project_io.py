@@ -90,7 +90,7 @@ def create_circuit_items(circuit_data, version=3):
                 item.closed = bool(entry.get("closed", False))
             if getattr(item, "component_id", None) == "potentiometer":
                 item.wiper_position = float(entry.get("wiper_position", 0.5))
-                if not 0.0 < item.wiper_position < 1.0:
+                if not 0.0 <= item.wiper_position <= 1.0:
                     raise ValueError("Potansiyometre sürgü konumu 0 ile 1 arasında olmalı.")
 
         raw_id = entry.get("id")
