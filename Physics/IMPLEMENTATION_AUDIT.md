@@ -19,7 +19,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 
 ### Electrical models
 - Most component symbols are not backed by electrical equations.
-- The current DC solver does not model capacitor/inductor transient response, AC sources, BJTs or MOSFETs. Fuse behavior is a fixed-resistance approximation; potentiometers are modeled as a three-terminal resistive divider. Diode/LED behavior is an approximate piecewise-linear DC model, not a full semiconductor model.
+- The current DC solver does not model capacitor/inductor transient response or AC sources. Fuse behavior is a fixed-resistance approximation; potentiometers are modeled as a three-terminal resistive divider. BJT/MOSFET behavior is only an idealized voltage-controlled switch approximation, not a transistor device model. Diode/LED behavior is an approximate piecewise-linear DC model, not a full semiconductor model.
 - It has no component tolerance, voltage/current/power ratings, thermal model, internal resistance, current limiting, battery state, or failure model.
 - It has no time-domain integrator, nonlinear Newton iteration, convergence controls, or event handling.
 - A solver result must never be shown as a complete circuit result when unsupported devices are present. The DC solver was changed to reject unsupported devices rather than silently omit them.
@@ -143,3 +143,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 
 - Fuse current/voltage/power are now calculated using the configured fixed resistance; no fuse blowing or thermal rating behavior exists.
 - Potentiometers are solved as two resistive sections with an editable 0–1 wiper ratio, persisted in project files and included in undo/redo.
+
+- BJT (NPN) and N-channel MOSFET symbols now have DC on/off switching approximations: BJT threshold 0.7 V, MOSFET gate threshold 2.0 V; conducting output path uses a small fixed resistance. Base/gate current, gain curves, saturation physics, body diode, capacitance and temperature are not modeled.
