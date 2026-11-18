@@ -55,3 +55,5 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 - Kablolar bütün olarak taşınabilir ve konumları kaydedilir.
 - Bileşen adları özellikler panelinden, devre adı Menü üzerinden düzenlenebilir.
 - Proje biçimi v2'dir; v1 dosyaları da açılabilir.
+- Yeni eklenen bileşenler otomatik R1/C1/V1 gibi referans adları alır; ad ve değer sembolün altında gösterilir.
+- Proje biçimi v3; bileşenlerin kararlı kimlikleri ve devre adı kaydedilir. v1/v2 dosyaları geriye dönük açılır.
