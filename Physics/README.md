@@ -66,3 +66,6 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 - Diyot/LED DC çözümü basitleştirilmiş parçalı doğrusal modeldir (eşik gerilimi + seri direnç); gerçek üretici modeli veya sıcaklık etkisi değildir.
 
 - DC çözümünden sonra bir bileşeni seçerek sağdaki özellikler panelinde o bileşenin hesaplanan gerilim, akım ve güç değerlerini görebilirsin. Devre değiştiğinde eski ölçüm otomatik geçersiz kılınır.
+
+- Sigorta DC modelinde girilen sabit dirençle hesaplanır; atma/ısınma davranışı henüz yoktur.
+- Potansiyometrenin toplam direncini ve özellikler panelindeki sürgü oranını (0–1) düzenleyebilirsin; DC çözümü üç uçlu gerilim bölücüyü hesaplar.
