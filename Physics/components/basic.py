@@ -181,3 +181,15 @@ class BasicComponent(QGraphicsItem):
             path.moveTo(-5, 12); path.lineTo(5, 12)
         painter.drawPath(path)
 
+        painter.setPen(QPen(color_value))
+        font = painter.font()
+        font.setPixelSize(9)
+        painter.setFont(font)
+        bounds = self.boundingRect()
+        name = painter.fontMetrics().elidedText(str(self.name), Qt.TextElideMode.ElideRight, int(bounds.width() - 4))
+        painter.drawText(QRectF(bounds.left(), 24, bounds.width(), 14), Qt.AlignmentFlag.AlignHCenter, name)
+        value_text = f"{self.value} {self.unit}".strip()
+        if value_text:
+            value_text = painter.fontMetrics().elidedText(value_text, Qt.TextElideMode.ElideRight, int(bounds.width() - 4))
+            painter.drawText(QRectF(bounds.left(), 37, bounds.width(), 13), Qt.AlignmentFlag.AlignHCenter, value_text)
+
