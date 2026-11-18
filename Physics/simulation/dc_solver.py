@@ -227,7 +227,8 @@ def solve_dc_operating_point(scene):
         branch_index_by_item = {}
         for branch_index, (item, branch_voltage, series_resistance, branch_kind) in enumerate(branches):
             branch_index_by_item[item] = len(unknown_nodes) + branch_index
-            positive_node, negative_node = component_nodes[item][:2]
+            branch_pins = component_nodes[item][1:3] if branch_kind == "transistor" else component_nodes[item][:2]
+            positive_node, negative_node = branch_pins
             source_column = len(unknown_nodes) + branch_index
             positive = node_index.get(positive_node)
             negative = node_index.get(negative_node)
