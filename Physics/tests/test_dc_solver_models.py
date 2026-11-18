@@ -194,6 +194,35 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertTrue(measured["conducting"])
         self.assertAlmostEqual(measured["current"], 5 / 1000.05, places=8)
 
+    def test_parallel_resistors_obey_kcl_and_power_balance(self):
+        source = Component("voltage_source", "V1", "5")
+        first = Component("resistor", "R1", "1k")
+        second = Component("resistor", "R2", "2k")
+        topology = {
+            "component_nodes": {source: [1, 0], first: [1, 0], second: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        total_load_current = sum(item["current"] for item in result["resistors"])
+        self.assertAlmostEqual(total_load_current, -result["sources"][0]["current"], places=9)
+        self.assertAlmostEqual(sum(item["power"] for item in result["resistors"]), result["sources"][0]["power_delivered"], places=9)
+        self.assertAlmostEqual(total_load_current, 0.0075, places=9)
+
+    def test_negative_source_polarity_reverses_resistor_current(self):
+        source = Component("voltage_source", "V1", "-5")
+        resistor = Component("resistor", "R1", "1k")
+        topology = {
+            "component_nodes": {source: [1, 0], resistor: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertAlmostEqual(result["resistors"][0]["current"], -0.005, places=9)
+        self.assertAlmostEqual(result["resistors"][0]["power"], 0.025, places=9)
+
     def test_non_positive_reactive_value_is_rejected(self):
         capacitor = Component("capacitor", "C1", "0")
         topology = {
