@@ -973,6 +973,7 @@ class Workspace(QGraphicsView):
                     )
                 )
                 self.history.redo_stack.clear()
+                self.history_changed.emit()
 
             self.drag_start_positions.clear()
             return
