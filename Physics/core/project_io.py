@@ -83,7 +83,10 @@ def create_circuit_items(circuit_data, version=3):
             item.setPos(float(entry.get("x", 0)), float(entry.get("y", 0)))
             item.setRotation(float(entry.get("rotation", 0)))
             if hasattr(item, "set_value"):
-                item.set_value(entry.get("value", ""))
+                stored_value = entry.get("value", "")
+                if component_type == "fuse" and not str(stored_value).strip():
+                    stored_value = "0.1"
+                item.set_value(stored_value)
             if version >= 2:
                 item.name = str(entry.get("name", getattr(item, "name", component_type)))
             if getattr(item, "component_id", None) == "switch":
