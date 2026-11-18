@@ -44,3 +44,10 @@ DC çalışma noktası çözümü şu anda direnç, ideal DC gerilim kaynağı, 
 Bir proje şu anda tek devre sahnesi içerir. Çoklu adlandırılmış devreler ve hiyerarşik özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
 
 Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
+
+
+### Current incremental capabilities
+
+- Component names are editable in the properties panel and saved in project format v2; version 1 projects remain readable.
+- DC steady-state analysis includes ideal capacitors (open circuit) and ideal inductors (short circuit). This does not provide charging/discharging curves or transient waveforms.
+- Unsupported component models are still rejected rather than silently omitted.
