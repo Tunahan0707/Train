@@ -1,6 +1,9 @@
 import json
 import tempfile
+import os
 import unittest
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QGraphicsScene
