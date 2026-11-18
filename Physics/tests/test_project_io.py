@@ -112,6 +112,21 @@ class ProjectIOTests(unittest.TestCase):
         self.assertEqual(item.value, "220")
         self.assertEqual(item.name, "Direnç")
 
+    def test_legacy_fuse_receives_safe_default_resistance(self):
+        legacy = {
+            "format": "physics-circuit",
+            "version": 1,
+            "components": [{"type": "fuse", "x": 0, "y": 0, "value": ""}],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy_fuse.physics"
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            scene = QGraphicsScene()
+            load_circuit(scene, path)
+        fuse = scene.items()[0]
+        self.assertEqual(fuse.value, "0.1")
+        self.assertEqual(fuse.unit, "Ω")
+
     def test_unknown_component_type_is_rejected_without_clearing_scene(self):
         invalid = {
             "format": "physics-circuit",
