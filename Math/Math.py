@@ -265,6 +265,11 @@ class Roots:
             raise ValueError("Kök derecesi pozitif bir tam sayı olmalıdır!")
         Roots._validate_eps(eps)
 
+        if not isinstance(x, (int, float, DualNumber, ComplexNumber)):
+            raise TypeError("x int, float, DualNumber veya ComplexNumber olmalıdır!")
+        if n == 1:
+            return x
+
         if isinstance(x, DualNumber):
             real_root = Roots._real_root(x.real, n, eps)
             if real_root == 0:
@@ -292,10 +297,6 @@ class Roots:
                 y = next_y
             raise ArithmeticError("Karmaşık kök hesabı yakınsamadı!")
 
-        if not isinstance(x, (int, float)):
-            raise TypeError("x int, float, DualNumber veya ComplexNumber olmalıdır!")
-        if n == 1:
-            return x
         return Roots._real_root(x, n, eps)
 
     @staticmethod
