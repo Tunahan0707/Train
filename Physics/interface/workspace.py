@@ -269,6 +269,7 @@ class Workspace(QGraphicsView):
                     "component_id": "wire",
                     "start": QPointF(item.start_point),
                     "end": QPointF(item.end_point),
+                    "position": QPointF(item.pos()),
                 })
                 continue
             if component_id is None:
@@ -292,7 +293,8 @@ class Workspace(QGraphicsView):
                     QPointF(snapshot["start"].x() + offset, snapshot["start"].y() + offset),
                     QPointF(snapshot["end"].x() + offset, snapshot["end"].y() + offset),
                 )
-                position = QPointF(0, 0)
+                position = QPointF(snapshot.get("position", QPointF(0, 0)).x() + offset,
+                                  snapshot.get("position", QPointF(0, 0)).y() + offset)
             elif component_id == "resistor":
                 item = Resistor()
                 position = QPointF(snapshot["position"].x() + offset, snapshot["position"].y() + offset)
