@@ -64,3 +64,5 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 - İletken çiziminden Escape ile çıkılır; kablo oluşturma Ctrl+Z ile geri alınabilir.
 
 - Diyot/LED DC çözümü basitleştirilmiş parçalı doğrusal modeldir (eşik gerilimi + seri direnç); gerçek üretici modeli veya sıcaklık etkisi değildir.
+
+- DC çözümünden sonra bir bileşeni seçerek sağdaki özellikler panelinde o bileşenin hesaplanan gerilim, akım ve güç değerlerini görebilirsin. Devre değiştiğinde eski ölçüm otomatik geçersiz kılınır.
