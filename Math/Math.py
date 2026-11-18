@@ -210,12 +210,9 @@ class Roots:
                 y = (y + 1.0) / 2
                 continue
 
-            next_y = ((n - 1) * y + m * (10 ** (exponent % n)) / denominator) / n
-            # Ölçeklenmiş Newton adımı doğrudan x üzerinde daha kararlı yürütülür.
-            scaled_x = float(x)
-            next_y = ((n - 1) * y + scaled_x / denominator) / n
+            next_y = ((n - 1) * y + float(x) / denominator) / n
 
-            if abs(next_y - y) <= eps * max(abs(next_y), 1.0):
+            if next_y == 0 or abs(next_y - y) <= eps * abs(next_y):
                 return next_y
             y = next_y
 
@@ -269,9 +266,6 @@ class Roots:
             raise ValueError("Kök derecesi pozitif bir tam sayı olmalıdır!")
         Roots._validate_eps(eps)
 
-        if n == 1:
-            return x
-
         if isinstance(x, DualNumber):
             real_root = Roots._real_root(x.real, n, eps)
             if real_root == 0:
@@ -294,13 +288,15 @@ class Roots:
                 if denominator.real == 0 and denominator.complex == 0:
                     raise ArithmeticError("Kök hesabı sırasında sıfıra bölme oluştu!")
                 next_y = ((n - 1) * y + x / denominator) / n
-                if abs(next_y - y) <= eps * max(abs(next_y), 1.0):
+                if abs(next_y - y) <= eps * abs(next_y):
                     return next_y
                 y = next_y
             raise ArithmeticError("Karmaşık kök hesabı yakınsamadı!")
 
         if not isinstance(x, (int, float)):
             raise TypeError("x int, float, DualNumber veya ComplexNumber olmalıdır!")
+        if n == 1:
+            return x
         return Roots._real_root(x, n, eps)
 
     @staticmethod
