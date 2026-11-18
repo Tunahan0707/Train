@@ -278,6 +278,11 @@ class Roots:
                 raise ValueError("Bu noktadaki DualNumber kök türevi tanımsızdır!")
             return DualNumber(real_root, x.dual / (n * (real_root ** (n - 1))))
 
+        # Negatif gerçek sayıların çift dereceli kökleri karmaşık sayıdır.
+        # Karmaşık algoritma ana (principal) kökü hesaplar.
+        if isinstance(x, (int, float)) and x < 0 and n % 2 == 0:
+            x = ComplexNumber(x, 0)
+
         if isinstance(x, ComplexNumber):
             if x.real == 0 and x.complex == 0:
                 return ComplexNumber(0, 0)
