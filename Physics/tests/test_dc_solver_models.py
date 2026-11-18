@@ -118,6 +118,36 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertAlmostEqual(measured["first_current"], 0.001, places=8)
         self.assertAlmostEqual(measured["second_current"], 0.001, places=8)
 
+    def test_bjt_turns_on_as_a_controlled_switch(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        transistor = Component("bjt", "Q1", "")
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], transistor: [2, 1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        measured = result["transistors"][0]
+        self.assertTrue(measured["conducting"])
+        self.assertAlmostEqual(measured["current"], 5 / 1000.1, places=8)
+
+    def test_mosfet_stays_off_below_gate_threshold(self):
+        source = Component("voltage_source", "V1", "1")
+        resistor = Component("resistor", "R1", "1k")
+        transistor = Component("mosfet", "M1", "")
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], transistor: [2, 1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        measured = result["transistors"][0]
+        self.assertFalse(measured["conducting"])
+        self.assertAlmostEqual(measured["current"], 0.0)
+
     def test_non_positive_reactive_value_is_rejected(self):
         capacitor = Component("capacitor", "C1", "0")
         topology = {
