@@ -116,7 +116,7 @@ def solve_dc_operating_point(scene):
     unknown_nodes = [node for node in net_ids if node not in ground_nodes]
     node_index = {node: index for index, node in enumerate(unknown_nodes)}
 
-    resistors, fuses, potentiometers, sources, inductors, capacitors, diodes, transistors = [], [], [], [], [], [], [], []
+    resistors, fuses, potentiometers, sources, inductors, capacitors, diodes, transistors, switches = [], [], [], [], [], [], [], [], []
     for item, pins in component_nodes.items():
         component_id = getattr(item, "component_id", "")
         expected_pins = 1 if component_id == "ground" else (3 if component_id in ("potentiometer", "bjt", "mosfet") else 2)
@@ -124,6 +124,8 @@ def solve_dc_operating_point(scene):
             raise ValueError(f"{_component_label(item)} {expected_pins} uçlu olmalı.")
         if component_id == "resistor":
             resistors.append(item)
+        elif component_id == "switch":
+            switches.append(item)
         elif component_id == "fuse":
             fuses.append(item)
         elif component_id == "potentiometer":
@@ -188,6 +190,7 @@ def solve_dc_operating_point(scene):
     for _iteration in range(max(8, (len(diodes) + len(transistors)) * 4 + 4)):
         branches = [(item, source_voltages[item], 0.0, "source") for item in sources]
         branches.extend((item, 0.0, 0.0, "inductor") for item in inductors)
+        branches.extend((item, 0.0, 0.0, "switch") for item in switches if getattr(item, "closed", False))
         branches.extend(
             (item, diode_models[item][0], diode_models[item][1], "diode")
             for item in diodes if item in active_diodes
@@ -385,6 +388,12 @@ def solve_dc_operating_point(scene):
         })
 
     component_measurements = {}
+    for item in switch_results:
+        component_measurements[item["id"]] = {
+            "Durum": "Kapalı" if item["closed"] else "Açık",
+            "Gerilim": f'{item["voltage"]:.6g} V',
+            "Akım": f'{item["current"]:.6g} A',
+        }
     for item in resistor_results:
         component_measurements[item["id"]] = {
             "Gerilim": f'{item["voltage"]:.6g} V',
@@ -440,6 +449,7 @@ def solve_dc_operating_point(scene):
         "capacitors": capacitor_results,
         "diodes": diode_results,
         "transistors": transistor_results,
+        "switches": switch_results,
         "unsupported": [],
         "automatic_ground": automatic_ground,
         "net_count": len(net_ids),
@@ -473,6 +483,11 @@ def format_dc_report(scene=None, result=None):
         lines.extend(["", "POTANSİYOMETRELER (üç uçlu direnç bölücü)"])
         for item in result["potentiometers"]:
             lines.append(f"  {item['name']}: {item['voltage']:.6g} V uçlar arası, sürgü {item['wiper_voltage']:.6g} V")
+    if result["switches"]:
+        lines.extend(["", "ANAHTARLAR"])
+        for item in result["switches"]:
+            state = "Kapalı" if item["closed"] else "Açık"
+            lines.append(f"  {item['name']}: {state}, {item['voltage']:.6g} V, {item['current']:.6g} A")
     if result["transistors"]:
         lines.extend(["", "TRANSİSTÖRLER (basitleştirilmiş anahtar modeli)"])
         for item in result["transistors"]:
