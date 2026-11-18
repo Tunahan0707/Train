@@ -29,7 +29,7 @@ class PropertiesPanel(QWidget):
     def clear_rows(self):
         self._clear_layout(self.root)
 
-    def set_items(self, items):
+    def set_items(self, items, simulation_result=None):
         self.clear_rows()
         grouped = {}
         for item in items:
@@ -60,6 +60,16 @@ class PropertiesPanel(QWidget):
                 separator.setFrameShadow(QFrame.Shadow.Plain)
                 separator.setObjectName("propertySeparator")
                 self.root.addWidget(separator)
+        measurements = (simulation_result or {}).get("component_measurements", {})
+        for item in items:
+            measured = measurements.get(getattr(item, "instance_id", None))
+            if not measured:
+                continue
+            heading = QLabel("Son DC ölçümü")
+            heading.setObjectName("propertyGroupTitle")
+            self.root.addWidget(heading)
+            for label, value_text in measured.items():
+                self._add_static_row(label, value_text)
         self.root.addStretch(1)
 
     def _add_name_row(self, items):
