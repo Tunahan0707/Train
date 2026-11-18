@@ -291,8 +291,11 @@ class MainWindow(QMainWindow):
             return
         snapshots = source.workspace._capture_items(source.workspace.circuit_scene.items())
         copies, positions = source.workspace._create_item_copies(snapshots, 40)
-        for item, position in positions.items():
-            item.setPos(position)
+        for item, snapshot in zip(copies, snapshots):
+            item.setPos(positions[item])
+            if item.component_id != "wire":
+                item.name = snapshot.get("name", item.name)
+                item.update()
         self._add_circuit_tab(f"{source.circuit_name} kopya", items=copies, select=True)
         self.mark_dirty()
 
