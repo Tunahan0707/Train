@@ -254,3 +254,6 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Rebuild connectivity from moved wire scene coordinates.
 - [ ] Interactive wire endpoint and bend editing.
 - [ ] Multiple circuit documents and reusable hierarchical circuits.
+- [x] Assign stable instance IDs to components and wires.
+- [x] Automatically assign unique reference labels to newly placed components.
+- [x] Render component reference labels and values on the schematic.
