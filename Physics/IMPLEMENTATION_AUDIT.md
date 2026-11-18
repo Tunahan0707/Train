@@ -46,7 +46,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - No simulation timeline, pause/resume/step/speed controls, or result history exists.
 
 ### Reliability and validation
-- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named and multi-circuit project persistence, legacy import, reactive DC models, diode states, and moved-wire connectivity. They have not yet been executed in this remote editing session.
+- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named and multi-circuit project persistence, legacy import, reactive DC models, diode/transistor/switch states, fuse and potentiometer behavior, undoable commands, and moved-wire connectivity. They have not yet been executed in this remote editing session.
 - There are still no comprehensive tests for full netlist topology, all component behaviors, multi-branch KCL/KVL, active-set stability across complex diode networks, or transient accuracy.
 - GUI interaction has not been verified automatically.
 - No crash recovery/autosave or project backup/version history exists.
@@ -147,3 +147,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - BJT (NPN) and N-channel MOSFET symbols now have DC on/off switching approximations: BJT threshold 0.7 V, MOSFET gate threshold 2.0 V; conducting output path uses a small fixed resistance. Base/gate current, gain curves, saturation physics, body diode, capacitance and temperature are not modeled.
 
 - Closed switches are now stamped as explicit zero-volt MNA branches instead of merging their terminals in the netlist, so current through a closed switch and voltage across an open switch can be reported.
+
+- Unit tests now cover source/resistor power signs, ideal reactive DC behavior, diode forward/reverse states, fuse resistance, potentiometer divider ratio, BJT/MOSFET switch approximations, switch current/voltage, property-command undo/redo, and project persistence.
