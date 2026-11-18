@@ -240,7 +240,7 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - The component drawer uses a horizontal scroll viewport sized to its contents; component entries are hollow, sharp-cornered tiles with widths calculated from their full labels and a minimum width.
 - The canvas (workspace) scrollbars now have explicit theme styling: navy tracks in dark mode, pale grey tracks in light mode, and muted grey handles in both.
 - The schematic switch toggles open/closed on click without treating a drag as a toggle. Its state is shown in the properties panel, saved in project files, and copied when duplicated.
-- Closed ideal switches join their two terminals in the netlist. The current linear DC solver treats the closed ideal switch as a short and lets an open switch remain disconnected.
+- Switch terminals remain distinct in the netlist so switch current can be measured. The DC solver adds an ideal zero-volt branch for a closed switch; an open switch is modeled as an open circuit.
 - The DC solver now refuses to produce a partial result when unsupported component types are present or a component terminal is reported disconnected.
 
 
@@ -298,3 +298,5 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Circuit edits invalidate old DC measurements.
 - [x] Fuse and potentiometer DC approximations are included.
 - [x] Approximate diode/LED and transistor switch states are included in DC analysis.
+
+- [x] Report current through closed ideal switches and voltage across open switches.
