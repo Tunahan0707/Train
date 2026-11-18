@@ -7,6 +7,7 @@ from simulation.dc_solver import solve_dc_operating_point
 class Component:
     def __init__(self, component_id, name, value):
         self.component_id = component_id
+        self.instance_id = f"id-{component_id}-{name}"
         self.name = name
         self.value = value
 
