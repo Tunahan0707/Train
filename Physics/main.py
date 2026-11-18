@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
         self.circuit_name = "Devre 1"
         self.current_theme_colors = None
         self.simulation_results = {}
+        self.is_dirty = False
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -93,6 +94,7 @@ class MainWindow(QMainWindow):
 
         page.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
         page.workspace.history_changed.connect(lambda circuit_id=page.circuit_id: self.invalidate_simulation(circuit_id))
+        page.workspace.history_changed.connect(self.mark_dirty)
         page.workspace.history_changed.connect(self.update_properties)
         page.component_library.add_requested.connect(
             lambda component_id, shift, workspace=page.workspace, library=page.component_library:
@@ -134,6 +136,7 @@ class MainWindow(QMainWindow):
         if answer != QMessageBox.StandardButton.Yes:
             return
         self.simulation_results.pop(page.circuit_id, None)
+        self.mark_dirty()
         if self.tabs.count() == 1:
             page.workspace.circuit_scene.clear()
             page.workspace.history.undo_stack.clear()
@@ -266,17 +269,20 @@ class MainWindow(QMainWindow):
         page.circuit_name = name
         self.tabs.setTabText(self.tabs.currentIndex(), name)
         self.circuit_name = name
+        self.mark_dirty()
         self._update_window_title()
 
     def _update_window_title(self):
         page = self.tabs.currentWidget() if hasattr(self, "tabs") else None
         active_name = page.circuit_name if page is not None else self.circuit_name
         suffix = f" — {self.current_file}" if self.current_file else ""
-        self.setWindowTitle(f"{WINDOW_TITLE} · {active_name}{suffix}")
+        dirty_mark = "*" if getattr(self, "is_dirty", False) else ""
+        self.setWindowTitle(f"{dirty_mark}{WINDOW_TITLE} · {active_name}{suffix}")
 
     def new_circuit(self):
         name = f"Devre {self.tabs.count() + 1}"
         self._add_circuit_tab(name, select=True)
+        self.mark_dirty()
 
     def duplicate_circuit(self):
         source = self.tabs.currentWidget()
@@ -287,6 +293,7 @@ class MainWindow(QMainWindow):
         for item, position in positions.items():
             item.setPos(position)
         self._add_circuit_tab(f"{source.circuit_name} kopya", items=copies, select=True)
+        self.mark_dirty()
 
     def _collect_circuits(self):
         return [
@@ -346,6 +353,7 @@ class MainWindow(QMainWindow):
             0,
         )
         self.current_file = file_path
+        self.is_dirty = False
         self.tabs.setCurrentIndex(active_index)
         self.activate_circuit_tab(active_index)
         self.apply_theme_progress(self.theme_switch.position)
@@ -357,6 +365,8 @@ class MainWindow(QMainWindow):
         try:
             active = self.tabs.currentWidget()
             save_project(self._collect_circuits(), self.current_file, active.circuit_id if active else None)
+            self.is_dirty = False
+            self._update_window_title()
         except (OSError, ValueError) as error:
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
 
@@ -373,7 +383,33 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
             return
         self.current_file = file_path
+        self.is_dirty = False
         self._update_window_title()
+
+    def mark_dirty(self):
+        if not self.is_dirty:
+            self.is_dirty = True
+            self._update_window_title()
+
+    def closeEvent(self, event):
+        if not self.is_dirty:
+            event.accept()
+            return
+        answer = QMessageBox.question(
+            self, "Kaydedilmemiş değişiklikler",
+            "Projede kaydedilmemiş değişiklikler var. Kaydedilsin mi?",
+            QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Save,
+        )
+        if answer == QMessageBox.StandardButton.Cancel:
+            event.ignore()
+            return
+        if answer == QMessageBox.StandardButton.Save:
+            self.save_circuit()
+            if self.is_dirty:
+                event.ignore()
+                return
+        event.accept()
 
     def update_properties(self):
         if self.workspace is None:
