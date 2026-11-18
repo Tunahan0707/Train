@@ -120,7 +120,7 @@ class ComponentLibrary(QWidget):
         self.menu_button.setStyleSheet("QPushButton::menu-indicator { image: none; width: 0px; }")
         self.menu_button.setObjectName("paletteMenuButton")
         menu = QMenu(self.menu_button)
-        for label, key in [("Yeni devre", "new"), ("Devreyi yeniden adlandır", "rename"), ("Aç", "open"), ("Kaydet", "save"), ("Farklı kaydet", "save_as")]:
+        for label, key in [("Yeni devre", "new"), ("Devreyi çoğalt", "duplicate"), ("Devreyi yeniden adlandır", "rename"), ("Aç", "open"), ("Kaydet", "save"), ("Farklı kaydet", "save_as")]:
             action = QAction(label, menu)
             action.triggered.connect(lambda checked=False, value=key: self.menu_action.emit(value))
             menu.addAction(action)
