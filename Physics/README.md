@@ -69,3 +69,5 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 
 - Sigorta DC modelinde girilen sabit dirençle hesaplanır; atma/ısınma davranışı henüz yoktur.
 - Potansiyometrenin toplam direncini ve özellikler panelindeki sürgü oranını (0–1) düzenleyebilirsin; DC çözümü üç uçlu gerilim bölücüyü hesaplar.
+
+- BJT ve N-kanal MOSFET şu an yalnızca eşik gerilimine bağlı basit anahtar yaklaşımıyla çözülür. Bu, gerçek transistor kazanç/eğri modeli değildir; BJT baz akımı ve MOSFET gövde diyodu hesaba katılmaz.
