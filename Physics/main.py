@@ -79,13 +79,13 @@ class MainWindow(QMainWindow):
         page = QWidget()
         page.circuit_id = str(circuit_id or uuid.uuid4())
         page.circuit_name = str(name or "Devre")
-        page.layout = QVBoxLayout(page)
-        page.layout.setContentsMargins(0, 0, 0, 0)
-        page.layout.setSpacing(0)
+        page.content_layout = QVBoxLayout(page)
+        page.content_layout.setContentsMargins(0, 0, 0, 0)
+        page.content_layout.setSpacing(0)
         page.workspace = Workspace(page)
         page.component_library = ComponentLibrary(page)
-        page.layout.addWidget(page.workspace, 1)
-        page.layout.addWidget(page.component_library, 0)
+        page.content_layout.addWidget(page.workspace, 1)
+        page.content_layout.addWidget(page.component_library, 0)
         for item in items or []:
             page.workspace.circuit_scene.addItem(item)
 
@@ -318,7 +318,7 @@ class MainWindow(QMainWindow):
         self.current_file = file_path
         self.tabs.setCurrentIndex(active_index)
         self.activate_circuit_tab(active_index)
-        self.apply_theme_progress(self.theme_switch.progress)
+        self.apply_theme_progress(self.theme_switch.position)
 
     def save_circuit(self):
         if self.current_file is None:
