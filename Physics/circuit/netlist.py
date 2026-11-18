@@ -19,22 +19,24 @@ def build_netlist(scene, tolerance=2.0):
             continue
 
         if component_id == "wire":
+            start_point = item.mapToScene(QPointF(item.start_point))
+            end_point = item.mapToScene(QPointF(item.end_point))
             start_index = len(nodes)
             nodes.append({
                 "kind": "wire",
                 "label": f"Tel ucu {start_index + 1}",
-                "point": QPointF(item.start_point),
+                "point": start_point,
             })
             end_index = len(nodes)
             nodes.append({
                 "kind": "wire",
                 "label": f"Tel ucu {end_index + 1}",
-                "point": QPointF(item.end_point),
+                "point": end_point,
             })
             wire_pairs.append((start_index, end_index))
-            corner = QPointF(item.end_point.x(), item.start_point.y())
-            wire_segments.append((start_index, item.start_point, corner))
-            wire_segments.append((start_index, corner, item.end_point))
+            corner = QPointF(end_point.x(), start_point.y())
+            wire_segments.append((start_index, start_point, corner))
+            wire_segments.append((start_index, corner, end_point))
             continue
 
         component_counts[component_id] = component_counts.get(component_id, 0) + 1
