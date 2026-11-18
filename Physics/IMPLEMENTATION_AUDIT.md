@@ -9,7 +9,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - PySide6 schematic editor with selection, multi-selection, placement, drag/drop, rotation, duplication, undo/redo, zoom and pan.
 - Symbol definitions for resistor, capacitor, inductor, diode, LED, BJT, MOSFET, fuse, potentiometer, DC source, AC source, battery, switch, ground and wire.
 - Movable orthogonal wire graphics and a geometric netlist builder. Wire endpoints, component terminals, ground references and contacts to wire segments can be grouped. A crossing without endpoint contact is not a junction.
-- JSON project save/load for one named schematic scene (format v2, with v1 compatibility).
+- Multi-circuit project tabs with add, rename, reorder and close operations; project format stores multiple named circuit scenes, active circuit ID, and stable circuit/component IDs. Legacy single-circuit formats v1-v3 are importable.
 - Inline component value and instance-name editing; new components receive unique reference labels (R1, C1, V1, etc.), labels/values are drawn on the canvas, and rename operations participate in undo/redo.
 - Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches, ideal capacitors (open circuit) and ideal inductors (zero-volt branch).
 - Engineering suffix parsing and Gaussian elimination unit tests.
@@ -32,8 +32,8 @@ This document distinguishes existing prototype behavior from verified engineerin
 - There is no electrical highlight/selection of a whole net.
 
 ### Circuit and project model
-- A project currently contains one circuit scene.
-- There are no multiple named circuits/tabs within a project.
+- A project can contain multiple named circuit scenes in tabs.
+- Multiple named circuit tabs now exist; reusable hierarchical custom circuit definitions are still absent.
 - There is no reusable hierarchical subcircuit definition, port declaration, custom-component library entry, or nested circuit editor.
 - A single circuit can be named and renamed; the name is persisted separately from the file path. Multiple named circuits within one project remain unavailable.
 - Version 2 project files are supported, with a compatibility loader for version 1.
@@ -59,7 +59,7 @@ The following sequence is deliberate. Later systems depend on earlier ones; addi
 - Introduce a project document containing multiple independently named circuits.
 - Add create, rename, duplicate, reorder, delete and switch-active-circuit operations.
 - Give every component a stable instance ID and a user-editable reference/name.
-- Replace implicit scene-only persistence with a versioned project schema and migration from the current format.
+- Project-level versioned persistence and migration from legacy single-circuit formats are implemented; topology remains scene-derived.
 - Model terminals, wires, junctions and nets explicitly.
 - Add interactive wire routing, endpoint dragging, bend editing, snapping, splitting, joining and junction editing.
 - Make topology changes undoable and testable.
@@ -126,3 +126,11 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - The properties panel now edits component instance names and the workspace records these changes in undo/redo history.
 
 - Stable UUIDs are now assigned to component and wire instances and persisted for future probe/measurement references.
+
+
+### Multi-circuit project increment
+
+- A project now holds multiple named circuit tabs. Tabs can be added, renamed, reordered, and closed; the active circuit is restored on load.
+- Saving writes a project document containing all tabs. Opening legacy single-circuit .physics files imports them as a one-tab project.
+- Each circuit and component has a stable UUID. The project loader validates duplicate circuit/component IDs before replacing the active project.
+- This is multi-document organization, not yet hierarchical custom circuit components with external ports.
