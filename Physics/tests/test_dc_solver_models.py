@@ -52,6 +52,37 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertAlmostEqual(result["sources"][0]["power_delivered"], 0.025, places=9)
         self.assertAlmostEqual(result["sources"][0]["power_absorbed"], -0.025, places=9)
 
+    def test_forward_diode_uses_piecewise_linear_model(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        diode = Component("diode", "D1", "")
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], diode: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        diode_result = result["diodes"][0]
+        self.assertTrue(diode_result["conducting"])
+        self.assertAlmostEqual(diode_result["voltage"], 0.7 + 0.01 * diode_result["current"], places=8)
+        self.assertAlmostEqual(diode_result["current"], 4.3 / 1000.01, places=8)
+
+    def test_reverse_diode_stays_off(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        diode = Component("diode", "D1", "")
+        topology = {
+            "component_nodes": {source: [2, 0], resistor: [2, 1], diode: [0, 1]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertFalse(result["diodes"][0]["conducting"])
+        self.assertAlmostEqual(result["diodes"][0]["current"], 0.0)
+        self.assertAlmostEqual(result["resistors"][0]["current"], 0.0, places=9)
+
     def test_non_positive_reactive_value_is_rejected(self):
         capacitor = Component("capacitor", "C1", "0")
         topology = {
