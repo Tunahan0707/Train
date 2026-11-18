@@ -13,6 +13,7 @@ from PySide6.QtGui import (
     QShortcut,
 )
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal, QEvent
+from math import hypot
 
 from settings import (
     GRID_SIZE,
@@ -27,6 +28,7 @@ from settings import (
     SHORTCUT_ROTATE,
     SHORTCUT_DUPLICATE,
     SHORTCUT_RESET_ZOOM,
+    SHORTCUT_CANCEL,
     GRID_SNAP_ENABLED,
     MOUSE_SELECTION_BUTTON,
     MOUSE_PAN_BUTTON,
@@ -167,6 +169,9 @@ class Workspace(QGraphicsView):
         self.selection_start_scene = None
         self.selection_path = QPainterPath()
         self.drag_start_positions = {}
+        self.wire_mode = False
+        self.wire_start = None
+        self.wire_preview_end = None
 
         # Çöp kutusu
         self.delete_button = TrashButton(self)
@@ -187,6 +192,7 @@ class Workspace(QGraphicsView):
             ("Ctrl+C", self.copy_selected_items),
             ("Ctrl+V", self.paste_copied_items),
             (SHORTCUT_RESET_ZOOM, self.reset_zoom),
+            (SHORTCUT_CANCEL, self.cancel_wire_mode),
         ]
 
         self.shortcuts = []
@@ -259,6 +265,64 @@ class Workspace(QGraphicsView):
     def reset_zoom(self):
         self.resetTransform()
         self.centerOn(0, 0)
+
+    def cancel_wire_mode(self):
+        if not self.wire_mode:
+            return
+        self.wire_mode = False
+        self.wire_start = None
+        self.wire_preview_end = None
+        self.unsetCursor()
+        self.viewport().update()
+
+    def _start_wire_mode(self):
+        self.wire_mode = True
+        self.wire_start = None
+        self.wire_preview_end = None
+        self.setCursor(Qt.CursorShape.CrossCursor)
+        self.setFocus()
+        self.viewport().update()
+
+    def _snap_wire_point(self, point):
+        point = QPointF(point)
+        grid_point = self.snap_position(point) if GRID_SNAP_ENABLED else point
+        candidates = []
+        snap_distance = GRID_SIZE * 0.75
+
+        for item in self.circuit_scene.items():
+            component_id = getattr(item, "component_id", None)
+            if component_id == "wire":
+                start = item.scene_start_point()
+                end = item.scene_end_point()
+                candidates.extend((start, end))
+                corner = QPointF(end.x(), start.y())
+                for first, second in ((start, corner), (corner, end)):
+                    dx = second.x() - first.x()
+                    dy = second.y() - first.y()
+                    length_sq = dx * dx + dy * dy
+                    if length_sq == 0:
+                        projected = first
+                    else:
+                        t = ((point.x() - first.x()) * dx + (point.y() - first.y()) * dy) / length_sq
+                        t = max(0.0, min(1.0, t))
+                        projected = QPointF(first.x() + t * dx, first.y() + t * dy)
+                    if hypot(point.x() - projected.x(), point.y() - projected.y()) <= snap_distance:
+                        candidates.append(projected)
+                continue
+            terminal_method = getattr(item, "terminal_positions", None)
+            if terminal_method is None:
+                continue
+            for local_x, local_y in terminal_method():
+                candidates.append(item.mapToScene(QPointF(local_x, local_y)))
+
+        nearby = [candidate for candidate in candidates
+                  if hypot(point.x() - candidate.x(), point.y() - candidate.y()) <= snap_distance]
+        if nearby:
+            return min(nearby, key=lambda candidate: hypot(
+                point.x() - candidate.x(), point.y() - candidate.y()
+            ))
+        return grid_point
+
 
     REFERENCE_PREFIXES = {
         "resistor": "R", "capacitor": "C", "inductor": "L", "diode": "D",
@@ -461,6 +525,17 @@ class Workspace(QGraphicsView):
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
 
+        if self.wire_mode and self.wire_start is not None and self.wire_preview_end is not None:
+            painter.save()
+            preview_pen = QPen(QColor(color("accent")), 2.0, Qt.PenStyle.DashLine)
+            painter.setPen(preview_pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            preview = QPainterPath(self.wire_start)
+            preview.lineTo(self.wire_preview_end.x(), self.wire_start.y())
+            preview.lineTo(self.wire_preview_end)
+            painter.drawPath(preview)
+            painter.restore()
+
         if not self.selecting:
             return
 
@@ -563,19 +638,15 @@ class Workspace(QGraphicsView):
         self.viewport().update()
 
     def add_component(self, component_id, shift=False, stack_index=0):
+        if component_id == "wire":
+            self._start_wire_mode()
+            return True
         center = self.mapToScene(self.viewport().rect().center())
         position = QPointF(center.x(), center.y() + stack_index * GRID_SIZE * 4) if shift else center
         if GRID_SNAP_ENABLED:
             position = self.snap_position(position)
 
-        if component_id == "wire":
-            half = GRID_SIZE * 2
-            item = WireItem(
-                QPointF(position.x() - half, position.y()),
-                QPointF(position.x() + half, position.y()),
-            )
-            item_position = QPointF(0, 0)
-        elif component_id == "resistor":
+        if component_id == "resistor":
             item = Resistor()
             item_position = position
         else:
@@ -630,12 +701,11 @@ class Workspace(QGraphicsView):
             position = self.snap_position(position)
 
         if component_id == "wire":
-            half = GRID_SIZE * 2
-            item = WireItem(
-                QPointF(position.x() - half, position.y()),
-                QPointF(position.x() + half, position.y()),
-            )
-            item_position = QPointF(0, 0)
+            self._start_wire_mode()
+            self.component_dropped.emit()
+            event.setDropAction(Qt.DropAction.CopyAction)
+            event.accept()
+            return
         elif component_id == "resistor":
             item = Resistor()
             item_position = position
@@ -661,6 +731,24 @@ class Workspace(QGraphicsView):
 
     # Fare basılması
     def mousePressEvent(self, event):
+        if self.wire_mode and event.button() == Qt.MouseButton.LeftButton:
+            point = self._snap_wire_point(self.mapToScene(event.position().toPoint()))
+            if self.wire_start is None:
+                self.wire_start = point
+                self.wire_preview_end = point
+            else:
+                end_point = point
+                if hypot(end_point.x() - self.wire_start.x(), end_point.y() - self.wire_start.y()) >= 1.0:
+                    wire = WireItem(self.wire_start, end_point)
+                    self.circuit_scene.clearSelection()
+                    self.history.execute(AddItemCommand(self.circuit_scene, wire, QPointF(0, 0)))
+                    wire.setSelected(True)
+                    self.history_changed.emit()
+                self.cancel_wire_mode()
+            self.viewport().update()
+            event.accept()
+            return
+
         # Shift + sağ tık: bileşen sil
         if (
             self.matches_button(event, MOUSE_DELETE_BUTTON)
@@ -714,6 +802,12 @@ class Workspace(QGraphicsView):
     # Fare hareketi
     def mouseMoveEvent(self, event):
         current_pos = event.position().toPoint()
+
+        if self.wire_mode and self.wire_start is not None:
+            self.wire_preview_end = self._snap_wire_point(self.mapToScene(current_pos))
+            self.viewport().update()
+            event.accept()
+            return
 
         if self.panning:
             delta = current_pos - self.pan_start
