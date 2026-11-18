@@ -1,4 +1,5 @@
 import json
+import uuid
 from pathlib import Path
 
 from components.resistor import Resistor
@@ -15,6 +16,7 @@ def save_circuit(scene, file_path, circuit_name=None):
         if component_id == "wire":
             components.append({
                 "type": "wire",
+                "id": item.instance_id,
                 "start": [item.start_point.x(), item.start_point.y()],
                 "end": [item.end_point.x(), item.end_point.y()],
                 "x": item.pos().x(),
@@ -23,6 +25,7 @@ def save_circuit(scene, file_path, circuit_name=None):
         else:
             components.append({
                 "type": component_id,
+                "id": item.instance_id,
                 "name": str(getattr(item, "name", component_id)),
                 "x": item.pos().x(),
                 "y": item.pos().y(),
@@ -33,7 +36,7 @@ def save_circuit(scene, file_path, circuit_name=None):
 
     data = {
         "format": "physics-circuit",
-        "version": 2,
+        "version": 3,
         "circuit": {"name": str(circuit_name or Path(file_path).stem or "Devre")},
         "components": components,
     }
@@ -45,7 +48,7 @@ def load_circuit(scene, file_path):
     if data.get("format") != "physics-circuit":
         raise ValueError("Bu dosya bir Physics devre projesi değil.")
     version = data.get("version")
-    if version not in (1, 2):
+    if version not in (1, 2, 3):
         raise ValueError("Desteklenmeyen proje dosyası sürümü.")
 
     constructors = {
@@ -69,6 +72,7 @@ def load_circuit(scene, file_path):
     if not isinstance(entries, list):
         raise ValueError("Proje bileşen listesi geçersiz.")
     new_items = []
+    seen_ids = set()
     for entry in entries:
         if not isinstance(entry, dict):
             raise ValueError("Proje içinde geçersiz bileşen kaydı var.")
@@ -80,11 +84,29 @@ def load_circuit(scene, file_path):
                 raise ValueError("Kablo koordinatları geçersiz.")
             item = WireItem((float(start[0]), float(start[1])), (float(end[0]), float(end[1])))
             item.setPos(float(entry.get("x", 0)), float(entry.get("y", 0)))
+            raw_id = entry.get("id")
+            if raw_id:
+                try:
+                    item.instance_id = str(uuid.UUID(str(raw_id)))
+                except (ValueError, AttributeError):
+                    raise ValueError("Kablo bileşen kimliği geçersiz.")
+            if item.instance_id in seen_ids:
+                raise ValueError("Projede yinelenen bileşen kimliği var.")
+            seen_ids.add(item.instance_id)
             new_items.append(item)
             continue
         if component_type not in constructors:
             raise ValueError(f"Desteklenmeyen bileşen türü: {component_type}")
         item = constructors[component_type]()
+        raw_id = entry.get("id")
+        if raw_id:
+            try:
+                item.instance_id = str(uuid.UUID(str(raw_id)))
+            except (ValueError, AttributeError):
+                raise ValueError("Bileşen kimliği geçersiz.")
+        if item.instance_id in seen_ids:
+            raise ValueError("Projede yinelenen bileşen kimliği var.")
+        seen_ids.add(item.instance_id)
         item.setPos(float(entry.get("x", 0)), float(entry.get("y", 0)))
         item.setRotation(float(entry.get("rotation", 0)))
         if hasattr(item, "set_value"):
