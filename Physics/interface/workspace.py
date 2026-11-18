@@ -260,6 +260,31 @@ class Workspace(QGraphicsView):
         self.resetTransform()
         self.centerOn(0, 0)
 
+    REFERENCE_PREFIXES = {
+        "resistor": "R", "capacitor": "C", "inductor": "L", "diode": "D",
+        "led": "LED", "bjt": "Q", "mosfet": "M", "fuse": "F",
+        "potentiometer": "RV", "voltage_source": "V", "ac_source": "VAC",
+        "battery": "BAT", "switch": "SW", "ground": "GND",
+    }
+
+    def _assign_reference_name(self, item, counts=None):
+        component_id = getattr(item, "component_id", None)
+        prefix = self.REFERENCE_PREFIXES.get(component_id)
+        if prefix is None:
+            return
+        if counts is None:
+            index = sum(1 for existing in self.circuit_scene.items()
+                        if getattr(existing, "component_id", None) == component_id)
+        else:
+            if component_id not in counts:
+                counts[component_id] = sum(
+                    1 for existing in self.circuit_scene.items()
+                    if getattr(existing, "component_id", None) == component_id
+                )
+            index = counts[component_id]
+            counts[component_id] += 1
+        item.name = f"{prefix}{index + 1}"
+
     def _capture_items(self, items):
         snapshots = []
         for item in items:
@@ -286,6 +311,7 @@ class Workspace(QGraphicsView):
     def _create_item_copies(self, snapshots, offset):
         copies = []
         positions = {}
+        reference_counts = {}
         for snapshot in snapshots:
             component_id = snapshot["component_id"]
             if component_id == "wire":
@@ -311,6 +337,7 @@ class Workspace(QGraphicsView):
                 item.closed = snapshot.get("closed", False)
             if component_id != "wire":
                 item.setRotation(snapshot.get("rotation", 0.0))
+                self._assign_reference_name(item, reference_counts)
             copies.append(item)
             positions[item] = position
         return copies, positions
@@ -550,6 +577,8 @@ class Workspace(QGraphicsView):
                 return False
             item_position = position
 
+        if component_id != "wire":
+            self._assign_reference_name(item)
         item.setPos(item_position)
         visible_area = self.mapToScene(self.viewport().rect()).boundingRect().adjusted(2, 2, -2, -2)
         item_bounds = item.mapRectToScene(item.boundingRect())
@@ -610,6 +639,8 @@ class Workspace(QGraphicsView):
                 return
             item_position = position
 
+        if component_id != "wire":
+            self._assign_reference_name(item)
         self.history.execute(AddItemCommand(self.circuit_scene, item, item_position))
         self.circuit_scene.clearSelection()
         item.setSelected(True)
