@@ -125,3 +125,18 @@ class SetNameCommand:
     def redo(self):
         self.item.name = self.new_name
         self.item.update()
+
+
+class SetWiperPositionCommand:
+    def __init__(self, item, old_position, new_position):
+        self.item = item
+        self.old_position = float(old_position)
+        self.new_position = float(new_position)
+
+    def undo(self):
+        self.item.wiper_position = self.old_position
+        self.item.update()
+
+    def redo(self):
+        self.item.wiper_position = self.new_position
+        self.item.update()
