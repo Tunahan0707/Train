@@ -37,7 +37,7 @@ python -m unittest discover -s tests -v
 
 Editörde direnç, kondansatör, bobin, diyot, LED, BJT, MOSFET, sigorta, potansiyometre, DC/AC kaynak, pil, anahtar, GND ve kablo sembolleri bulunur. Ancak sembolün bulunması, fiziksel modelinin tamamlandığı anlamına gelmez.
 
-Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Kablolar seçilip bütün olarak taşınabilir; uç ve köşe düzenleme ile doğrudan uçtan uca kablo çizimi henüz yoktur.
+Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları ve ortak GND referansını kullanarak temel bağlantı gruplarını çıkarır. Yalnızca kesişen iki kablo, uç/T bağlantısı yoksa bağlı sayılmaz. Bağlantı kategorisinden İletken aracını seç; ilk tıklamayla başlangıcı, ikinci tıklamayla bitişi belirle. Araç bileşen uçlarına ve mevcut kablo segmentlerine yakındaki noktaları yakalar. Kablolar ayrıca seçilip bütün olarak taşınabilir; uç/köşe tutamaçları henüz yoktur.
 
 DC çalışma noktası çözümü direnç, ideal DC gerilim kaynağı, pil, ideal kapalı anahtar, ideal kondansatör (açık devre) ve ideal bobin (kısa devre) modellerini kapsar. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, yarı iletkenlerin doğrusal olmayan modelleri, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
 
@@ -60,3 +60,5 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 
 - Üstteki sekme çubuğundaki **+** ile yeni devre oluştur; sekme adına Menü → Devreyi yeniden adlandır ile ad ver.
 - Kaydetme işlemi açık projedeki bütün devre sekmelerini birlikte kaydeder.
+
+- İletken çiziminden Escape ile çıkılır; kablo oluşturma Ctrl+Z ile geri alınabilir.
