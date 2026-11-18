@@ -63,6 +63,7 @@ class MainWindow(QMainWindow):
 
         self.properties_panel.value_change_requested.connect(self._set_component_value)
         self.properties_panel.name_change_requested.connect(self._set_component_name)
+        self.properties_panel.wiper_change_requested.connect(self._set_component_wiper)
 
         toolbar = QToolBar("Tema", self)
         toolbar.setMovable(False)
@@ -167,6 +168,10 @@ class MainWindow(QMainWindow):
     def _set_component_name(self, items, name):
         if self.workspace is not None:
             self.workspace.set_component_name(items, name)
+
+    def _set_component_wiper(self, items, position):
+        if self.workspace is not None:
+            self.workspace.set_component_wiper_position(items, position)
 
     def handle_palette_menu(self, action):
         actions = {
