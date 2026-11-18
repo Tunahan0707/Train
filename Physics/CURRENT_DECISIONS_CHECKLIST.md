@@ -278,3 +278,6 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Fixed-resistance DC fuse model and measurements.
 - [x] Three-terminal potentiometer DC divider with editable, undoable wiper position.
 - [ ] Fuse thermal trip and current rating model.
+
+- [x] Simplified DC on/off switch approximations for NPN BJT and N-channel MOSFET.
+- [ ] Full BJT/MOSFET device models, gain/transfer curves and parasitics.
