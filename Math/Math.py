@@ -83,8 +83,8 @@ class InverseTrigonometry:
         return factor * ans
 
     @staticmethod
-    def arctan2(y, x):
-        pi = Functs.Pi()
+    def arctan2(y, x, eps=1e-15):
+        pi = Functs.Pi(eps)
 
         if x == 0:
             if y > 0:
@@ -98,7 +98,7 @@ class InverseTrigonometry:
             return pi if x < 0 else 0
 
         if abs(y) <= abs(x):
-            angle = InverseTrigonometry.arctan(y / x)
+            angle = InverseTrigonometry.arctan(y / x, eps)
 
             if x < 0:
                 return angle + pi if y > 0 else angle - pi
@@ -106,7 +106,7 @@ class InverseTrigonometry:
             return angle
 
         else:
-            angle = pi / 2 - InverseTrigonometry.arctan(x / y)
+            angle = pi / 2 - InverseTrigonometry.arctan(x / y, eps)
 
             if y < 0:
                 angle = -angle
@@ -166,6 +166,7 @@ class Factorial:
         return a
 
 class Roots:
+    _MAX_ITERATIONS = 10000
 
     @staticmethod
     def _is_finite(x):
@@ -203,7 +204,7 @@ class Roots:
         if y == 0:
             y = 1.0
 
-        for _ in range(10000):
+        for _ in range(Roots._MAX_ITERATIONS):
             denominator = y ** (n - 1)
             if denominator == 0:
                 y = (y + 1.0) / 2
@@ -251,13 +252,13 @@ class Roots:
             e -= 1
 
         ans = 1.0
-        while True:
+        for _ in range(Roots._MAX_ITERATIONS):
             next_ans = (ans + m / ans) / 2
             if abs(next_ans - ans) <= eps * abs(next_ans):
-                break
+                return next_ans * (2 ** (e // 2))
             ans = next_ans
 
-        return next_ans * (2 ** (e // 2))
+        raise ArithmeticError("Karekök hesabı yakınsamadı!")
 
     @staticmethod
     def root(x, n, eps=1e-15):
@@ -286,21 +287,16 @@ class Roots:
         if isinstance(x, ComplexNumber):
             if x.real == 0 and x.complex == 0:
                 return ComplexNumber(0, 0)
-            magnitude = abs(x)
-            angle = x.arg() / n
-            y = ComplexNumber(
-                magnitude ** (1 / n) * Trigonometry.cos(angle),
-                magnitude ** (1 / n) * Trigonometry.sin(angle),
+            magnitude_squared = x.real**2 + x.complex**2
+            magnitude = Roots._real_root(magnitude_squared, 2, eps)
+            root_magnitude = Roots._real_root(magnitude, n, eps)
+            angle = x.arg(eps) / n
+
+            # Kutupsal gösterim doğrudan ana (principal) kökü verir.
+            return ComplexNumber(
+                root_magnitude * Trigonometry.cos(angle, eps),
+                root_magnitude * Trigonometry.sin(angle, eps),
             )
-            for _ in range(100):
-                denominator = y ** (n - 1)
-                if denominator.real == 0 and denominator.complex == 0:
-                    raise ArithmeticError("Kök hesabı sırasında sıfıra bölme oluştu!")
-                next_y = ((n - 1) * y + x / denominator) / n
-                if abs(next_y - y) <= eps * abs(next_y):
-                    return next_y
-                y = next_y
-            raise ArithmeticError("Karmaşık kök hesabı yakınsamadı!")
 
         return Roots._real_root(x, n, eps)
 
@@ -498,8 +494,8 @@ class ComplexNumber:
         return int(self.real)
     def __abs__(self):
         return Roots.sqrt(self.real**2 + self.complex**2)
-    def arg(self):
-        return InverseTrigonometry.arctan2(self.complex, self.real)
+    def arg(self, eps=1e-15):
+        return InverseTrigonometry.arctan2(self.complex, self.real, eps)
     def print_complex(self):
         print(f"{self.complex}i")
     def print_real(self):
