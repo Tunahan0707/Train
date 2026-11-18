@@ -1,3 +1,5 @@
+import uuid
+
 from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsItem
 from PySide6.QtGui import QPainterPath, QPen, QColor
 from PySide6.QtCore import Qt, QPointF
@@ -9,6 +11,7 @@ class WireItem(QGraphicsPathItem):
     def __init__(self, start, end, parent=None):
         super().__init__(parent)
         self.component_id = "wire"
+        self.instance_id = str(uuid.uuid4())
         self.start_point = self.to_point(start)
         self.end_point = self.to_point(end)
         self.setFlags(
