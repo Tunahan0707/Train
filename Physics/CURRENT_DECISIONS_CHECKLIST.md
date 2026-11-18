@@ -85,7 +85,7 @@
 - [x] Zoom in/out and pan around the workspace.
 - [x] Support selection, multi-selection, and deletion.
 - [x] Save and open circuits.
-- [ ] Duplicate complete circuits.
+- [x] Duplicate complete circuits.
 
 ## 5. Reusable Custom Components
 
