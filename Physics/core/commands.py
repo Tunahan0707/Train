@@ -140,3 +140,18 @@ class SetWiperPositionCommand:
     def redo(self):
         self.item.wiper_position = self.new_position
         self.item.update()
+
+
+class SetSwitchStateCommand:
+    def __init__(self, item, old_state, new_state):
+        self.item = item
+        self.old_state = bool(old_state)
+        self.new_state = bool(new_state)
+
+    def undo(self):
+        self.item.closed = self.old_state
+        self.item.update()
+
+    def redo(self):
+        self.item.closed = self.new_state
+        self.item.update()
