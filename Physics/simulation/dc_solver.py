@@ -81,7 +81,7 @@ def solve_dc_operating_point(scene):
 
     supported = {
         "resistor", "voltage_source", "battery", "switch", "ground",
-        "capacitor", "inductor", "diode", "led",
+        "capacitor", "inductor", "diode", "led", "fuse", "potentiometer",
     }
     unsupported = [
         f"{_component_label(item)} ({getattr(item, 'component_id', 'unknown')})"
@@ -116,14 +116,18 @@ def solve_dc_operating_point(scene):
     unknown_nodes = [node for node in net_ids if node not in ground_nodes]
     node_index = {node: index for index, node in enumerate(unknown_nodes)}
 
-    resistors, sources, inductors, capacitors, diodes = [], [], [], [], []
+    resistors, fuses, potentiometers, sources, inductors, capacitors, diodes = [], [], [], [], [], [], []
     for item, pins in component_nodes.items():
         component_id = getattr(item, "component_id", "")
-        expected_pins = 1 if component_id == "ground" else 2
+        expected_pins = 1 if component_id == "ground" else (3 if component_id == "potentiometer" else 2)
         if len(pins) != expected_pins:
             raise ValueError(f"{_component_label(item)} {expected_pins} uçlu olmalı.")
         if component_id == "resistor":
             resistors.append(item)
+        elif component_id == "fuse":
+            fuses.append(item)
+        elif component_id == "potentiometer":
+            potentiometers.append(item)
         elif component_id in ("voltage_source", "battery"):
             sources.append(item)
         elif component_id == "inductor":
@@ -133,10 +137,26 @@ def solve_dc_operating_point(scene):
         elif component_id in ("diode", "led"):
             diodes.append(item)
 
-    for item in resistors:
-        resistance = parse_engineering_value(getattr(item, "value", ""))
+    def component_resistance(item):
+        raw = str(getattr(item, "value", "")).strip()
+        resistance = parse_engineering_value(raw)
+        unit = str(getattr(item, "unit", ""))
+        has_suffix = any(raw.endswith(suffix) for suffix in SUFFIXES)
+        if not has_suffix:
+            if unit.startswith("k"):
+                resistance *= 1e3
+            elif unit.startswith("M"):
+                resistance *= 1e6
+        return resistance
+
+    for item in resistors + fuses + potentiometers:
+        resistance = component_resistance(item)
         if resistance <= 0:
             raise ValueError(f"{_component_label(item)} direnci sıfırdan büyük olmalı.")
+    for item in potentiometers:
+        position = float(getattr(item, "wiper_position", 0.5))
+        if not 0.0 < position < 1.0:
+            raise ValueError(f"{_component_label(item)} sürgü konumu 0 ile 1 arasında olmalı.")
     for item in inductors + capacitors:
         if parse_engineering_value(getattr(item, "value", "")) <= 0:
             raise ValueError(f"{_component_label(item)} değeri sıfırdan büyük olmalı.")
@@ -181,10 +201,16 @@ def solve_dc_operating_point(scene):
                 matrix[first][second] -= conductance
                 matrix[second][first] -= conductance
 
-        for item in resistors:
+        for item in resistors + fuses:
             pins = component_nodes[item]
-            resistance = parse_engineering_value(getattr(item, "value", ""))
+            resistance = component_resistance(item)
             stamp_conductance(pins[0], pins[1], 1.0 / resistance)
+        for item in potentiometers:
+            pins = component_nodes[item]
+            total_resistance = component_resistance(item)
+            position = float(getattr(item, "wiper_position", 0.5))
+            stamp_conductance(pins[0], pins[2], 1.0 / (total_resistance * position))
+            stamp_conductance(pins[2], pins[1], 1.0 / (total_resistance * (1.0 - position)))
 
         branch_index_by_item = {}
         for branch_index, (item, branch_voltage, series_resistance, branch_kind) in enumerate(branches):
@@ -234,13 +260,44 @@ def solve_dc_operating_point(scene):
     resistor_results = []
     for item in resistors:
         pins = component_nodes[item]
-        resistance = parse_engineering_value(getattr(item, "value", ""))
+        resistance = component_resistance(item)
         voltage = node_voltages[pins[0]] - node_voltages[pins[1]]
         current = voltage / resistance
         resistor_results.append({
             "id": getattr(item, "instance_id", None), "name": _component_label(item), "resistance": resistance,
             "current": current, "voltage": voltage,
             "power": current * current * resistance,
+        })
+
+    fuse_results = []
+    for item in fuses:
+        pins = component_nodes[item]
+        resistance = component_resistance(item)
+        voltage = node_voltages[pins[0]] - node_voltages[pins[1]]
+        current = voltage / resistance
+        fuse_results.append({
+            "id": getattr(item, "instance_id", None), "name": _component_label(item),
+            "resistance": resistance, "voltage": voltage, "current": current,
+            "power": current * current * resistance,
+        })
+
+    potentiometer_results = []
+    for item in potentiometers:
+        first, second, wiper = component_nodes[item]
+        total_resistance = component_resistance(item)
+        position = float(getattr(item, "wiper_position", 0.5))
+        first_resistance = total_resistance * position
+        second_resistance = total_resistance * (1.0 - position)
+        first_voltage = node_voltages[first] - node_voltages[wiper]
+        second_voltage = node_voltages[wiper] - node_voltages[second]
+        potentiometer_results.append({
+            "id": getattr(item, "instance_id", None), "name": _component_label(item),
+            "resistance": total_resistance,
+            "voltage": node_voltages[first] - node_voltages[second],
+            "wiper_voltage": node_voltages[wiper],
+            "first_current": first_voltage / first_resistance,
+            "second_current": second_voltage / second_resistance,
+            "wiper_position": position,
         })
 
     source_results = []
@@ -291,6 +348,17 @@ def solve_dc_operating_point(scene):
             "Akım": f'{item["current"]:.6g} A',
             "Güç": f'{item["power"]:.6g} W',
         }
+    for item in fuse_results:
+        component_measurements[item["id"]] = {
+            "Gerilim": f'{item["voltage"]:.6g} V', "Akım": f'{item["current"]:.6g} A',
+            "Güç": f'{item["power"]:.6g} W',
+        }
+    for item in potentiometer_results:
+        component_measurements[item["id"]] = {
+            "Uçlar arası gerilim": f'{item["voltage"]:.6g} V',
+            "Sürgü gerilimi": f'{item["wiper_voltage"]:.6g} V',
+            "Sürgü konumu": f'{item["wiper_position"]:.3f}',
+        }
     for item in source_results:
         component_measurements[item["id"]] = {
             "Gerilim": f'{item["voltage"]:.6g} V',
@@ -315,6 +383,8 @@ def solve_dc_operating_point(scene):
         "node_voltages": node_voltages,
         "component_measurements": component_measurements,
         "resistors": resistor_results,
+        "fuses": fuse_results,
+        "potentiometers": potentiometer_results,
         "sources": source_results,
         "inductors": inductor_results,
         "capacitors": capacitor_results,
@@ -344,6 +414,14 @@ def format_dc_report(scene=None, result=None):
             f"{item['current']:.6g} A, {item['power']:.6g} W"
         )
 
+    if result["fuses"]:
+        lines.extend(["", "SİGORTALAR (sabit direnç modeli)"])
+        for item in result["fuses"]:
+            lines.append(f"  {item['name']}: {item['voltage']:.6g} V, {item['current']:.6g} A, {item['power']:.6g} W")
+    if result["potentiometers"]:
+        lines.extend(["", "POTANSİYOMETRELER (üç uçlu direnç bölücü)"])
+        for item in result["potentiometers"]:
+            lines.append(f"  {item['name']}: {item['voltage']:.6g} V uçlar arası, sürgü {item['wiper_voltage']:.6g} V")
     if result["diodes"]:
         lines.extend(["", "DİYOTLAR / LED (parçalı doğrusal model)"])
         for item in result["diodes"]:
@@ -367,9 +445,9 @@ def format_dc_report(scene=None, result=None):
 
     lines.extend([
         "",
-        "Model kapsamı: direnç, ideal DC gerilim kaynağı, pil, ideal anahtar, ideal kondansatör/bobin ve parçalı doğrusal diyot/LED.",
+        "Model kapsamı: direnç, sabit dirençli sigorta, üç uçlu potansiyometre, ideal DC kaynak/pil/anahtar, ideal kondansatör/bobin ve parçalı doğrusal diyot/LED.",
         "DC kararlı hâlde kondansatör açık devre, bobin kısa devre kabul edilir; geçici rejim hesaplanmaz. Diyot/LED sabit eşik gerilimi ve seri direnç yaklaşımıyla modellenir.",
-        "BJT, MOSFET, sigorta, potansiyometre ve AC kaynak için çözüm üretilmez.",
+        "BJT, MOSFET ve AC kaynak için çözüm üretilmez.",
         "GND yoksa bir düğüm geçici referans olarak seçilir.",
         "Kaynak akımının pozitif yönü, kaynağın sol (+) ucundan sağ (-) ucuna doğrudur.",
     ])
