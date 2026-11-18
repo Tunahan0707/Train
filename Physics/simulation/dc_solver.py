@@ -427,6 +427,8 @@ def solve_dc_operating_point(scene):
         component_measurements[item["id"]] = {
             "Uçlar arası gerilim": f'{item["voltage"]:.6g} V',
             "Sürgü gerilimi": f'{item["wiper_voltage"]:.6g} V',
+            "Üst bölüm akımı": f'{item["first_current"]:.6g} A',
+            "Alt bölüm akımı": f'{item["second_current"]:.6g} A',
             "Sürgü konumu": f'{item["wiper_position"]:.3f}',
             "Güç": f'{item["power"]:.6g} W',
         }
