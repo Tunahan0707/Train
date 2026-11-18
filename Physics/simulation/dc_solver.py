@@ -73,24 +73,25 @@ def _component_label(item):
 
 
 def solve_dc_operating_point(scene):
-    """Solve a linear DC operating point; never silently omit unsupported devices."""
+    """Solve a DC operating point with linear passive and piecewise-linear diode models."""
     netlist = build_netlist(scene)
     component_nodes = netlist["component_nodes"]
     if not component_nodes:
         raise ValueError("Devrede analiz edilecek bileşen bulunamadı.")
 
-    supported = {"resistor", "voltage_source", "battery", "switch", "ground", "capacitor", "inductor"}
+    supported = {
+        "resistor", "voltage_source", "battery", "switch", "ground",
+        "capacitor", "inductor", "diode", "led",
+    }
     unsupported = [
         f"{_component_label(item)} ({getattr(item, 'component_id', 'unknown')})"
         for item in component_nodes
         if getattr(item, "component_id", "") not in supported
     ]
     if unsupported:
-        names = ", ".join(sorted(unsupported))
         raise ValueError(
             "DC çözümü durduruldu. Şu bileşenlerin fiziksel modeli henüz uygulanmadı: "
-            + names
-            + ". Kısmi sonuç gösterilmedi."
+            + ", ".join(sorted(unsupported)) + ". Kısmi sonuç gösterilmedi."
         )
 
     disconnected = netlist.get("unconnected_terminals", [])
@@ -103,9 +104,7 @@ def solve_dc_operating_point(scene):
         )
 
     net_ids = sorted({
-        net_id
-        for pin_nodes in component_nodes.values()
-        for net_id in pin_nodes
+        net_id for pin_nodes in component_nodes.values() for net_id in pin_nodes
     })
     if not net_ids:
         raise ValueError("Elektriksel düğüm bulunamadı.")
@@ -117,82 +116,116 @@ def solve_dc_operating_point(scene):
     unknown_nodes = [node for node in net_ids if node not in ground_nodes]
     node_index = {node: index for index, node in enumerate(unknown_nodes)}
 
-    resistors = []
-    sources = []
-    inductors = []
-    capacitors = []
+    resistors, sources, inductors, capacitors, diodes = [], [], [], [], []
     for item, pins in component_nodes.items():
         component_id = getattr(item, "component_id", "")
+        expected_pins = 1 if component_id == "ground" else 2
+        if len(pins) != expected_pins:
+            raise ValueError(f"{_component_label(item)} {expected_pins} uçlu olmalı.")
         if component_id == "resistor":
-            if len(pins) != 2:
-                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             resistors.append(item)
         elif component_id in ("voltage_source", "battery"):
-            if len(pins) != 2:
-                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             sources.append(item)
         elif component_id == "inductor":
-            if len(pins) != 2:
-                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             inductors.append(item)
         elif component_id == "capacitor":
-            if len(pins) != 2:
-                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
             capacitors.append(item)
-        elif component_id == "switch":
-            if len(pins) != 2:
-                raise ValueError(f"{_component_label(item)} iki uçlu olmalı.")
-
-    # Validate stored reactive values even though DC steady-state stamps do not use their magnitude.
-    for item in inductors + capacitors:
-        reactive_value = parse_engineering_value(getattr(item, "value", ""))
-        if reactive_value <= 0:
-            raise ValueError(f"{_component_label(item)} değeri sıfırdan büyük olmalı.")
-
-    # Ideal DC steady state: capacitors are open circuits, inductors are zero-volt branches.
-    branches = [(item, parse_engineering_value(getattr(item, "value", ""))) for item in sources]
-    branches.extend((item, 0.0) for item in inductors)
-    size = len(unknown_nodes) + len(branches)
-    matrix = [[0.0 for _ in range(size)] for _ in range(size)]
-    vector = [0.0 for _ in range(size)]
-
-    def stamp_conductance(first_node, second_node, conductance):
-        first = node_index.get(first_node)
-        second = node_index.get(second_node)
-        if first is not None:
-            matrix[first][first] += conductance
-        if second is not None:
-            matrix[second][second] += conductance
-        if first is not None and second is not None:
-            matrix[first][second] -= conductance
-            matrix[second][first] -= conductance
+        elif component_id in ("diode", "led"):
+            diodes.append(item)
 
     for item in resistors:
-        pins = component_nodes[item]
         resistance = parse_engineering_value(getattr(item, "value", ""))
         if resistance <= 0:
             raise ValueError(f"{_component_label(item)} direnci sıfırdan büyük olmalı.")
-        stamp_conductance(pins[0], pins[1], 1.0 / resistance)
+    for item in inductors + capacitors:
+        if parse_engineering_value(getattr(item, "value", "")) <= 0:
+            raise ValueError(f"{_component_label(item)} değeri sıfırdan büyük olmalı.")
 
-    for branch_index, (item, source_voltage) in enumerate(branches):
-        pins = component_nodes[item]
-        positive_node, negative_node = pins
-        source_column = len(unknown_nodes) + branch_index
-        positive = node_index.get(positive_node)
-        negative = node_index.get(negative_node)
-
-        if positive is not None:
-            matrix[positive][source_column] += 1.0
-            matrix[source_column][positive] += 1.0
-        if negative is not None:
-            matrix[negative][source_column] -= 1.0
-            matrix[source_column][negative] -= 1.0
-
-        if getattr(item, "component_id", "") != "inductor" and source_voltage == 0:
+    source_voltages = {}
+    for item in sources:
+        voltage = parse_engineering_value(getattr(item, "value", ""))
+        if voltage == 0:
             raise ValueError(f"{_component_label(item)} gerilimi sıfır olamaz.")
-        vector[source_column] = source_voltage
+        source_voltages[item] = voltage
 
-    solution = gaussian_solve(matrix, vector) if size else []
+    diode_models = {
+        item: (0.7, 0.01) if getattr(item, "component_id", "") == "diode" else (2.0, 10.0)
+        for item in diodes
+    }
+    active_diodes = set()
+    solution = []
+    branch_currents = {}
+
+    # Active-set solution for piecewise-linear diode/LED models.
+    # Off: open circuit. On: fixed forward drop plus a small series resistance.
+    for _iteration in range(max(8, len(diodes) * 4 + 4)):
+        branches = [(item, source_voltages[item], 0.0, "source") for item in sources]
+        branches.extend((item, 0.0, 0.0, "inductor") for item in inductors)
+        branches.extend(
+            (item, diode_models[item][0], diode_models[item][1], "diode")
+            for item in diodes if item in active_diodes
+        )
+
+        size = len(unknown_nodes) + len(branches)
+        matrix = [[0.0 for _ in range(size)] for _ in range(size)]
+        vector = [0.0 for _ in range(size)]
+
+        def stamp_conductance(first_node, second_node, conductance):
+            first = node_index.get(first_node)
+            second = node_index.get(second_node)
+            if first is not None:
+                matrix[first][first] += conductance
+            if second is not None:
+                matrix[second][second] += conductance
+            if first is not None and second is not None:
+                matrix[first][second] -= conductance
+                matrix[second][first] -= conductance
+
+        for item in resistors:
+            pins = component_nodes[item]
+            resistance = parse_engineering_value(getattr(item, "value", ""))
+            stamp_conductance(pins[0], pins[1], 1.0 / resistance)
+
+        branch_index_by_item = {}
+        for branch_index, (item, branch_voltage, series_resistance, branch_kind) in enumerate(branches):
+            branch_index_by_item[item] = len(unknown_nodes) + branch_index
+            positive_node, negative_node = component_nodes[item][:2]
+            source_column = len(unknown_nodes) + branch_index
+            positive = node_index.get(positive_node)
+            negative = node_index.get(negative_node)
+            if positive is not None:
+                matrix[positive][source_column] += 1.0
+                matrix[source_column][positive] += 1.0
+            if negative is not None:
+                matrix[negative][source_column] -= 1.0
+                matrix[source_column][negative] -= 1.0
+            matrix[source_column][source_column] -= series_resistance
+            vector[source_column] = branch_voltage
+
+        solution = gaussian_solve(matrix, vector) if size else []
+        node_voltages = {node: 0.0 for node in net_ids}
+        for node, index in node_index.items():
+            node_voltages[node] = solution[index]
+        branch_currents = {
+            item: solution[column]
+            for item, column in branch_index_by_item.items()
+        }
+
+        changed = False
+        for item in diodes:
+            anode, cathode = component_nodes[item]
+            diode_voltage = node_voltages[anode] - node_voltages[cathode]
+            forward_voltage, _series_resistance = diode_models[item]
+            if item not in active_diodes and diode_voltage > forward_voltage:
+                active_diodes.add(item)
+                changed = True
+            elif item in active_diodes and branch_currents.get(item, 0.0) < -1e-10:
+                active_diodes.remove(item)
+                changed = True
+        if not changed:
+            break
+    else:
+        raise ValueError("Diyot çalışma noktası yakınsamadı; devreyi veya model varsayımlarını kontrol et.")
 
     node_voltages = {node: 0.0 for node in net_ids}
     for node, index in node_index.items():
@@ -205,34 +238,47 @@ def solve_dc_operating_point(scene):
         voltage = node_voltages[pins[0]] - node_voltages[pins[1]]
         current = voltage / resistance
         resistor_results.append({
-            "name": _component_label(item),
-            "resistance": resistance,
-            "current": current,
-            "voltage": voltage,
+            "name": _component_label(item), "resistance": resistance,
+            "current": current, "voltage": voltage,
             "power": current * current * resistance,
         })
 
     source_results = []
-    inductor_results = []
-    for branch_index, (item, branch_voltage) in enumerate(branches):
-        current_index = len(unknown_nodes) + branch_index
-        current = solution[current_index]
-        if getattr(item, "component_id", "") == "inductor":
-            inductor_results.append({
-                "name": _component_label(item),
-                "inductance": parse_engineering_value(getattr(item, "value", "")),
-                "voltage": 0.0,
-                "current": current,
-                "power": 0.0,
-            })
-            continue
-        voltage = branch_voltage
+    for item in sources:
+        current = branch_currents[item]
+        voltage = source_voltages[item]
         source_results.append({
+            "name": _component_label(item), "voltage": voltage,
+            "current": current, "power_absorbed": voltage * current,
+            "power_delivered": -voltage * current,
+        })
+
+    inductor_results = [{
+        "name": _component_label(item),
+        "inductance": parse_engineering_value(getattr(item, "value", "")),
+        "voltage": node_voltages[component_nodes[item][0]] - node_voltages[component_nodes[item][1]],
+        "current": branch_currents[item],
+        "power": 0.0,
+    } for item in inductors]
+
+    capacitor_results = [{
+        "name": _component_label(item),
+        "current": 0.0,
+        "voltage": node_voltages[component_nodes[item][0]] - node_voltages[component_nodes[item][1]],
+    } for item in capacitors]
+
+    diode_results = []
+    for item in diodes:
+        anode, cathode = component_nodes[item]
+        voltage = node_voltages[anode] - node_voltages[cathode]
+        current = branch_currents.get(item, 0.0)
+        diode_results.append({
             "name": _component_label(item),
+            "type": getattr(item, "component_id", "diode"),
             "voltage": voltage,
             "current": current,
-            "power_absorbed": voltage * current,
-            "power_delivered": -voltage * current,
+            "power": voltage * current,
+            "conducting": item in active_diodes,
         })
 
     return {
@@ -240,14 +286,8 @@ def solve_dc_operating_point(scene):
         "resistors": resistor_results,
         "sources": source_results,
         "inductors": inductor_results,
-        "capacitors": [
-            {
-                "name": _component_label(item),
-                "current": 0.0,
-                "voltage": node_voltages[component_nodes[item][0]] - node_voltages[component_nodes[item][1]],
-            }
-            for item in capacitors
-        ],
+        "capacitors": capacitor_results,
+        "diodes": diode_results,
         "unsupported": [],
         "automatic_ground": automatic_ground,
         "net_count": len(net_ids),
@@ -273,6 +313,11 @@ def format_dc_report(scene):
             f"{item['current']:.6g} A, {item['power']:.6g} W"
         )
 
+    if result["diodes"]:
+        lines.extend(["", "DİYOTLAR / LED (parçalı doğrusal model)"])
+        for item in result["diodes"]:
+            state = "İletimde" if item["conducting"] else "Kesimde"
+            lines.append(f"  {item['name']}: {item['voltage']:.6g} V, {item['current']:.6g} A ({state})")
     if result["inductors"]:
         lines.extend(["", "BOBİNLER (DC kararlı hâl)"])
         for item in result["inductors"]:
@@ -291,9 +336,9 @@ def format_dc_report(scene):
 
     lines.extend([
         "",
-        "Model kapsamı: direnç, ideal DC gerilim kaynağı, pil, ideal anahtar, ideal kondansatör ve ideal bobin.",
-        "DC kararlı hâlde kondansatör açık devre, bobin kısa devre kabul edilir; geçici rejim hesaplanmaz.",
-        "Diyot, LED, transistör, sigorta, potansiyometre ve AC kaynak için çözüm üretilmez.",
+        "Model kapsamı: direnç, ideal DC gerilim kaynağı, pil, ideal anahtar, ideal kondansatör/bobin ve parçalı doğrusal diyot/LED.",
+        "DC kararlı hâlde kondansatör açık devre, bobin kısa devre kabul edilir; geçici rejim hesaplanmaz. Diyot/LED sabit eşik gerilimi ve seri direnç yaklaşımıyla modellenir.",
+        "BJT, MOSFET, sigorta, potansiyometre ve AC kaynak için çözüm üretilmez.",
         "GND yoksa bir düğüm geçici referans olarak seçilir.",
         "Kaynak akımının pozitif yönü, kaynağın sol (+) ucundan sağ (-) ucuna doğrudur.",
     ])
