@@ -274,3 +274,7 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Show calculated per-component DC readings in the properties panel after simulation.
 - [x] Invalidate stale measurements after electrical edits.
 - [ ] Dedicated meter instruments and oscilloscope traces.
+
+- [x] Fixed-resistance DC fuse model and measurements.
+- [x] Three-terminal potentiometer DC divider with editable, undoable wiper position.
+- [ ] Fuse thermal trip and current rating model.
