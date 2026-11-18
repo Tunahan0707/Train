@@ -39,7 +39,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - Version 2 project files are supported, with a compatibility loader for version 1.
 
 ### Measurement and analysis
-- No ammeter, voltmeter, multimeter, oscilloscope or logic analyzer is implemented.
+- No physical ammeter, voltmeter, multimeter, oscilloscope or logic analyzer instrument is implemented. Latest DC solver results can be inspected per selected component in the properties panel.
 - There is no persistent probe/trace system.
 - No voltage/current/power/temperature overlay exists.
 - No short-circuit, overcurrent, reverse-bias, floating-node or component-rating diagnostics exist beyond basic connectivity and matrix errors.
@@ -138,3 +138,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - Wire-tool preview, Escape cancellation, snapping to nearby component terminals/wire segments, and undoable wire creation are implemented.
 
 - Diode and LED DC operating points use an active-set piecewise-linear approximation: off = open circuit; on = fixed forward drop with series resistance. Reverse breakdown, temperature dependence, leakage, capacitance and detailed device curves are not modeled.
+
+- Per-component DC measurements are keyed by stable instance UUID and shown in the properties panel after a successful solve. Editing the circuit invalidates the stored result to prevent stale readings.
