@@ -10,7 +10,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - Symbol definitions for resistor, capacitor, inductor, diode, LED, BJT, MOSFET, fuse, potentiometer, DC source, AC source, battery, switch, ground and wire.
 - Movable orthogonal wire graphics and a geometric netlist builder. Wire endpoints, component terminals, ground references and contacts to wire segments can be grouped. A crossing without endpoint contact is not a junction.
 - JSON project save/load for one named schematic scene (format v2, with v1 compatibility).
-- Inline component value and instance-name editing; rename operations participate in undo/redo.
+- Inline component value and instance-name editing; new components receive unique reference labels (R1, C1, V1, etc.), labels/values are drawn on the canvas, and rename operations participate in undo/redo.
 - Linear DC operating-point analysis using modified nodal analysis for resistors, ideal DC voltage sources, batteries, ideal closed switches, ideal capacitors (open circuit) and ideal inductors (zero-volt branch).
 - Engineering suffix parsing and Gaussian elimination unit tests.
 - Clipboard copy/paste and duplicate operations are present in the workspace code.
@@ -114,7 +114,7 @@ A checklist item is complete only when its underlying behavior exists, persists 
 ## Recent implementation increments
 
 - Component names can now be edited in the properties panel; rename operations participate in undo/redo.
-- Project format version 2 persists component names and still reads version 1 files. Loading rejects unknown component types before replacing the current scene.
+- Project format version 3 persists circuit names, component names, stable component instance IDs and movable wire positions; versions 1 and 2 remain readable. Loading rejects unknown component types before replacing the current scene.
 - DC steady-state analysis now models ideal capacitors as open circuits and ideal inductors as zero-volt branches (short circuits), reporting capacitor voltage and inductor current. This is not transient analysis.
 - Added tests for named component persistence, legacy file loading, safe rejection of unknown component types, and ideal reactive DC behavior. These tests have been authored but not executed in this remote editing session.
 
@@ -124,3 +124,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - Whole-wire movement now works through normal graphics-item selection and movement; wire position is included in project persistence and clipboard duplication. Netlist geometry is evaluated in scene coordinates after movement.
 - A circuit can be renamed from the palette menu. Its name is stored in the project document and restored on load.
 - The properties panel now edits component instance names and the workspace records these changes in undo/redo history.
+
+- Stable UUIDs are now assigned to component and wire instances and persisted for future probe/measurement references.
