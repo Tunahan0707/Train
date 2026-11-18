@@ -270,3 +270,7 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 
 - [x] Basic piecewise-linear DC diode and LED conduction models.
 - [ ] Detailed Shockley/device-curve semiconductor models, temperature and reverse breakdown.
+
+- [x] Show calculated per-component DC readings in the properties panel after simulation.
+- [x] Invalidate stale measurements after electrical edits.
+- [ ] Dedicated meter instruments and oscilloscope traces.
