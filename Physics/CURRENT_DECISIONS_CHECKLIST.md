@@ -244,3 +244,13 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Ideal capacitor and inductor DC steady-state behavior.
 - [ ] Circuit document naming, multiple circuit documents, and reusable hierarchical circuit definitions.
 - [ ] Transient simulation and nonlinear semiconductor models.
+
+
+## New implemented items
+
+- [x] Rename the active circuit and persist its name.
+- [x] Move wire objects and persist their scene position.
+- [x] Include moved-wire positions in copy/paste and duplicate operations.
+- [x] Rebuild connectivity from moved wire scene coordinates.
+- [ ] Interactive wire endpoint and bend editing.
+- [ ] Multiple circuit documents and reusable hierarchical circuits.
