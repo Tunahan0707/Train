@@ -257,3 +257,8 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Assign stable instance IDs to components and wires.
 - [x] Automatically assign unique reference labels to newly placed components.
 - [x] Render component reference labels and values on the schematic.
+
+- [x] Multiple named circuit tabs in one project.
+- [x] Add, rename, reorder and close circuit tabs.
+- [x] Save/load all circuit tabs and restore the active tab.
+- [ ] Reusable hierarchical custom circuit definitions with explicit external ports.
