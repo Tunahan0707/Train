@@ -11,7 +11,11 @@ class WireItem(QGraphicsPathItem):
         self.component_id = "wire"
         self.start_point = self.to_point(start)
         self.end_point = self.to_point(end)
-        self.setFlag(QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setFlags(
+            QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable
+            | QGraphicsPathItem.GraphicsItemFlag.ItemIsMovable
+            | QGraphicsPathItem.GraphicsItemFlag.ItemSendsGeometryChanges
+        )
         self.setPen(QPen(QColor(color("component")), 8))
         self.setZValue(-1)
         self.update_path()
@@ -28,9 +32,14 @@ class WireItem(QGraphicsPathItem):
             (self.end_point.x(), self.end_point.y()),
         ]
 
+    def scene_start_point(self):
+        return self.mapToScene(self.start_point)
+
+    def scene_end_point(self):
+        return self.mapToScene(self.end_point)
+
     def update_path(self):
         path = QPainterPath(self.start_point)
-        # Schematic wires use a clean right-angle route.
         path.lineTo(self.end_point.x(), self.start_point.y())
         path.lineTo(self.end_point)
         self.setPath(path)
