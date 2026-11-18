@@ -119,6 +119,21 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertAlmostEqual(measured["first_current"], 0.001, places=8)
         self.assertAlmostEqual(measured["second_current"], 0.001, places=8)
 
+    def test_potentiometer_unit_suffix_is_not_applied_twice(self):
+        source = Component("voltage_source", "V1", "10")
+        potentiometer = Component("potentiometer", "RV1", "10kΩ")
+        potentiometer.unit = "kΩ"
+        potentiometer.wiper_position = 0.25
+        topology = {
+            "component_nodes": {source: [2, 0], potentiometer: [2, 0, 1]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertAlmostEqual(result["potentiometers"][0]["resistance"], 10000.0)
+        self.assertAlmostEqual(result["potentiometers"][0]["wiper_voltage"], 7.5, places=8)
+
     def test_bjt_turns_on_as_a_controlled_switch(self):
         source = Component("voltage_source", "V1", "5")
         resistor = Component("resistor", "R1", "1k")
