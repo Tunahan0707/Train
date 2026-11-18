@@ -25,7 +25,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - A solver result must never be shown as a complete circuit result when unsupported devices are present. The DC solver was changed to reject unsupported devices rather than silently omit them.
 
 ### Connectivity and editing
-- Wires can now be selected and moved as whole objects, but their endpoints and bends cannot yet be edited interactively; there is no terminal-to-terminal wire drawing tool.
+- A two-click orthogonal wire tool now draws between snapped component terminals or existing wire geometry. Whole wires can be moved. Individual endpoint/bend handles and explicit junction objects are still absent.
 - Wire endpoints and bends cannot yet be interactively selected and edited.
 - There is no explicit junction object or topology-aware wire editing.
 - The current connectivity analyzer is geometric; it needs dedicated tests for terminal snapping, wire-to-wire contact, T-junctions, crossings, rotations, and near-miss tolerances.
@@ -134,3 +134,5 @@ A checklist item is complete only when its underlying behavior exists, persists 
 - Saving writes a project document containing all tabs. Opening legacy single-circuit .physics files imports them as a one-tab project.
 - Each circuit and component has a stable UUID. The project loader validates duplicate circuit/component IDs before replacing the active project.
 - This is multi-document organization, not yet hierarchical custom circuit components with external ports.
+
+- Wire-tool preview, Escape cancellation, snapping to nearby component terminals/wire segments, and undoable wire creation are implemented.
