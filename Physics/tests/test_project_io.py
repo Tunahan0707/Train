@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QGraphicsScene
 
 from components.basic import BasicComponent
 from components.resistor import Resistor
+from components.wire import WireItem
 from core.project_io import load_circuit, save_circuit
 
 
@@ -28,16 +29,24 @@ class ProjectIOTests(unittest.TestCase):
         capacitor.name = "C_FILTER"
         capacitor.set_value("22u")
         capacitor.setPos(-80, 30)
+        wire = WireItem((0, 0), (40, 0))
+        wire.setPos(30, 70)
         scene.addItem(resistor)
         scene.addItem(capacitor)
+        scene.addItem(wire)
 
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.physics"
-            save_circuit(scene, path)
+            save_circuit(scene, path, "Power supply")
             loaded = QGraphicsScene()
-            load_circuit(loaded, path)
+            loaded_name = load_circuit(loaded, path)
 
         by_type = {item.component_id: item for item in loaded.items()}
+        self.assertEqual(loaded_name, "Power supply")
+        loaded_wire = next(item for item in loaded.items() if item.component_id == "wire")
+        self.assertEqual(loaded_wire.instance_id, wire.instance_id)
+        self.assertEqual(loaded_wire.pos().x(), 30)
+        self.assertEqual(loaded_wire.pos().y(), 70)
         self.assertEqual(by_type["resistor"].instance_id, resistor.instance_id)
         self.assertEqual(by_type["capacitor"].instance_id, capacitor.instance_id)
         self.assertEqual(by_type["resistor"].name, "R_LOAD")
