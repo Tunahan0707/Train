@@ -28,7 +28,7 @@ class BasicComponent(QGraphicsItem):
         "led": ("LED", "", ""),
         "switch": ("Anahtar", "", ""),
         "ground": ("Toprak", "", ""),
-        "fuse": ("Sigorta", "", ""),
+        "fuse": ("Sigorta", "0.1", "Ω"),
         "potentiometer": ("Potansiyometre", "10", "kΩ"),
         "ac_source": ("AC Kaynak", "5", "V"),
         "bjt": ("BJT Transistör (NPN)", "", ""),
@@ -43,6 +43,7 @@ class BasicComponent(QGraphicsItem):
         self.instance_id = str(uuid.uuid4())
         self.name, self.value, self.unit = self.DEFINITIONS[component_id]
         self.closed = False if component_id == "switch" else None
+        self.wiper_position = 0.5 if component_id == "potentiometer" else None
         self._press_scene_pos = None
         self.setFlags(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable
