@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication, QGraphicsScene
 from components.basic import BasicComponent
 from components.resistor import Resistor
 from components.wire import WireItem
-from core.project_io import load_circuit, save_circuit
+from core.project_io import load_circuit, save_circuit, load_project, save_project
 
 
 class ProjectIOTests(unittest.TestCase):
@@ -54,6 +54,41 @@ class ProjectIOTests(unittest.TestCase):
         self.assertEqual(by_type["capacitor"].name, "C_FILTER")
         self.assertEqual(by_type["capacitor"].value, "22u")
         self.assertEqual(by_type["resistor"].pos().x(), 120)
+
+    def test_multi_circuit_project_round_trip(self):
+        first_scene = QGraphicsScene()
+        first_item = Resistor()
+        first_item.name = "R_MAIN"
+        first_scene.addItem(first_item)
+        second_scene = QGraphicsScene()
+        second_item = BasicComponent("voltage_source")
+        second_item.name = "V_AUX"
+        second_scene.addItem(second_item)
+        first_id = "0d85a6a7-4d74-44c1-86a0-3e9caa1305a1"
+        second_id = "e7f5e740-8b16-42e5-9a2f-f0f6f60ec1e1"
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "multi.physics"
+            save_project([
+                {"id": first_id, "name": "Ana devre", "scene": first_scene},
+                {"id": second_id, "name": "Yardımcı", "scene": second_scene},
+            ], path, second_id)
+            project = load_project(path)
+
+        self.assertEqual(project["active_circuit_id"], second_id)
+        self.assertEqual([entry["name"] for entry in project["circuits"]], ["Ana devre", "Yardımcı"])
+        self.assertEqual(project["circuits"][0]["items"][0].instance_id, first_item.instance_id)
+        self.assertEqual(project["circuits"][1]["items"][0].name, "V_AUX")
+
+    def test_single_circuit_file_opens_as_one_circuit_project(self):
+        scene = QGraphicsScene()
+        scene.addItem(Resistor())
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy_single.physics"
+            save_circuit(scene, path, "Legacy single")
+            project = load_project(path)
+        self.assertEqual(len(project["circuits"]), 1)
+        self.assertEqual(project["circuits"][0]["name"], "Legacy single")
 
     def test_version_one_projects_remain_loadable(self):
         legacy = {
