@@ -46,7 +46,7 @@ This document distinguishes existing prototype behavior from verified engineerin
 - No simulation timeline, pause/resume/step/speed controls, or result history exists.
 
 ### Reliability and validation
-- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named and multi-circuit project persistence, legacy import, reactive DC models, diode/transistor/switch states, fuse and potentiometer behavior, undoable commands, and moved-wire connectivity. They have not yet been executed in this remote editing session.
+- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named and multi-circuit project persistence, legacy import, reactive DC models, diode/transistor/switch states, fuse and potentiometer behavior, undoable commands, and moved-wire connectivity, T-junction/crossing behavior, and switch terminal topology. They have not yet been executed in this remote editing session.
 - There are still no comprehensive tests for full netlist topology, all component behaviors, multi-branch KCL/KVL, active-set stability across complex diode networks, or transient accuracy.
 - GUI interaction has not been verified automatically.
 - No crash recovery/autosave or project backup/version history exists.
