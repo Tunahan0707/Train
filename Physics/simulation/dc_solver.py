@@ -73,7 +73,7 @@ def _component_label(item):
 
 
 def solve_dc_operating_point(scene):
-    """Solve a DC operating point with linear passive and piecewise-linear diode models."""
+    """Solve a DC operating point with explicit ideal and approximate component models."""
     netlist = build_netlist(scene)
     component_nodes = netlist["component_nodes"]
     if not component_nodes:
