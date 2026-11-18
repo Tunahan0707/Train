@@ -404,6 +404,7 @@ class Workspace(QGraphicsView):
                 "rotation": item.rotation(),
                 "value": str(getattr(item, "value", "")),
                 "closed": bool(getattr(item, "closed", False)),
+                "wiper_position": getattr(item, "wiper_position", None),
             })
         return snapshots
 
@@ -434,6 +435,8 @@ class Workspace(QGraphicsView):
                 item.set_value(snapshot.get("value", ""))
             if component_id == "switch":
                 item.closed = snapshot.get("closed", False)
+            if component_id == "potentiometer":
+                item.wiper_position = snapshot.get("wiper_position", 0.5)
             if component_id != "wire":
                 item.setRotation(snapshot.get("rotation", 0.0))
                 self._assign_reference_name(item, reference_counts)
