@@ -51,6 +51,8 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertAlmostEqual(result["resistors"][0]["power"], 0.025, places=9)
         self.assertAlmostEqual(result["sources"][0]["power_delivered"], 0.025, places=9)
         self.assertAlmostEqual(result["sources"][0]["power_absorbed"], -0.025, places=9)
+        self.assertIn(resistor.instance_id, result["component_measurements"])
+        self.assertEqual(result["component_measurements"][resistor.instance_id]["Akım"], "0.005 A")
 
     def test_forward_diode_uses_piecewise_linear_model(self):
         source = Component("voltage_source", "V1", "5")
