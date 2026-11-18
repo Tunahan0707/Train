@@ -50,6 +50,7 @@ def serialize_circuit(scene, circuit_name="Devre", circuit_id=None):
                 "rotation": item.rotation(),
                 "value": getattr(item, "value", ""),
                 "closed": getattr(item, "closed", None),
+                "wiper_position": getattr(item, "wiper_position", None),
             })
     return {
         "id": str(circuit_id or uuid.uuid4()),
@@ -87,6 +88,10 @@ def create_circuit_items(circuit_data, version=3):
                 item.name = str(entry.get("name", getattr(item, "name", component_type)))
             if getattr(item, "component_id", None) == "switch":
                 item.closed = bool(entry.get("closed", False))
+            if getattr(item, "component_id", None) == "potentiometer":
+                item.wiper_position = float(entry.get("wiper_position", 0.5))
+                if not 0.0 < item.wiper_position < 1.0:
+                    raise ValueError("Potansiyometre sürgü konumu 0 ile 1 arasında olmalı.")
 
         raw_id = entry.get("id")
         if raw_id:
