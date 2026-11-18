@@ -35,8 +35,8 @@ This document distinguishes existing prototype behavior from verified engineerin
 - A project can contain multiple named circuit scenes in tabs.
 - Multiple named circuit tabs now exist; reusable hierarchical custom circuit definitions are still absent.
 - There is no reusable hierarchical subcircuit definition, port declaration, custom-component library entry, or nested circuit editor.
-- A single circuit can be named and renamed; the name is persisted separately from the file path. Multiple named circuits within one project remain unavailable.
-- Version 2 project files are supported, with a compatibility loader for version 1.
+- Each circuit tab has a persisted identity and editable name; the active tab is restored when the project is reopened.
+- Multi-circuit project schema v1 is supported; legacy single-circuit schema versions 1, 2 and 3 are imported.
 
 ### Measurement and analysis
 - No physical ammeter, voltmeter, multimeter, oscilloscope or logic analyzer instrument is implemented. Latest DC solver results can be inspected per selected component in the properties panel.
@@ -46,8 +46,8 @@ This document distinguishes existing prototype behavior from verified engineerin
 - No simulation timeline, pause/resume/step/speed controls, or result history exists.
 
 ### Reliability and validation
-- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named project persistence, v1 compatibility, reactive DC models, and moved-wire connectivity. They have not yet been executed in this remote editing session.
-- There are still no tests for full netlist topology, circuit persistence, component behavior, source polarity, Ohm's law, KCL/KVL, nonlinear convergence, or transient accuracy.
+- Automated tests are authored for engineering-value parsing, Gaussian elimination, empty-scene rejection, unsupported-model rejection, dangling-wire handling, named and multi-circuit project persistence, legacy import, reactive DC models, diode states, and moved-wire connectivity. They have not yet been executed in this remote editing session.
+- There are still no comprehensive tests for full netlist topology, all component behaviors, multi-branch KCL/KVL, active-set stability across complex diode networks, or transient accuracy.
 - GUI interaction has not been verified automatically.
 - No crash recovery/autosave or project backup/version history exists.
 
@@ -56,12 +56,12 @@ This document distinguishes existing prototype behavior from verified engineerin
 The following sequence is deliberate. Later systems depend on earlier ones; adding UI controls before their underlying model would create nonfunctional features.
 
 ### Phase A — circuit data model and topology
-- Introduce a project document containing multiple independently named circuits.
-- Add create, rename, duplicate, reorder, delete and switch-active-circuit operations.
-- Give every component a stable instance ID and a user-editable reference/name.
+- [x] Introduce a project document containing multiple independently named circuits.
+- [x] Add, rename, reorder, close and switch-active-circuit operations. Circuit duplication remains pending.
+- [x] Give every component a stable instance ID and a user-editable reference/name.
 - Project-level versioned persistence and migration from legacy single-circuit formats are implemented; topology remains scene-derived.
 - Model terminals, wires, junctions and nets explicitly.
-- Add interactive wire routing, endpoint dragging, bend editing, snapping, splitting, joining and junction editing.
+- [x] Add click-to-route orthogonal wires with terminal/wire snapping. Endpoint dragging, bend editing, splitting, joining and explicit junction editing remain pending.
 - Make topology changes undoable and testable.
 
 ### Phase B — electrical engine
@@ -69,19 +69,19 @@ The following sequence is deliberate. Later systems depend on earlier ones; addi
 - Add strict unit-aware parameter parsing and validation.
 - Complete resistors and ideal/non-ideal sources first; validate against analytical circuits.
 - Add capacitor/inductor transient state and a stable integration method.
-- Add diode and LED nonlinear models with Newton iteration and convergence reporting.
+- [x] Add an approximate piecewise-linear DC diode/LED active-set model. Full nonlinear device models and broader convergence validation remain pending.
 - Add BJT and MOSFET models with explicit model/parameter choices and documented approximations.
 - Add potentiometer, fuse, switch and battery models.
 - Add AC source waveforms and transient excitation.
 - Add thermal/electrical stress and failure behavior only after electrical quantities are reliable.
 
 ### Phase C — instruments and analysis
-- Add probes bound to stable net/component-terminal IDs.
+- Add probes bound to stable net/component-terminal IDs. Component-level DC result display exists, but persistent probes do not.
 - Add voltage and current meters with correct circuit insertion/measurement semantics.
 - Add multimeter modes and an oscilloscope with time traces.
 - Add power, energy and temperature measurements where the model supports them.
 - Add logic analysis only for explicitly digital/logic-level signals.
-- Add diagnostic reports for floating nodes, shorts, overloads, reverse polarity, model limitations and convergence failures.
+- Add diagnostic reports for floating nodes, shorts, overloads, reverse polarity and component ratings. Basic unsupported-model and solver convergence errors are present.
 
 ### Phase D — simulation workflow
 - Add start, stop, pause, resume, single-step, reset and speed controls.
