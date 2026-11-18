@@ -37,6 +37,21 @@ class DCSolverModelTests(unittest.TestCase):
         self.assertAlmostEqual(result["capacitors"][0]["voltage"], 5.0, places=9)
         self.assertEqual(result["capacitors"][0]["current"], 0.0)
 
+    def test_source_resistor_power_and_current_signs(self):
+        source = Component("voltage_source", "V1", "5")
+        resistor = Component("resistor", "R1", "1k")
+        topology = {
+            "component_nodes": {source: [1, 0], resistor: [1, 0]},
+            "ground_nodes": [0],
+            "unconnected_terminals": [],
+        }
+        with patch("simulation.dc_solver.build_netlist", return_value=topology):
+            result = solve_dc_operating_point(object())
+        self.assertAlmostEqual(result["resistors"][0]["current"], 0.005, places=9)
+        self.assertAlmostEqual(result["resistors"][0]["power"], 0.025, places=9)
+        self.assertAlmostEqual(result["sources"][0]["power_delivered"], 0.025, places=9)
+        self.assertAlmostEqual(result["sources"][0]["power_absorbed"], -0.025, places=9)
+
     def test_non_positive_reactive_value_is_rejected(self):
         capacitor = Component("capacitor", "C1", "0")
         topology = {
