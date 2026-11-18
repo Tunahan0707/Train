@@ -51,6 +51,51 @@ class WireConnectivityTests(unittest.TestCase):
         self.assertEqual(result["component_nodes"][first][0], result["component_nodes"][second][0])
         self.assertEqual(result["unconnected_terminals"], [])
 
+    def test_wire_endpoint_creates_t_junction_but_crossing_does_not(self):
+        class TestPin(PinComponent):
+            def __init__(self, x, y, name):
+                super().__init__(x, y, name)
+                self.component_id = "test_component"
+
+        first = TestPin(0, 0, "X1")
+        second = TestPin(50, 50, "X2")
+        horizontal = WireItem((0, 0), (100, 0))
+        branch = WireItem((50, 0), (50, 50))
+        class TJunctionScene:
+            def items(self):
+                return [first, second, horizontal, branch]
+        result = build_netlist(TJunctionScene())
+        self.assertEqual(result["component_nodes"][first][0], result["component_nodes"][second][0])
+
+        left = TestPin(0, 0, "X3")
+        right = TestPin(100, 0, "X4")
+        horizontal = WireItem((0, 0), (100, 0))
+        crossing = WireItem((50, -50), (50, 50))
+        class CrossingScene:
+            def items(self):
+                return [left, right, horizontal, crossing]
+        result = build_netlist(CrossingScene())
+        self.assertEqual(result["component_nodes"][left][0], result["component_nodes"][right][0])
+        self.assertEqual(len(result["nets"]), 1)
+
+    def test_closed_switch_terminals_remain_distinct_in_topology(self):
+        class TestSwitch:
+            component_id = "switch"
+            name = "SW1"
+            closed = True
+            def terminal_positions(self):
+                return [(-40, 0), (40, 0)]
+            def terminal_names(self):
+                return ["1", "2"]
+            def mapToScene(self, point):
+                return QPointF(point)
+        switch = TestSwitch()
+        class SwitchScene:
+            def items(self):
+                return [switch]
+        result = build_netlist(SwitchScene())
+        self.assertNotEqual(result["component_nodes"][switch][0], result["component_nodes"][switch][1])
+
     def test_copying_moved_wire_applies_offset_once(self):
         workspace = Workspace()
         wire = WireItem((0, 0), (40, 0))
