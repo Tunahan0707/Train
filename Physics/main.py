@@ -1,10 +1,12 @@
 import sys
+import uuid
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QDockWidget, QToolBar, QWidget,
     QVBoxLayout, QFileDialog, QMessageBox, QInputDialog,
+    QTabWidget, QToolButton,
 )
-from PySide6.QtGui import QAction, QColor
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
 
 from settings import WINDOW_HEIGHT, WINDOW_HEIGHT_MIN, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_WIDTH_MIN
@@ -12,7 +14,7 @@ from interface.workspace import Workspace
 from interface.component_library import ComponentLibrary
 from interface.properties_panel import PropertiesPanel
 from interface.theme_switch import ThemeSwitch
-from core.project_io import save_circuit, load_circuit
+from core.project_io import save_project, load_project
 from circuit.netlist import format_netlist_report
 from simulation.dc_solver import format_dc_report
 from theme import DARK, LIGHT, set_current
@@ -26,16 +28,27 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN)
         self.menuBar().hide()
         self.current_file = None
-        self.circuit_name = "Yeni devre"
+        self.workspace = None
+        self.component_library = None
+        self.circuit_name = "Devre 1"
+        self.current_theme_colors = None
 
         central = QWidget()
         layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        self.workspace = Workspace()
-        self.component_library = ComponentLibrary()
-        layout.addWidget(self.workspace, 1)
-        layout.addWidget(self.component_library, 0)
+        self.tabs = QTabWidget()
+        self.tabs.setObjectName("circuitTabs")
+        self.tabs.setMovable(True)
+        self.tabs.setTabsClosable(True)
+        self.tabs.currentChanged.connect(self.activate_circuit_tab)
+        self.tabs.tabCloseRequested.connect(self.close_circuit_tab)
+        self.add_tab_button = QToolButton()
+        self.add_tab_button.setText("+")
+        self.add_tab_button.setToolTip("Yeni devre ekle")
+        self.add_tab_button.clicked.connect(self.new_circuit)
+        self.tabs.setCornerWidget(self.add_tab_button, Qt.Corner.TopRightCorner)
+        layout.addWidget(self.tabs, 1)
         self.setCentralWidget(central)
 
         self.properties_panel = PropertiesPanel()
@@ -47,13 +60,8 @@ class MainWindow(QMainWindow):
         )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.properties_dock)
 
-        self.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
-        self.workspace.history_changed.connect(self.update_properties)
-        self.properties_panel.value_change_requested.connect(self.workspace.set_component_value)
-        self.properties_panel.name_change_requested.connect(self.workspace.set_component_name)
-        self.component_library.add_requested.connect(self.add_component_from_palette)
-        self.component_library.menu_action.connect(self.handle_palette_menu)
-        self.workspace.component_dropped.connect(self.component_library.collapse)
+        self.properties_panel.value_change_requested.connect(self._set_component_value)
+        self.properties_panel.name_change_requested.connect(self._set_component_name)
 
         toolbar = QToolBar("Tema", self)
         toolbar.setMovable(False)
@@ -63,15 +71,99 @@ class MainWindow(QMainWindow):
         self.theme_switch = ThemeSwitch(dark=True)
         toolbar.addWidget(self.theme_switch)
         self.theme_switch.progress_changed.connect(self.apply_theme_progress)
+
+        self._add_circuit_tab("Devre 1", select=True)
         self.apply_theme_progress(1.0)
 
-    def add_component_from_palette(self, component_id, shift):
+    def _add_circuit_tab(self, name, circuit_id=None, items=None, select=True):
+        page = QWidget()
+        page.circuit_id = str(circuit_id or uuid.uuid4())
+        page.circuit_name = str(name or "Devre")
+        page.layout = QVBoxLayout(page)
+        page.layout.setContentsMargins(0, 0, 0, 0)
+        page.layout.setSpacing(0)
+        page.workspace = Workspace(page)
+        page.component_library = ComponentLibrary(page)
+        page.layout.addWidget(page.workspace, 1)
+        page.layout.addWidget(page.component_library, 0)
+        for item in items or []:
+            page.workspace.circuit_scene.addItem(item)
+
+        page.workspace.circuit_scene.selectionChanged.connect(self.update_properties)
+        page.workspace.history_changed.connect(self.update_properties)
+        page.component_library.add_requested.connect(
+            lambda component_id, shift, workspace=page.workspace, library=page.component_library:
+                self.add_component_from_palette(component_id, shift, workspace, library)
+        )
+        page.component_library.menu_action.connect(self.handle_palette_menu)
+        page.workspace.component_dropped.connect(page.component_library.collapse)
+
+        index = self.tabs.addTab(page, page.circuit_name)
+        if self.current_theme_colors is not None:
+            page.workspace.apply_theme(self.current_theme_colors)
+            page.component_library.apply_theme(self.current_theme_colors)
+        if select:
+            self.tabs.setCurrentIndex(index)
+        return page
+
+    def activate_circuit_tab(self, index):
+        if index < 0 or index >= self.tabs.count():
+            self.workspace = None
+            self.component_library = None
+            self.properties_panel.clear_rows()
+            return
+        page = self.tabs.widget(index)
+        self.workspace = page.workspace
+        self.component_library = page.component_library
+        self.circuit_name = page.circuit_name
+        self.update_properties()
+        self._update_window_title()
+
+    def close_circuit_tab(self, index):
+        if index < 0 or index >= self.tabs.count():
+            return
+        page = self.tabs.widget(index)
+        answer = QMessageBox.question(
+            self, "Devreyi kapat", f'"{page.circuit_name}" devresi projeden kaldırılsın mı?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        if self.tabs.count() == 1:
+            page.workspace.circuit_scene.clear()
+            page.workspace.history.undo_stack.clear()
+            page.workspace.history.redo_stack.clear()
+            page.circuit_id = str(uuid.uuid4())
+            page.circuit_name = "Devre 1"
+            self.tabs.setTabText(index, page.circuit_name)
+            self.tabs.setCurrentIndex(index)
+            self.activate_circuit_tab(index)
+            return
+        removed = self.tabs.widget(index)
+        self.tabs.removeTab(index)
+        removed.deleteLater()
+        self.activate_circuit_tab(self.tabs.currentIndex())
+
+    def add_component_from_palette(self, component_id, shift, workspace=None, library=None):
+        workspace = workspace or self.workspace
+        library = library or self.component_library
+        if workspace is None or library is None:
+            return
         if shift:
-            index = self.component_library.shift_add_count
-            if self.workspace.add_component(component_id, True, index):
-                self.component_library.shift_add_count += 1
+            index = library.shift_add_count
+            if workspace.add_component(component_id, True, index):
+                library.shift_add_count += 1
         else:
-            self.workspace.add_component(component_id, False, 0)
+            workspace.add_component(component_id, False, 0)
+
+    def _set_component_value(self, items, value):
+        if self.workspace is not None:
+            self.workspace.set_component_value(items, value)
+
+    def _set_component_name(self, items, name):
+        if self.workspace is not None:
+            self.workspace.set_component_name(items, name)
 
     def handle_palette_menu(self, action):
         actions = {
@@ -99,9 +191,12 @@ class MainWindow(QMainWindow):
     def apply_theme_progress(self, progress):
         amount = max(0.0, min(1.0, progress))
         colors = {key: self.blend_color(LIGHT[key], DARK[key], amount) for key in DARK}
+        self.current_theme_colors = colors
         set_current(colors)
-        self.workspace.apply_theme(colors)
-        self.component_library.apply_theme(colors)
+        for index in range(self.tabs.count()):
+            page = self.tabs.widget(index)
+            page.workspace.apply_theme(colors)
+            page.component_library.apply_theme(colors)
         self.setStyleSheet(f"""
             QMainWindow, QWidget#componentLibrary, QWidget#propertiesPanel {{
                 background: {colors["panel"]};
@@ -111,164 +206,149 @@ class MainWindow(QMainWindow):
                 background: {colors["panel_alt"]};
                 color: {colors["text"]};
             }}
-            QWidget, QLabel, QLineEdit, QPushButton, QMenu, QDockWidget {{
+            QWidget, QLabel, QLineEdit, QPushButton, QMenu, QDockWidget, QTabBar {{
                 color: {colors["text"]};
             }}
-            QLabel#propertyStaticValue {{
-                color: {colors["text"]};
-            }}
-            QToolBar#themeToolbar {{
-                background: {colors["window"]};
-                border: none;
-                padding: 2px 8px;
-            }}
+            QTabWidget::pane {{ border: none; background: {colors["panel"]}; }}
+            QTabBar::tab {{ background: {colors["panel_alt"]}; padding: 7px 14px; border: none; }}
+            QTabBar::tab:selected {{ background: {colors["hover"]}; border-bottom: 2px solid {colors["accent"]}; }}
+            QToolButton {{ background: {colors["panel_alt"]}; border: none; padding: 4px 10px; }}
+            QLabel#propertyStaticValue {{ color: {colors["text"]}; }}
+            QToolBar#themeToolbar {{ background: {colors["window"]}; border: none; padding: 2px 8px; }}
             QDockWidget {{ color: {colors["text"]}; }}
-            QDockWidget::title {{
-                background: {colors["window"]};
-                color: {colors["text"]};
-                padding: 6px 8px;
-                border: none;
-            }}
+            QDockWidget::title {{ background: {colors["window"]}; color: {colors["text"]}; padding: 6px 8px; border: none; }}
             QPushButton#paletteTab, QPushButton#paletteMenuButton {{
-                background: transparent;
-                color: {colors["text"]};
-                border: none;
-                border-right: 1px solid {colors["border"]};
-                padding: 7px 13px;
+                background: transparent; color: {colors["text"]}; border: none;
+                border-right: 1px solid {colors["border"]}; padding: 7px 13px;
             }}
             QPushButton#paletteMenuButton::menu-indicator {{ image: none; width: 0px; }}
-            QPushButton#paletteTab:hover, QPushButton#paletteMenuButton:hover {{
-                background: {colors["hover"]};
-            }}
-            QPushButton#paletteTab:checked {{
-                background: {colors["hover"]};
-                border-bottom: 2px solid {colors["accent"]};
-            }}
+            QPushButton#paletteTab:hover, QPushButton#paletteMenuButton:hover {{ background: {colors["hover"]}; }}
+            QPushButton#paletteTab:checked {{ background: {colors["hover"]}; border-bottom: 2px solid {colors["accent"]}; }}
             QPushButton#componentButton {{
-                background: {colors["panel"]};
-                color: {colors["text"]};
-                border: 1px solid {colors["border"]};
-                border-radius: 0px;
-                padding: 7px 12px;
-                min-width: 0px;
+                background: {colors["panel"]}; color: {colors["text"]}; border: 1px solid {colors["border"]};
+                border-radius: 0px; padding: 7px 12px; min-width: 0px;
             }}
-            QPushButton#componentButton:hover {{
-                background: {colors["hover"]};
-            }}
-            QScrollBar:vertical {{
-                width: 8px;
-                background: {colors["panel"]};
-                border: none;
-            }}
-            QScrollBar:vertical {{ width: 8px; }}
-            QScrollBar::handle:vertical {{
-                background: {colors["muted"]};
-                min-height: 25px;
-            }}
+            QPushButton#componentButton:hover {{ background: {colors["hover"]}; }}
+            QScrollBar:vertical {{ width: 8px; background: {colors["panel"]}; border: none; }}
+            QScrollBar::handle:vertical {{ background: {colors["muted"]}; min-height: 25px; }}
             QLineEdit#inlinePropertyValue {{
-                background: transparent;
-                color: {colors["text"]};
-                border: none;
-                border-bottom: 1px solid transparent;
-                padding: 1px 0;
+                background: transparent; color: {colors["text"]}; border: none;
+                border-bottom: 1px solid transparent; padding: 1px 0;
             }}
-            QLineEdit#inlinePropertyValue:focus {{
-                border-bottom: 1px solid {colors["accent"]};
-            }}
-            QLabel#propertyGroupTitle {{
-                color: {colors["text"]};
-                font-weight: 600;
-                padding-top: 4px;
-            }}
-            QFrame, QFrame#propertySeparator {{
-                color: {colors["border"]};
-                background: transparent;
-            }}
-            QLineEdit#inlinePropertyValue::placeholder {{
-                color: {colors["muted"]};
-            }}
-            QMenu {{
-                background: {colors["panel"]};
-                color: {colors["text"]};
-                border: 1px solid {colors["border"]};
-                padding: 4px;
-            }}
+            QLineEdit#inlinePropertyValue:focus {{ border-bottom: 1px solid {colors["accent"]}; }}
+            QLabel#propertyGroupTitle {{ color: {colors["text"]}; font-weight: 600; padding-top: 4px; }}
+            QFrame, QFrame#propertySeparator {{ color: {colors["border"]}; background: transparent; }}
+            QLineEdit#inlinePropertyValue::placeholder {{ color: {colors["muted"]}; }}
+            QMenu {{ background: {colors["panel"]}; color: {colors["text"]}; border: 1px solid {colors["border"]}; padding: 4px; }}
             QMenu::item:selected {{ background: {colors["hover"]}; }}
-            QToolTip {{
-                background: {colors["panel_alt"]};
-                color: {colors["text"]};
-                border: 1px solid {colors["border"]};
-            }}
+            QToolTip {{ background: {colors["panel_alt"]}; color: {colors["text"]}; border: 1px solid {colors["border"]}; }}
         """)
 
     def rename_circuit(self):
-        name, accepted = QInputDialog.getText(self, "Devreyi yeniden adlandır", "Devre adı:", text=self.circuit_name)
+        page = self.tabs.currentWidget()
+        if page is None:
+            return
+        name, accepted = QInputDialog.getText(
+            self, "Devreyi yeniden adlandır", "Devre adı:", text=page.circuit_name
+        )
         name = name.strip()
         if not accepted or not name:
             return
+        page.circuit_name = name
+        self.tabs.setTabText(self.tabs.currentIndex(), name)
         self.circuit_name = name
         self._update_window_title()
 
     def _update_window_title(self):
+        page = self.tabs.currentWidget() if hasattr(self, "tabs") else None
+        active_name = page.circuit_name if page is not None else self.circuit_name
         suffix = f" — {self.current_file}" if self.current_file else ""
-        self.setWindowTitle(f"{WINDOW_TITLE} · {self.circuit_name}{suffix}")
+        self.setWindowTitle(f"{WINDOW_TITLE} · {active_name}{suffix}")
+
+    def new_circuit(self):
+        name = f"Devre {self.tabs.count() + 1}"
+        self._add_circuit_tab(name, select=True)
+
+    def _collect_circuits(self):
+        return [
+            {
+                "id": self.tabs.widget(index).circuit_id,
+                "name": self.tabs.widget(index).circuit_name,
+                "scene": self.tabs.widget(index).workspace.circuit_scene,
+            }
+            for index in range(self.tabs.count())
+        ]
 
     def check_connections(self):
+        if self.workspace is None:
+            return
         QMessageBox.information(self, "Bağlantı analizi", format_netlist_report(self.workspace.circuit_scene))
 
     def run_dc_simulation(self):
+        if self.workspace is None:
+            return
         try:
             QMessageBox.information(self, "DC çalışma noktası", format_dc_report(self.workspace.circuit_scene))
         except (ValueError, ZeroDivisionError) as error:
             QMessageBox.warning(self, "DC çözümü yapılamadı", str(error))
 
-    def new_circuit(self):
-        self.workspace.circuit_scene.clear()
-        self.workspace.history.undo_stack.clear()
-        self.workspace.history.redo_stack.clear()
-        self.current_file = None
-        self.circuit_name = "Yeni devre"
-        self._update_window_title()
-        self.update_properties()
-
     def open_circuit(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Devre aç", "", "Physics Devreleri (*.physics);;JSON (*.json)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Physics projesi aç", "", "Physics Projeleri (*.physics);;JSON (*.json)"
+        )
         if not file_path:
             return
         try:
-            self.circuit_name = load_circuit(self.workspace.circuit_scene, file_path)
-            self.workspace.history.undo_stack.clear()
-            self.workspace.history.redo_stack.clear()
-            self.current_file = file_path
-            self._update_window_title()
-            self.update_properties()
+            project = load_project(file_path)
         except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError) as error:
-            QMessageBox.critical(self, "Devre açılamadı", str(error))
+            QMessageBox.critical(self, "Proje açılamadı", str(error))
+            return
+
+        while self.tabs.count():
+            page = self.tabs.widget(0)
+            self.tabs.removeTab(0)
+            page.deleteLater()
+        for entry in project["circuits"]:
+            self._add_circuit_tab(entry["name"], entry["id"], entry["items"], select=False)
+        active_index = next(
+            (index for index in range(self.tabs.count())
+             if self.tabs.widget(index).circuit_id == project["active_circuit_id"]),
+            0,
+        )
+        self.current_file = file_path
+        self.tabs.setCurrentIndex(active_index)
+        self.activate_circuit_tab(active_index)
+        self.apply_theme_progress(self.theme_switch.progress)
 
     def save_circuit(self):
         if self.current_file is None:
             self.save_circuit_as()
             return
         try:
-            save_circuit(self.workspace.circuit_scene, self.current_file, self.circuit_name)
-        except OSError as error:
+            active = self.tabs.currentWidget()
+            save_project(self._collect_circuits(), self.current_file, active.circuit_id if active else None)
+        except (OSError, ValueError) as error:
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
 
     def save_circuit_as(self):
-        file_path, _ = QFileDialog.getSaveFileName(self, "Devreyi kaydet", "", "Physics Devreleri (*.physics)")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Physics projesini kaydet", "", "Physics Projeleri (*.physics)")
         if not file_path:
             return
         if not file_path.lower().endswith(".physics"):
             file_path += ".physics"
         try:
-            save_circuit(self.workspace.circuit_scene, file_path, self.circuit_name)
-        except OSError as error:
+            active = self.tabs.currentWidget()
+            save_project(self._collect_circuits(), file_path, active.circuit_id if active else None)
+        except (OSError, ValueError) as error:
             QMessageBox.critical(self, "Kaydedilemedi", str(error))
             return
         self.current_file = file_path
         self._update_window_title()
 
     def update_properties(self):
+        if self.workspace is None:
+            self.properties_panel.clear_rows()
+            return
         self.properties_panel.set_items(self.workspace.circuit_scene.selectedItems())
 
 
