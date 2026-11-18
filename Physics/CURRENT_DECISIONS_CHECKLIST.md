@@ -56,7 +56,7 @@
 - [ ] Battery internal resistance, capacity and discharge model
 
 ### Control and connectivity
-- [x] Switch symbol and manual open/close state
+- [x] Switch symbol, manual open/close state, and undo/redo
 - [ ] Switch contact resistance, timing and transient behavior
 - [x] Wire drawing and basic geometric connectivity analysis
 - [ ] Editable wire endpoints, junction editing and robust topology validation
@@ -300,3 +300,5 @@ Grid snapping, component rotation, grouped duplication, basic project save/load,
 - [x] Approximate diode/LED and transistor switch states are included in DC analysis.
 
 - [x] Report current through closed ideal switches and voltage across open switches.
+
+- [x] Make manual switch state changes undoable and redoable.
