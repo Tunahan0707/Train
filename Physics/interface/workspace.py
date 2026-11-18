@@ -264,7 +264,7 @@ class Workspace(QGraphicsView):
             position = float(str(new_value).replace(",", "."))
         except ValueError:
             return
-        if not 0.0 < position < 1.0:
+        if not 0.0 <= position <= 1.0:
             return
         changed = False
         for item in items:
