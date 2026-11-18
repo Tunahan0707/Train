@@ -17,7 +17,7 @@ from settings import (
 
 
 class BasicComponent(QGraphicsItem):
-    """Simple schematic symbol with editable value and two electrical terminals."""
+    """Schematic symbol with editable value and component-specific electrical terminals."""
 
     DEFINITIONS = {
         "capacitor": ("Kondansatör", "100", "µF"),
