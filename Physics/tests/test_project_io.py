@@ -29,10 +29,14 @@ class ProjectIOTests(unittest.TestCase):
         capacitor.name = "C_FILTER"
         capacitor.set_value("22u")
         capacitor.setPos(-80, 30)
+        potentiometer = BasicComponent("potentiometer")
+        potentiometer.name = "RV_DIV"
+        potentiometer.wiper_position = 0.25
         wire = WireItem((0, 0), (40, 0))
         wire.setPos(30, 70)
         scene.addItem(resistor)
         scene.addItem(capacitor)
+        scene.addItem(potentiometer)
         scene.addItem(wire)
 
         with tempfile.TemporaryDirectory() as directory:
@@ -53,6 +57,8 @@ class ProjectIOTests(unittest.TestCase):
         self.assertEqual(by_type["resistor"].value, "4.7k")
         self.assertEqual(by_type["capacitor"].name, "C_FILTER")
         self.assertEqual(by_type["capacitor"].value, "22u")
+        self.assertEqual(by_type["potentiometer"].name, "RV_DIV")
+        self.assertAlmostEqual(by_type["potentiometer"].wiper_position, 0.25)
         self.assertEqual(by_type["resistor"].pos().x(), 120)
 
     def test_multi_circuit_project_round_trip(self):
