@@ -41,7 +41,7 @@ Netlist; bileşen uçlarını, kablo uçlarını, kablo segmentlerine temasları
 
 DC çalışma noktası çözümü direnç, ideal DC gerilim kaynağı, pil, ideal kapalı anahtar, ideal kondansatör (açık devre) ve ideal bobin (kısa devre) modellerini kapsar. Desteklenmeyen bileşen varsa artık kısmi/yanıltıcı sonuç vermek yerine çözümü durdurur. Kondansatör/bobin geçici rejimi, yarı iletkenlerin doğrusal olmayan modelleri, AC analizi, ölçü aletleri, ısıl davranış ve hasar fiziği henüz tamamlanmamıştır.
 
-Bir proje şu anda tek devre sahnesi içerir; bu devre adlandırılıp yeniden adlandırılabilir. Çoklu devre sekmeleri ve hiyerarşik özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
+Bir proje birden fazla devre sekmesi içerebilir. Sekmeler eklenebilir, yeniden adlandırılabilir, sıralanabilir ve kapatılabilir. Eski tek devre dosyaları tek sekmeli projeye aktarılır. Hiyerarşik, yeniden kullanılabilir özel devre bileşenleri henüz uygulanmamıştır. Gerçek kapsam ve sıralama için `IMPLEMENTATION_AUDIT.md` dosyasına bak.
 
 Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 
@@ -57,3 +57,6 @@ Proje dosyaları `.physics` uzantısıyla JSON tabanlı olarak kaydedilir.
 - Proje biçimi v2'dir; v1 dosyaları da açılabilir.
 - Yeni eklenen bileşenler otomatik R1/C1/V1 gibi referans adları alır; ad ve değer sembolün altında gösterilir.
 - Proje biçimi v3; bileşenlerin kararlı kimlikleri ve devre adı kaydedilir. v1/v2 dosyaları geriye dönük açılır.
+
+- Üstteki sekme çubuğundaki **+** ile yeni devre oluştur; sekme adına Menü → Devreyi yeniden adlandır ile ad ver.
+- Kaydetme işlemi açık projedeki bütün devre sekmelerini birlikte kaydeder.
