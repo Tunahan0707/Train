@@ -5,6 +5,7 @@ from PySide6.QtCore import Signal, Qt
 class PropertiesPanel(QWidget):
     value_change_requested = Signal(object, str)
     name_change_requested = Signal(object, str)
+    wiper_change_requested = Signal(object, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -45,6 +46,8 @@ class PropertiesPanel(QWidget):
 
             if all(hasattr(item, "set_value") for item in group_items):
                 self._add_value_row(group_items)
+            if component_id == "potentiometer":
+                self._add_wiper_row(group_items)
             if component_id == "switch":
                 states = {bool(getattr(item, "closed", False)) for item in group_items}
                 state_text = ("Kapalı" if True in states else "Açık") if len(states) == 1 else "Karışık"
@@ -87,6 +90,26 @@ class PropertiesPanel(QWidget):
         edit.editingFinished.connect(lambda selected=tuple(items), field=edit: self._apply_name(selected, field))
         row.addWidget(edit, 1)
         self.root.addLayout(row)
+
+    def _add_wiper_row(self, items):
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Sürgü (0–1):"))
+        edit = QLineEdit()
+        edit.setFrame(False)
+        edit.setObjectName("inlinePropertyValue")
+        positions = {str(getattr(item, "wiper_position", 0.5)) for item in items}
+        if len(positions) == 1:
+            edit.setText(next(iter(positions)))
+        else:
+            edit.setPlaceholderText("Farklı konumlar")
+        edit.editingFinished.connect(lambda selected=tuple(items), field=edit: self._apply_wiper(selected, field))
+        row.addWidget(edit, 1)
+        self.root.addLayout(row)
+
+    def _apply_wiper(self, items, field):
+        value = field.text().strip()
+        if value:
+            self.wiper_change_requested.emit(list(items), value)
 
     def _add_value_row(self, items):
         row = QHBoxLayout()
